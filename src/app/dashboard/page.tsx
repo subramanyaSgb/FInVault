@@ -298,20 +298,47 @@ export default function DashboardPage() {
           </div>
         </motion.div>
 
-        {/* Quick Actions */}
+        {/* Quick Actions - Premium Cards */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.3 }}
-          className="flex gap-2 overflow-x-auto no-scrollbar pb-1 -mx-4 px-4"
+          className="grid grid-cols-2 gap-3"
         >
-          <Link href="/transactions/add" className="btn-primary whitespace-nowrap">
-            <Plus className="w-4 h-4" />
-            Add Expense
+          {/* Add Expense Card */}
+          <Link href="/transactions/add" className="group">
+            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-accent/20 via-accent/10 to-transparent border border-accent/30 p-4 h-[100px] transition-all duration-300 hover:border-accent/50 hover:shadow-[0_0_20px_rgba(201,165,92,0.15)]">
+              {/* Glow effect */}
+              <div className="absolute -top-10 -right-10 w-24 h-24 bg-accent/20 rounded-full blur-2xl group-hover:bg-accent/30 transition-colors" />
+
+              <div className="relative flex flex-col h-full justify-between">
+                <div className="w-10 h-10 rounded-xl bg-accent/20 border border-accent/30 flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <Plus className="w-5 h-5 text-accent" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-text-primary">Add Expense</p>
+                  <p className="text-[10px] text-text-muted">Quick entry</p>
+                </div>
+              </div>
+            </div>
           </Link>
-          <Link href="/transactions/scan" className="btn-secondary whitespace-nowrap">
-            <Camera className="w-4 h-4" />
-            Scan Receipt
+
+          {/* Scan Receipt Card */}
+          <Link href="/transactions/scan" className="group">
+            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-info/20 via-info/10 to-transparent border border-info/30 p-4 h-[100px] transition-all duration-300 hover:border-info/50 hover:shadow-[0_0_20px_rgba(59,130,246,0.15)]">
+              {/* Glow effect */}
+              <div className="absolute -top-10 -right-10 w-24 h-24 bg-info/20 rounded-full blur-2xl group-hover:bg-info/30 transition-colors" />
+
+              <div className="relative flex flex-col h-full justify-between">
+                <div className="w-10 h-10 rounded-xl bg-info/20 border border-info/30 flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <Camera className="w-5 h-5 text-info" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-text-primary">Scan Receipt</p>
+                  <p className="text-[10px] text-text-muted">AI-powered OCR</p>
+                </div>
+              </div>
+            </div>
           </Link>
         </motion.div>
 
