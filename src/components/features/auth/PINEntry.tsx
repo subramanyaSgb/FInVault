@@ -62,14 +62,25 @@ export function PINEntry({ profileId, onSuccess, onBack }: PINEntryProps) {
   }
 
   return (
-    <div className="h-screen bg-[#0A0A0A] flex flex-col relative overflow-hidden">
+    <div
+      className="fixed inset-0 bg-[#050505] flex flex-col overflow-hidden"
+      style={{ height: '100dvh' }}
+    >
+      {/* Ambient glow */}
+      <div
+        className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[250px] h-[250px] pointer-events-none"
+        style={{
+          background: 'radial-gradient(circle, rgba(180,155,80,0.06) 0%, transparent 70%)',
+        }}
+      />
+
       {/* Header */}
       <div className="p-4 relative z-10 flex-shrink-0">
         <button
           onClick={onBack}
-          className="p-2.5 rounded-xl bg-[#141414] hover:bg-[#1A1A1A] border border-[#1F1F1F] transition-colors"
+          className="p-2 rounded-xl bg-[#0C0C0C] hover:bg-[#141414] border border-[#181818] transition-colors"
         >
-          <ArrowLeft className="w-5 h-5 text-[#666]" />
+          <ArrowLeft className="w-4 h-4 text-[#505050]" />
         </button>
       </div>
 
@@ -80,69 +91,69 @@ export function PINEntry({ profileId, onSuccess, onBack }: PINEntryProps) {
         animate={{ opacity: 1 }}
         transition={{ duration: 0.3 }}
       >
-        <div className="w-full max-w-[280px]">
+        <div className="w-full max-w-[260px]">
           {/* Profile Info */}
-          <div className="text-center mb-6">
+          <div className="text-center mb-4">
             {profile?.avatar && !profile.avatar.startsWith('data:image/svg') ? (
               <img
                 src={profile.avatar}
                 alt={profile.name}
-                className="w-16 h-16 rounded-full mx-auto mb-3 object-cover ring-2 ring-[#1F1F1F]"
+                className="w-12 h-12 rounded-full mx-auto mb-2 object-cover ring-1 ring-[#1A1A1A]"
               />
             ) : (
-              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#B49B50] to-[#8B7A3D] flex items-center justify-center mx-auto mb-3">
-                <span className="text-xl font-semibold text-[#0A0A0A]">
+              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#B49B50] to-[#7A6A35] flex items-center justify-center mx-auto mb-2">
+                <span className="text-base font-semibold text-[#050505]">
                   {profile?.name.charAt(0).toUpperCase()}
                 </span>
               </div>
             )}
-            <h2 className="text-lg font-semibold text-white mb-0.5">
+            <h2 className="text-base font-semibold text-white mb-0.5">
               {profile?.name}
             </h2>
-            <p className="text-xs text-[#555]">Enter PIN to unlock</p>
+            <p className="text-[10px] text-[#505050]">Enter PIN to unlock</p>
           </div>
 
           {/* Error Message */}
           <AnimatePresence>
             {error && (
               <motion.div
-                initial={{ opacity: 0, y: -6 }}
+                initial={{ opacity: 0, y: -4 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -6 }}
-                className="flex items-center gap-2 px-3 py-2 bg-red-500/10 rounded-lg mb-4 border border-red-500/15"
+                exit={{ opacity: 0, y: -4 }}
+                className="flex items-center gap-2 px-3 py-2 bg-red-500/10 rounded-lg mb-3 border border-red-500/10"
               >
-                <AlertCircle className="w-4 h-4 text-red-400 flex-shrink-0" />
-                <p className="text-[11px] text-red-400">{error}</p>
+                <AlertCircle className="w-3.5 h-3.5 text-red-400 flex-shrink-0" />
+                <p className="text-[10px] text-red-400">{error}</p>
               </motion.div>
             )}
           </AnimatePresence>
 
           {/* PIN Dots */}
-          <div className="flex justify-center gap-3 mb-6">
+          <div className="flex justify-center gap-2.5 mb-4">
             {[0, 1, 2, 3, 4, 5].map((index) => (
               <motion.div
                 key={index}
-                className={`w-3 h-3 rounded-full transition-all duration-100 ${
+                className={`w-2.5 h-2.5 rounded-full transition-all duration-100 ${
                   index < pin.length
                     ? 'bg-[#B49B50]'
-                    : 'bg-[#1F1F1F] border border-[#2A2A2A]'
+                    : 'bg-[#181818] border border-[#252525]'
                 }`}
-                animate={index < pin.length ? { scale: [1, 1.25, 1] } : {}}
+                animate={index < pin.length ? { scale: [1, 1.2, 1] } : {}}
                 transition={{ duration: 0.1 }}
               />
             ))}
           </div>
 
           {/* Numpad - compact */}
-          <div className="grid grid-cols-3 gap-2 mb-4">
+          <div className="grid grid-cols-3 gap-1.5 mb-3">
             {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
               <motion.button
                 key={num}
                 type="button"
                 onClick={() => handleNumPress(num.toString())}
-                whileTap={{ scale: 0.95 }}
+                whileTap={{ scale: 0.96 }}
                 disabled={isLoading}
-                className="aspect-square rounded-xl bg-[#141414] border border-[#1F1F1F] text-lg font-medium text-white hover:bg-[#1A1A1A] active:bg-[#B49B50]/10 active:border-[#B49B50]/30 transition-all duration-100 disabled:opacity-40"
+                className="aspect-square rounded-lg bg-[#0C0C0C] border border-[#181818] text-base font-medium text-white hover:bg-[#141414] active:bg-[#B49B50]/10 active:border-[#B49B50]/30 transition-all duration-75 disabled:opacity-40"
               >
                 {num}
               </motion.button>
@@ -152,20 +163,20 @@ export function PINEntry({ profileId, onSuccess, onBack }: PINEntryProps) {
             <motion.button
               type="button"
               onClick={() => setPin('')}
-              whileTap={{ scale: 0.95 }}
+              whileTap={{ scale: 0.96 }}
               disabled={isLoading}
-              className="aspect-square rounded-xl bg-[#141414] border border-[#1F1F1F] flex items-center justify-center text-[#555] hover:text-red-400 hover:bg-red-500/5 transition-all duration-100 disabled:opacity-40"
+              className="aspect-square rounded-lg bg-[#0C0C0C] border border-[#181818] flex items-center justify-center text-[#505050] hover:text-red-400 hover:bg-red-500/5 transition-all duration-75 disabled:opacity-40"
             >
-              <span className="text-[10px] font-semibold">CLR</span>
+              <span className="text-[9px] font-semibold">CLR</span>
             </motion.button>
 
             {/* 0 */}
             <motion.button
               type="button"
               onClick={() => handleNumPress('0')}
-              whileTap={{ scale: 0.95 }}
+              whileTap={{ scale: 0.96 }}
               disabled={isLoading}
-              className="aspect-square rounded-xl bg-[#141414] border border-[#1F1F1F] text-lg font-medium text-white hover:bg-[#1A1A1A] active:bg-[#B49B50]/10 active:border-[#B49B50]/30 transition-all duration-100 disabled:opacity-40"
+              className="aspect-square rounded-lg bg-[#0C0C0C] border border-[#181818] text-base font-medium text-white hover:bg-[#141414] active:bg-[#B49B50]/10 active:border-[#B49B50]/30 transition-all duration-75 disabled:opacity-40"
             >
               0
             </motion.button>
@@ -174,11 +185,11 @@ export function PINEntry({ profileId, onSuccess, onBack }: PINEntryProps) {
             <motion.button
               type="button"
               onClick={() => setPin(pin.slice(0, -1))}
-              whileTap={{ scale: 0.95 }}
+              whileTap={{ scale: 0.96 }}
               disabled={isLoading}
-              className="aspect-square rounded-xl bg-[#141414] border border-[#1F1F1F] flex items-center justify-center text-[#555] hover:text-white transition-all duration-100 disabled:opacity-40"
+              className="aspect-square rounded-lg bg-[#0C0C0C] border border-[#181818] flex items-center justify-center text-[#505050] hover:text-white transition-all duration-75 disabled:opacity-40"
             >
-              <Delete className="w-5 h-5" />
+              <Delete className="w-4 h-4" />
             </motion.button>
           </div>
 
@@ -189,10 +200,10 @@ export function PINEntry({ profileId, onSuccess, onBack }: PINEntryProps) {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="flex items-center justify-center gap-2 py-2"
+                className="flex items-center justify-center gap-2 py-1.5"
               >
-                <div className="w-4 h-4 border-2 border-[#B49B50]/30 border-t-[#B49B50] rounded-full animate-spin" />
-                <span className="text-xs text-[#666]">Verifying</span>
+                <div className="w-3.5 h-3.5 border-2 border-[#B49B50]/30 border-t-[#B49B50] rounded-full animate-spin" />
+                <span className="text-[10px] text-[#505050]">Verifying</span>
               </motion.div>
             )}
           </AnimatePresence>
@@ -201,18 +212,18 @@ export function PINEntry({ profileId, onSuccess, onBack }: PINEntryProps) {
           {profile?.biometricEnabled && !isLoading && (
             <button
               type="button"
-              className="w-full py-2.5 flex items-center justify-center gap-2 rounded-xl border border-[#1F1F1F] text-[#555] hover:text-[#B49B50] hover:border-[#B49B50]/30 transition-colors"
+              className="w-full py-2 flex items-center justify-center gap-2 rounded-lg border border-[#181818] text-[#505050] hover:text-[#B49B50] hover:border-[#B49B50]/30 transition-colors"
             >
-              <Fingerprint className="w-4 h-4" />
-              <span className="text-xs">Use Biometric</span>
+              <Fingerprint className="w-3.5 h-3.5" />
+              <span className="text-[10px]">Use Biometric</span>
             </button>
           )}
         </div>
       </motion.div>
 
       {/* Footer */}
-      <div className="text-center py-3 flex-shrink-0">
-        <p className="text-[10px] text-[#3A3A3A] tracking-wider uppercase">
+      <div className="text-center py-2 flex-shrink-0">
+        <p className="text-[9px] text-[#303030] tracking-[0.12em] uppercase">
           AES-256 Encrypted
         </p>
       </div>

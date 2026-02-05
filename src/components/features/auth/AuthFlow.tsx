@@ -22,9 +22,8 @@ export function AuthFlow({ onAuthenticated }: AuthFlowProps) {
     const init = async () => {
       await initializeAuth()
       await loadProfiles()
-      setTimeout(() => setScreen('select'), 600)
+      setTimeout(() => setScreen('select'), 500)
     }
-
     init()
   }, [loadProfiles])
 
@@ -34,28 +33,6 @@ export function AuthFlow({ onAuthenticated }: AuthFlowProps) {
     }
   }, [isAuthenticated, onAuthenticated])
 
-  const handleProfileSelect = (profileId: string) => {
-    setSelectedProfileId(profileId)
-    setScreen('pin')
-  }
-
-  const handleCreateNew = () => {
-    setScreen('create')
-  }
-
-  const handleBackToSelect = () => {
-    setSelectedProfileId(null)
-    setScreen('select')
-  }
-
-  const handlePINSuccess = () => {
-    onAuthenticated()
-  }
-
-  const handleProfileCreated = () => {
-    onAuthenticated()
-  }
-
   return (
     <AnimatePresence mode="wait">
       {screen === 'loading' && (
@@ -64,91 +41,72 @@ export function AuthFlow({ onAuthenticated }: AuthFlowProps) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.3 }}
-          className="h-screen bg-[#0A0A0A] flex items-center justify-center"
+          transition={{ duration: 0.2 }}
+          className="fixed inset-0 bg-[#050505] flex items-center justify-center"
+          style={{ height: '100dvh' }}
         >
-          {/* Subtle glow */}
+          {/* Glow */}
           <div
-            className="absolute w-64 h-64"
-            style={{
-              background: 'radial-gradient(circle, rgba(180,155,80,0.06) 0%, transparent 60%)',
-            }}
+            className="absolute w-48 h-48"
+            style={{ background: 'radial-gradient(circle, rgba(180,155,80,0.06) 0%, transparent 70%)' }}
           />
 
-          {/* Content */}
           <div className="text-center relative z-10">
             {/* Logo */}
             <motion.div
-              className="mb-6"
+              className="mb-5"
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              transition={{ duration: 0.5 }}
+              transition={{ duration: 0.4 }}
             >
-              <div className="w-14 h-14 mx-auto rounded-xl bg-gradient-to-b from-[#1A1A1A] to-[#111] flex items-center justify-center border border-[#262626]">
-                <svg width="28" height="28" viewBox="0 0 48 48" fill="none" className="text-[#B49B50]">
+              <div className="w-12 h-12 mx-auto rounded-xl bg-[#0F0F0F] border border-[#1A1A1A] flex items-center justify-center">
+                <svg width="22" height="22" viewBox="0 0 48 48" fill="none">
                   <motion.circle
                     cx="24"
                     cy="24"
-                    r="20"
-                    stroke="currentColor"
+                    r="18"
+                    stroke="#B49B50"
                     strokeWidth="1.5"
                     fill="none"
                     initial={{ pathLength: 0 }}
                     animate={{ pathLength: 1 }}
-                    transition={{ duration: 0.8, ease: 'easeOut' }}
-                  />
-                  <motion.circle
-                    cx="24"
-                    cy="24"
-                    r="12"
-                    stroke="currentColor"
-                    strokeWidth="1"
-                    fill="none"
-                    initial={{ pathLength: 0 }}
-                    animate={{ pathLength: 1 }}
-                    transition={{ duration: 0.6, delay: 0.15, ease: 'easeOut' }}
+                    transition={{ duration: 0.6 }}
                   />
                   <motion.circle
                     cx="24"
                     cy="24"
                     r="3"
-                    fill="currentColor"
+                    fill="#B49B50"
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
-                    transition={{ duration: 0.2, delay: 0.4 }}
+                    transition={{ delay: 0.3 }}
                   />
                 </svg>
               </div>
             </motion.div>
 
-            {/* Text */}
             <motion.h1
-              className="text-xl font-semibold text-white mb-4"
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
+              className="text-lg font-semibold text-white"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.15 }}
             >
               FinVault
             </motion.h1>
 
-            {/* Loading dots */}
+            {/* Dots */}
             <motion.div
-              className="flex items-center justify-center gap-1"
+              className="flex justify-center gap-1 mt-3"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ delay: 0.3 }}
+              transition={{ delay: 0.25 }}
             >
               {[0, 1, 2].map((i) => (
                 <motion.div
                   key={i}
-                  className="w-1.5 h-1.5 rounded-full bg-[#B49B50]"
+                  className="w-1 h-1 rounded-full bg-[#B49B50]"
                   animate={{ opacity: [0.3, 1, 0.3] }}
-                  transition={{
-                    duration: 0.8,
-                    repeat: Infinity,
-                    delay: i * 0.15,
-                    ease: 'easeInOut',
-                  }}
+                  transition={{ duration: 0.7, repeat: Infinity, delay: i * 0.12 }}
                 />
               ))}
             </motion.div>
@@ -162,36 +120,42 @@ export function AuthFlow({ onAuthenticated }: AuthFlowProps) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.25 }}
+          transition={{ duration: 0.2 }}
         >
-          <ProfileSelection onSelect={handleProfileSelect} onCreateNew={handleCreateNew} />
+          <ProfileSelection
+            onSelect={(id) => { setSelectedProfileId(id); setScreen('pin') }}
+            onCreateNew={() => setScreen('create')}
+          />
         </motion.div>
       )}
 
       {screen === 'create' && (
         <motion.div
           key="create"
-          initial={{ opacity: 0, x: 30 }}
+          initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: -30 }}
-          transition={{ duration: 0.25 }}
+          exit={{ opacity: 0, x: -20 }}
+          transition={{ duration: 0.2 }}
         >
-          <ProfileCreation onComplete={handleProfileCreated} onBack={handleBackToSelect} />
+          <ProfileCreation
+            onComplete={onAuthenticated}
+            onBack={() => setScreen('select')}
+          />
         </motion.div>
       )}
 
       {screen === 'pin' && selectedProfileId && (
         <motion.div
           key="pin"
-          initial={{ opacity: 0, x: 30 }}
+          initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: -30 }}
-          transition={{ duration: 0.25 }}
+          exit={{ opacity: 0, x: -20 }}
+          transition={{ duration: 0.2 }}
         >
           <PINEntry
             profileId={selectedProfileId}
-            onSuccess={handlePINSuccess}
-            onBack={handleBackToSelect}
+            onSuccess={onAuthenticated}
+            onBack={() => { setSelectedProfileId(null); setScreen('select') }}
           />
         </motion.div>
       )}
