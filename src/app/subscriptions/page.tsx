@@ -20,6 +20,7 @@ import {
   AlertCircle,
   CheckCircle2,
   PieChart,
+  Calendar,
 } from 'lucide-react'
 import { useSubscriptionStore } from '@/stores/subscriptionStore'
 import { useAuthStore } from '@/stores/authStore'
@@ -52,6 +53,24 @@ const BILLING_CYCLES: { value: BillingCycle; label: string; multiplier: number }
   { value: 'half_yearly', label: 'Half Yearly', multiplier: 6 },
   { value: 'yearly', label: 'Yearly', multiplier: 12 },
 ]
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.08 },
+  },
+}
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20, filter: 'blur(10px)' },
+  visible: {
+    opacity: 1,
+    y: 0,
+    filter: 'blur(0px)',
+    transition: { duration: 0.4 },
+  },
+}
 
 export default function SubscriptionsPage() {
   const { currentProfile } = useAuthStore()
@@ -240,11 +259,11 @@ export default function SubscriptionsPage() {
     return (
       <div className="min-h-screen bg-bg-primary p-4">
         <div className="animate-pulse space-y-4">
-          <div className="h-32 bg-bg-secondary rounded-card" />
-          <div className="h-48 bg-bg-secondary rounded-card" />
+          <div className="h-32 bg-bg-secondary rounded-2xl" />
+          <div className="h-48 bg-bg-secondary rounded-2xl" />
           <div className="space-y-3">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="h-24 bg-bg-secondary rounded-card" />
+              <div key={i} className="h-24 bg-bg-secondary rounded-2xl" />
             ))}
           </div>
         </div>
@@ -253,11 +272,15 @@ export default function SubscriptionsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-bg-primary">
-      {/* Header */}
-      <header className="sticky top-0 z-40 bg-bg-primary/80 backdrop-blur-md border-b border-white/5">
-        <div className="flex items-center justify-between p-4">
-          <div className="flex items-center gap-3">
+    <div className="min-h-screen bg-bg-primary pb-20">
+      {/* Premium Glass Header */}
+      <header className="sticky top-0 z-40 bg-bg-primary/60 backdrop-blur-xl border-b border-glass-border">
+        <div className="flex items-center justify-between px-4 py-4">
+          <motion.div
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="flex items-center gap-3"
+          >
             <button
               onClick={() => window.history.back()}
               className="p-2 hover:bg-bg-secondary rounded-full transition-colors"
@@ -265,85 +288,112 @@ export default function SubscriptionsPage() {
               <ArrowLeft className="w-5 h-5 text-text-secondary" />
             </button>
             <div>
-              <p className="text-xs text-text-tertiary uppercase tracking-wider">Subscriptions</p>
-              <h1 className="text-lg font-semibold text-text-primary">Manage Plans</h1>
+              <p className="text-xs text-accent font-medium tracking-wide uppercase">Subscriptions</p>
+              <h1 className="text-xl font-semibold text-text-primary mt-0.5">Manage Plans</h1>
             </div>
-          </div>
-          <button
+          </motion.div>
+          <motion.button
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
             onClick={() => {
               setEditingSubscription(null)
               resetForm()
               setShowAddModal(true)
             }}
-            className="p-2 bg-accent-alpha rounded-full"
+            className="w-10 h-10 rounded-xl bg-accent/20 border border-accent/30 flex items-center justify-center hover:bg-accent/30 transition-all"
           >
-            <Plus className="w-5 h-5 text-accent-primary" />
-          </button>
+            <Plus className="w-5 h-5 text-accent" />
+          </motion.button>
         </div>
       </header>
 
-      <main className="p-4 space-y-6">
-        {/* Monthly Cost Summary */}
+      <motion.main
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+        className="p-4 space-y-6"
+      >
+        {/* Premium Monthly Cost Summary */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-gradient-to-br from-bg-secondary to-bg-tertiary rounded-card p-6 border border-white/5"
+          variants={itemVariants}
+          className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-bg-secondary to-bg-tertiary border border-border-subtle p-5"
         >
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-accent-alpha flex items-center justify-center">
-                <CreditCard className="w-5 h-5 text-accent-primary" />
+          {/* Glow decorations */}
+          <div
+            className="absolute -top-20 -right-20 w-40 h-40 pointer-events-none"
+            style={{ background: 'radial-gradient(circle, rgba(201, 165, 92, 0.12) 0%, transparent 70%)' }}
+          />
+
+          <div className="relative">
+            <div className="flex items-center gap-4 mb-5">
+              <div className="w-14 h-14 rounded-2xl bg-accent/20 border border-accent/30 flex items-center justify-center">
+                <CreditCard className="w-7 h-7 text-accent" />
               </div>
               <div>
                 <p className="text-xs text-text-tertiary uppercase tracking-wider">Monthly Cost</p>
-                <h2 className="text-2xl font-bold text-text-primary">
+                <p className="text-3xl font-display font-bold text-gradient-gold">
                   {formatCurrency(monthlyTotal)}
-                </h2>
+                </p>
               </div>
             </div>
-          </div>
-          <div className="grid grid-cols-2 gap-4 pt-4 border-t border-white/10">
-            <div>
-              <p className="text-xs text-text-tertiary mb-1">Annual Cost</p>
-              <p className="text-lg font-semibold text-text-primary">
-                {formatCurrency(annualTotal)}
-              </p>
-            </div>
-            <div>
-              <p className="text-xs text-text-tertiary mb-1">Active Subscriptions</p>
-              <p className="text-lg font-semibold text-text-primary">{subscriptions.length}</p>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="relative overflow-hidden rounded-xl bg-bg-primary/40 border border-border-subtle p-4">
+                <div className="absolute -top-4 -right-4 w-10 h-10 bg-warning/10 rounded-full blur-xl" />
+                <div className="w-9 h-9 rounded-lg bg-warning-muted flex items-center justify-center mb-2">
+                  <Calendar className="w-4 h-4 text-warning" />
+                </div>
+                <p className="text-[10px] text-text-muted uppercase tracking-wider">Annual Cost</p>
+                <p className="text-lg font-semibold text-warning">{formatCurrency(annualTotal)}</p>
+              </div>
+
+              <div className="relative overflow-hidden rounded-xl bg-bg-primary/40 border border-border-subtle p-4">
+                <div className="absolute -top-4 -right-4 w-10 h-10 bg-success/10 rounded-full blur-xl" />
+                <div className="w-9 h-9 rounded-lg bg-success-muted flex items-center justify-center mb-2">
+                  <CheckCircle2 className="w-4 h-4 text-success" />
+                </div>
+                <p className="text-[10px] text-text-muted uppercase tracking-wider">Active</p>
+                <p className="text-lg font-semibold text-success">{subscriptions.length}</p>
+              </div>
             </div>
           </div>
         </motion.div>
 
-        {/* Category Breakdown */}
+        {/* Premium Category Breakdown */}
         {categoryBreakdown.length > 0 && (
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="bg-bg-secondary rounded-card p-5 border border-white/5"
+            variants={itemVariants}
+            className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-bg-secondary to-bg-tertiary border border-border-subtle p-5"
           >
-            <div className="flex items-center gap-2 mb-4">
-              <PieChart className="w-5 h-5 text-accent-primary" />
-              <h3 className="font-semibold text-text-primary">Category Breakdown</h3>
-            </div>
-            <div className="space-y-3">
-              {categoryBreakdown.map((category) => (
-                <div key={category.category} className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="text-text-secondary">{getCategoryIcon(category.category)}</span>
-                    <span className="text-sm text-text-primary">{getCategoryLabel(category.category)}</span>
-                    <span className="text-xs text-text-tertiary">({category.count})</span>
+            <div className="absolute -top-10 -right-10 w-20 h-20 bg-accent/10 rounded-full blur-2xl" />
+            <div className="relative">
+              <div className="flex items-center gap-2 mb-4">
+                <PieChart className="w-5 h-5 text-accent" />
+                <h3 className="font-semibold text-text-primary">Category Breakdown</h3>
+              </div>
+              <div className="space-y-3">
+                {categoryBreakdown.map((category) => (
+                  <div key={category.category} className="flex items-center justify-between p-3 rounded-xl bg-bg-primary/40 border border-border-subtle">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center text-accent">
+                        {getCategoryIcon(category.category)}
+                      </div>
+                      <div>
+                        <span className="text-sm font-medium text-text-primary">{getCategoryLabel(category.category)}</span>
+                        <span className="text-xs text-text-tertiary ml-2">({category.count})</span>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-sm font-semibold text-text-primary">
+                        {formatCurrency(category.monthlyAmount)}
+                      </span>
+                      <span className="text-xs text-text-tertiary ml-1">/mo</span>
+                    </div>
                   </div>
-                  <div className="text-right">
-                    <span className="text-sm font-medium text-text-primary">
-                      {formatCurrency(category.monthlyAmount)}
-                    </span>
-                    <span className="text-xs text-text-tertiary ml-2">/month</span>
-                  </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </motion.div>
         )}
@@ -351,41 +401,37 @@ export default function SubscriptionsPage() {
         {/* Upcoming Renewals Alert */}
         {upcomingRenewals.length > 0 && (
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.15 }}
-            className="bg-warning-bg rounded-card p-4 border border-warning/20"
+            variants={itemVariants}
+            className="relative overflow-hidden rounded-2xl bg-warning/10 border border-warning/20 p-4"
           >
-            <div className="flex items-center gap-2 mb-3">
-              <Bell className="w-5 h-5 text-warning" />
-              <h3 className="font-semibold text-warning">Upcoming Renewals</h3>
-              <span className="px-2 py-0.5 bg-warning/20 rounded-full text-xs text-warning">
-                {upcomingRenewals.length}
-              </span>
-            </div>
-            <div className="space-y-2">
-              {upcomingRenewals.slice(0, 3).map((sub) => {
-                const days = getDaysUntilRenewal(sub.nextBillingDate)
-                return (
-                  <div key={sub.id} className="flex items-center justify-between">
-                    <span className="text-sm text-text-secondary">{sub.name}</span>
-                    <span className={`text-xs ${days <= 3 ? 'text-error' : 'text-warning'}`}>
-                      {days === 0 ? 'Today' : days === 1 ? 'Tomorrow' : `In ${days} days`}
-                    </span>
-                  </div>
-                )
-              })}
-              {upcomingRenewals.length > 3 && (
-                <p className="text-xs text-text-tertiary mt-2">
-                  +{upcomingRenewals.length - 3} more renewals this month
-                </p>
-              )}
+            <div className="absolute -top-10 -right-10 w-20 h-20 bg-warning/20 rounded-full blur-xl" />
+            <div className="relative">
+              <div className="flex items-center gap-2 mb-3">
+                <Bell className="w-5 h-5 text-warning" />
+                <h3 className="font-semibold text-warning">Upcoming Renewals</h3>
+                <span className="px-2 py-0.5 bg-warning/20 rounded-full text-xs font-medium text-warning">
+                  {upcomingRenewals.length}
+                </span>
+              </div>
+              <div className="space-y-2">
+                {upcomingRenewals.slice(0, 3).map((sub) => {
+                  const days = getDaysUntilRenewal(sub.nextBillingDate)
+                  return (
+                    <div key={sub.id} className="flex items-center justify-between p-3 rounded-xl bg-bg-primary/40">
+                      <span className="text-sm font-medium text-text-primary">{sub.name}</span>
+                      <span className={`text-xs font-semibold ${days <= 3 ? 'text-error' : 'text-warning'}`}>
+                        {days === 0 ? 'Today' : days === 1 ? 'Tomorrow' : `In ${days} days`}
+                      </span>
+                    </div>
+                  )
+                })}
+              </div>
             </div>
           </motion.div>
         )}
 
-        {/* Tabs */}
-        <div className="flex gap-2">
+        {/* Premium Tabs */}
+        <motion.div variants={itemVariants} className="flex gap-2">
           {[
             { id: 'all', label: 'All Subscriptions' },
             { id: 'upcoming', label: `Upcoming (${upcomingRenewals.length})` },
@@ -393,28 +439,36 @@ export default function SubscriptionsPage() {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as typeof activeTab)}
-              className={`px-4 py-2 rounded-button text-sm font-medium transition-colors ${
+              className={`px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${
                 activeTab === tab.id
-                  ? 'bg-accent-primary text-bg-primary'
-                  : 'bg-bg-secondary text-text-secondary hover:bg-bg-tertiary'
+                  ? 'bg-accent text-bg-primary shadow-[0_0_15px_rgba(201,165,92,0.3)]'
+                  : 'bg-bg-secondary text-text-secondary border border-border-subtle hover:border-accent/30'
               }`}
             >
               {tab.label}
             </button>
           ))}
-        </div>
+        </motion.div>
 
         {/* Subscriptions List */}
-        <div className="space-y-3">
+        <motion.div variants={itemVariants} className="space-y-3">
           {filteredSubscriptions.length === 0 ? (
-            <div className="text-center py-12 bg-bg-secondary rounded-card">
-              <CreditCard className="w-12 h-12 text-text-tertiary mx-auto mb-4" />
-              <p className="text-text-secondary">No subscriptions found</p>
-              <p className="text-sm text-text-tertiary mt-1">
-                {activeTab === 'upcoming'
-                  ? 'No renewals in the next 30 days'
-                  : 'Add your first subscription to track expenses'}
-              </p>
+            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-bg-secondary to-bg-tertiary border border-border-subtle p-8 text-center">
+              <div
+                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 pointer-events-none"
+                style={{ background: 'radial-gradient(circle, rgba(201, 165, 92, 0.08) 0%, transparent 70%)' }}
+              />
+              <div className="relative">
+                <div className="w-16 h-16 rounded-2xl bg-accent/10 border border-accent/20 flex items-center justify-center mx-auto mb-4">
+                  <CreditCard className="w-8 h-8 text-accent/60" />
+                </div>
+                <h3 className="text-lg font-semibold text-text-primary mb-2">No subscriptions found</h3>
+                <p className="text-text-secondary text-sm mb-6">
+                  {activeTab === 'upcoming'
+                    ? 'No renewals in the next 30 days'
+                    : 'Add your first subscription to track expenses'}
+                </p>
+              </div>
             </div>
           ) : (
             filteredSubscriptions.map((subscription, index) => {
@@ -424,74 +478,78 @@ export default function SubscriptionsPage() {
               return (
                 <motion.div
                   key={subscription.id}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.05 }}
-                  className="bg-bg-secondary rounded-card p-4 border border-white/5"
+                  className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-bg-secondary to-bg-tertiary border border-border-subtle p-4 transition-all duration-300 hover:border-accent/30 hover:shadow-[0_0_15px_rgba(201,165,92,0.08)]"
                 >
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-accent-alpha flex items-center justify-center">
-                        {getCategoryIcon(subscription.category)}
+                  <div className="absolute -top-10 -right-10 w-20 h-20 bg-accent/0 rounded-full blur-2xl group-hover:bg-accent/10 transition-all" />
+
+                  <div className="relative">
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 rounded-xl bg-accent/10 border border-accent/20 flex items-center justify-center text-accent group-hover:scale-110 transition-transform">
+                          {getCategoryIcon(subscription.category)}
+                        </div>
+                        <div>
+                          <h3 className="font-semibold text-text-primary">{subscription.name}</h3>
+                          <p className="text-sm text-text-secondary">
+                            {subscription.provider} • {getCategoryLabel(subscription.category)}
+                          </p>
+                        </div>
                       </div>
-                      <div>
-                        <h3 className="font-semibold text-text-primary">{subscription.name}</h3>
-                        <p className="text-sm text-text-secondary">
-                          {subscription.provider} • {getCategoryLabel(subscription.category)}
+                      <div className="flex gap-1">
+                        <button
+                          onClick={() => handleEdit(subscription)}
+                          className="p-2 rounded-lg text-text-tertiary hover:text-accent hover:bg-accent/10 transition-colors"
+                        >
+                          <Edit2 className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(subscription.id)}
+                          className="p-2 rounded-lg text-text-tertiary hover:text-error hover:bg-error/10 transition-colors"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-3">
+                      <div className="p-3 rounded-xl bg-bg-primary/40 border border-border-subtle">
+                        <p className="text-[10px] text-text-muted uppercase tracking-wider mb-1">Amount</p>
+                        <p className="text-sm font-semibold text-text-primary">
+                          {formatCurrency(subscription.amount)}
+                        </p>
+                        <span className="text-[10px] text-text-tertiary">
+                          {BILLING_CYCLES.find((c) => c.value === subscription.billingCycle)?.label}
+                        </span>
+                      </div>
+                      <div className="p-3 rounded-xl bg-bg-primary/40 border border-border-subtle">
+                        <p className="text-[10px] text-text-muted uppercase tracking-wider mb-1">Monthly</p>
+                        <p className="text-sm font-semibold text-warning">
+                          {formatCurrency(monthlyAmount)}
                         </p>
                       </div>
-                    </div>
-                    <div className="flex gap-1">
-                      <button
-                        onClick={() => handleEdit(subscription)}
-                        className="p-2 hover:bg-bg-tertiary rounded-full transition-colors"
-                      >
-                        <Edit2 className="w-4 h-4 text-text-secondary" />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(subscription.id)}
-                        className="p-2 hover:bg-bg-tertiary rounded-full transition-colors"
-                      >
-                        <Trash2 className="w-4 h-4 text-error" />
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-3 gap-4 mt-4 pt-4 border-t border-white/5">
-                    <div>
-                      <p className="text-xs text-text-tertiary mb-1">Amount</p>
-                      <p className="text-sm font-semibold text-text-primary">
-                        {formatCurrency(subscription.amount)}
-                      </p>
-                      <span className="text-xs text-text-tertiary">
-                        {BILLING_CYCLES.find((c) => c.value === subscription.billingCycle)?.label}
-                      </span>
-                    </div>
-                    <div>
-                      <p className="text-xs text-text-tertiary mb-1">Monthly</p>
-                      <p className="text-sm font-semibold text-warning">
-                        {formatCurrency(monthlyAmount)}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-text-tertiary mb-1">Next Bill</p>
-                      <div className="flex items-center gap-1">
-                        {daysUntilRenewal <= subscription.reminderDays ? (
-                          <AlertCircle className="w-3 h-3 text-warning" />
-                        ) : (
-                          <CheckCircle2 className="w-3 h-3 text-success" />
-                        )}
-                        <span
-                          className={`text-sm font-semibold ${
-                            daysUntilRenewal <= 3 ? 'text-error' : 'text-text-primary'
-                          }`}
-                        >
-                          {daysUntilRenewal <= 0
-                            ? 'Today'
-                            : daysUntilRenewal === 1
-                            ? 'Tomorrow'
-                            : `${daysUntilRenewal} days`}
-                        </span>
+                      <div className="p-3 rounded-xl bg-bg-primary/40 border border-border-subtle">
+                        <p className="text-[10px] text-text-muted uppercase tracking-wider mb-1">Next Bill</p>
+                        <div className="flex items-center gap-1">
+                          {daysUntilRenewal <= subscription.reminderDays ? (
+                            <AlertCircle className="w-3 h-3 text-warning" />
+                          ) : (
+                            <CheckCircle2 className="w-3 h-3 text-success" />
+                          )}
+                          <span
+                            className={`text-sm font-semibold ${
+                              daysUntilRenewal <= 3 ? 'text-error' : 'text-text-primary'
+                            }`}
+                          >
+                            {daysUntilRenewal <= 0
+                              ? 'Today'
+                              : daysUntilRenewal === 1
+                              ? 'Tomorrow'
+                              : `${daysUntilRenewal}d`}
+                          </span>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -499,133 +557,141 @@ export default function SubscriptionsPage() {
               )
             })
           )}
-        </div>
-      </main>
+        </motion.div>
+      </motion.main>
 
-      {/* Add/Edit Subscription Modal */}
+      {/* Premium Add/Edit Modal */}
       <AnimatePresence>
         {showAddModal && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-bg-primary/95 backdrop-blur-md flex items-center justify-center p-4"
+            className="fixed inset-0 z-50 bg-bg-primary/95 backdrop-blur-xl flex items-center justify-center p-4"
           >
             <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-bg-secondary rounded-card p-6 w-full max-w-md max-h-[90vh] overflow-y-auto"
+              initial={{ scale: 0.95, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 20 }}
+              className="relative overflow-hidden bg-gradient-to-br from-bg-secondary to-bg-tertiary rounded-2xl border border-border-subtle p-6 w-full max-w-md max-h-[90vh] overflow-y-auto"
             >
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-h4 font-semibold text-text-primary">
-                  {editingSubscription ? 'Edit Subscription' : 'Add Subscription'}
-                </h2>
-                <button
-                  onClick={() => setShowAddModal(false)}
-                  className="p-2 hover:bg-bg-tertiary rounded-full transition-colors"
-                >
-                  <X className="w-5 h-5 text-text-secondary" />
-                </button>
-              </div>
+              <div
+                className="absolute -top-20 -right-20 w-40 h-40 pointer-events-none"
+                style={{ background: 'radial-gradient(circle, rgba(201, 165, 92, 0.1) 0%, transparent 70%)' }}
+              />
 
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
-                  <label className="text-sm text-text-secondary block mb-2">Service Name</label>
-                  <input
-                    type="text"
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full bg-bg-tertiary border border-white/10 rounded-input px-4 py-3 text-text-primary focus:border-accent-primary focus:outline-none"
-                    placeholder="e.g., Netflix"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="text-sm text-text-secondary block mb-2">Provider</label>
-                  <input
-                    type="text"
-                    value={formData.provider}
-                    onChange={(e) => setFormData({ ...formData, provider: e.target.value })}
-                    className="w-full bg-bg-tertiary border border-white/10 rounded-input px-4 py-3 text-text-primary focus:border-accent-primary focus:outline-none"
-                    placeholder="e.g., Netflix India"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="text-sm text-text-secondary block mb-2">Category</label>
-                  <div className="grid grid-cols-4 gap-2">
-                    {CATEGORIES.map((cat) => (
-                      <button
-                        key={cat.id}
-                        type="button"
-                        onClick={() => setFormData({ ...formData, category: cat.id })}
-                        className={`flex flex-col items-center gap-1 p-2 rounded-lg border transition-colors ${
-                          formData.category === cat.id
-                            ? 'border-accent-primary bg-accent-alpha'
-                            : 'border-white/10 hover:bg-bg-tertiary'
-                        }`}
-                      >
-                        <span className={formData.category === cat.id ? 'text-accent-primary' : 'text-text-secondary'}>
-                          {cat.icon}
-                        </span>
-                        <span className="text-xs text-text-secondary">{cat.label}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
+              <div className="relative">
+                <div className="flex items-center justify-between mb-6">
                   <div>
-                    <label className="text-sm text-text-secondary block mb-2">Amount</label>
+                    <p className="text-xs text-accent font-medium tracking-wide uppercase">Subscription</p>
+                    <h2 className="text-xl font-semibold text-text-primary mt-0.5">
+                      {editingSubscription ? 'Edit Subscription' : 'Add Subscription'}
+                    </h2>
+                  </div>
+                  <button
+                    onClick={() => setShowAddModal(false)}
+                    className="p-2 rounded-xl hover:bg-bg-tertiary transition-colors"
+                  >
+                    <X className="w-5 h-5 text-text-secondary" />
+                  </button>
+                </div>
+
+                <form onSubmit={handleSubmit} className="space-y-5">
+                  <div>
+                    <label className="text-sm text-text-secondary block mb-2">Service Name</label>
                     <input
-                      type="number"
-                      value={formData.amount}
-                      onChange={(e) =>
-                        setFormData({ ...formData, amount: Number(e.target.value) })
-                      }
-                      className="w-full bg-bg-tertiary border border-white/10 rounded-input px-4 py-3 text-text-primary focus:border-accent-primary focus:outline-none"
-                      placeholder="199"
+                      type="text"
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      className="w-full bg-bg-primary/50 border border-border-subtle rounded-xl px-4 py-3 text-text-primary focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/50 transition-all"
+                      placeholder="e.g., Netflix"
                       required
                     />
                   </div>
+
                   <div>
-                    <label className="text-sm text-text-secondary block mb-2">Billing Cycle</label>
-                    <select
-                      value={formData.billingCycle}
-                      onChange={(e) =>
-                        setFormData({ ...formData, billingCycle: e.target.value as BillingCycle })
-                      }
-                      className="w-full bg-bg-tertiary border border-white/10 rounded-input px-4 py-3 text-text-primary focus:border-accent-primary focus:outline-none"
+                    <label className="text-sm text-text-secondary block mb-2">Provider</label>
+                    <input
+                      type="text"
+                      value={formData.provider}
+                      onChange={(e) => setFormData({ ...formData, provider: e.target.value })}
+                      className="w-full bg-bg-primary/50 border border-border-subtle rounded-xl px-4 py-3 text-text-primary focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/50 transition-all"
+                      placeholder="e.g., Netflix India"
                       required
-                    >
-                      {BILLING_CYCLES.map((cycle) => (
-                        <option key={cycle.value} value={cycle.value}>
-                          {cycle.label}
-                        </option>
-                      ))}
-                    </select>
+                    />
                   </div>
-                </div>
 
-                <div>
-                  <label className="text-sm text-text-secondary block mb-2">Next Billing Date</label>
-                  <input
-                    type="date"
-                    value={formData.nextBillingDate.toISOString().split('T')[0]}
-                    onChange={(e) => setFormData({ ...formData, nextBillingDate: new Date(e.target.value) })}
-                    className="w-full bg-bg-tertiary border border-white/10 rounded-input px-4 py-3 text-text-primary focus:border-accent-primary focus:outline-none"
-                    required
-                  />
-                </div>
+                  <div>
+                    <label className="text-sm text-text-secondary block mb-3">Category</label>
+                    <div className="grid grid-cols-4 gap-2">
+                      {CATEGORIES.map((cat) => (
+                        <button
+                          key={cat.id}
+                          type="button"
+                          onClick={() => setFormData({ ...formData, category: cat.id })}
+                          className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border transition-all ${
+                            formData.category === cat.id
+                              ? 'border-accent bg-accent/10 scale-105'
+                              : 'border-border-subtle hover:bg-bg-tertiary hover:border-accent/30'
+                          }`}
+                        >
+                          <span className={formData.category === cat.id ? 'text-accent' : 'text-text-secondary'}>
+                            {cat.icon}
+                          </span>
+                          <span className="text-xs text-text-secondary">{cat.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
 
-                <div>
-                  <label className="text-sm text-text-secondary block mb-2">
-                    Reminder (days before)
-                  </label>
-                  <div className="flex items-center gap-3">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-sm text-text-secondary block mb-2">Amount</label>
+                      <input
+                        type="number"
+                        value={formData.amount || ''}
+                        onChange={(e) =>
+                          setFormData({ ...formData, amount: Number(e.target.value) })
+                        }
+                        className="w-full bg-bg-primary/50 border border-border-subtle rounded-xl px-4 py-3 text-text-primary focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/50 transition-all"
+                        placeholder="199"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm text-text-secondary block mb-2">Billing Cycle</label>
+                      <select
+                        value={formData.billingCycle}
+                        onChange={(e) =>
+                          setFormData({ ...formData, billingCycle: e.target.value as BillingCycle })
+                        }
+                        className="w-full bg-bg-primary/50 border border-border-subtle rounded-xl px-4 py-3 text-text-primary focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/50 transition-all"
+                        required
+                      >
+                        {BILLING_CYCLES.map((cycle) => (
+                          <option key={cycle.value} value={cycle.value}>
+                            {cycle.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-sm text-text-secondary block mb-2">Next Billing Date</label>
+                    <input
+                      type="date"
+                      value={formData.nextBillingDate.toISOString().split('T')[0]}
+                      onChange={(e) => setFormData({ ...formData, nextBillingDate: new Date(e.target.value) })}
+                      className="w-full bg-bg-primary/50 border border-border-subtle rounded-xl px-4 py-3 text-text-primary focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/50 transition-all"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-sm text-text-secondary block mb-2">
+                      Reminder (days before): {formData.reminderDays}
+                    </label>
                     <input
                       type="range"
                       min="1"
@@ -634,37 +700,24 @@ export default function SubscriptionsPage() {
                       onChange={(e) =>
                         setFormData({ ...formData, reminderDays: Number(e.target.value) })
                       }
-                      className="flex-1"
+                      className="w-full accent-accent"
                     />
-                    <span className="text-sm text-text-primary w-8">{formData.reminderDays}</span>
                   </div>
-                </div>
 
-                <div>
-                  <label className="text-sm text-text-secondary block mb-2">Description (optional)</label>
-                  <textarea
-                    value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    className="w-full bg-bg-tertiary border border-white/10 rounded-input px-4 py-3 text-text-primary focus:border-accent-primary focus:outline-none resize-none"
-                    rows={3}
-                    placeholder="Any notes about this subscription..."
-                  />
-                </div>
-
-                <button
-                  type="submit"
-                  className="w-full py-3 bg-accent-primary text-bg-primary font-semibold rounded-button hover:bg-accent-secondary transition-colors"
-                >
-                  {editingSubscription ? 'Update Subscription' : 'Add Subscription'}
-                </button>
-              </form>
+                  <motion.button
+                    type="submit"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="w-full py-3.5 bg-gradient-to-r from-accent to-accent-secondary text-bg-primary font-semibold rounded-xl shadow-[0_0_20px_rgba(201,165,92,0.3)] hover:shadow-[0_0_30px_rgba(201,165,92,0.4)] transition-all"
+                  >
+                    {editingSubscription ? 'Update Subscription' : 'Add Subscription'}
+                  </motion.button>
+                </form>
+              </div>
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* Bottom Padding */}
-      <div className="h-20" />
     </div>
   )
 }
