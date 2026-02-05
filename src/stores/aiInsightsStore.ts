@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { db } from '@/lib/db'
 import type { Transaction, AIChatMessage } from '@/types'
-import { askFinancialQuestion } from '@/lib/ai/gemini'
+import { askFinancialQuestion, isGeminiConfigured } from '@/lib/ai/gemini'
 
 interface MonthlyData {
   month: string
@@ -479,6 +479,17 @@ async function processQuery(profileId: string, query: string): Promise<string> {
     .slice(0, 5)
     .map(([category, amount]) => ({ category, amount }))
 
+  // Check if Gemini is configured
+  if (!isGeminiConfigured()) {
+    // Try local processing first for basic queries
+    const localResponse = await processQueryLocally(profileId, query)
+    if (localResponse !== "I'm here to help analyze your finances. You can ask me about your spending, budget recommendations, unusual transactions, or upcoming bills.") {
+      return localResponse
+    }
+    // For complex queries without Gemini, provide helpful guidance
+    return "I'm running in basic mode without Gemini AI. I can answer simple questions about your spending, budgets, unusual transactions, and upcoming bills. For more intelligent responses, please add your Gemini API key in Settings > AI."
+  }
+
   // Use Gemini AI for intelligent responses
   try {
     const response = await askFinancialQuestion(query, {
@@ -491,7 +502,11 @@ async function processQuery(profileId: string, query: string): Promise<string> {
   } catch (error) {
     console.warn('Gemini query failed, using fallback:', error)
     // Fallback to local processing
-    return processQueryLocally(profileId, query)
+    const localResponse = await processQueryLocally(profileId, query)
+    if (localResponse !== "I'm here to help analyze your finances. You can ask me about your spending, budget recommendations, unusual transactions, or upcoming bills.") {
+      return localResponse
+    }
+    return "I couldn't connect to Gemini AI. Please check your API key in Settings > AI, or try asking about your spending, budgets, unusual transactions, or upcoming bills."
   }
 }
 

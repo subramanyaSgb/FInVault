@@ -12,9 +12,13 @@ import {
   Calendar,
   Bot,
   User,
+  Settings,
+  Zap,
 } from 'lucide-react'
+import Link from 'next/link'
 import { useAuthStore } from '@/stores/authStore'
 import { useAIInsightsStore } from '@/stores/aiInsightsStore'
+import { isGeminiConfigured } from '@/lib/ai/gemini'
 
 interface Insight {
   type: 'warning' | 'alert' | 'tip' | 'info'
@@ -47,7 +51,13 @@ export default function AIChatPage() {
   } = useAIInsightsStore()
   const [input, setInput] = useState('')
   const [insights, setInsights] = useState<Insight[]>([])
+  const [geminiActive, setGeminiActive] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+
+  // Check Gemini status
+  useEffect(() => {
+    setGeminiActive(isGeminiConfigured())
+  }, [currentProfile])
 
   const loadInsights = useCallback(async () => {
     if (!currentProfile) return
@@ -184,11 +194,52 @@ export default function AIChatPage() {
             </div>
             <div>
               <h1 className="text-lg font-semibold text-text-primary">FinVault AI</h1>
-              <p className="text-xs text-text-secondary">Your financial assistant</p>
+              <p className="text-xs text-text-secondary flex items-center gap-1">
+                {geminiActive ? (
+                  <>
+                    <Zap className="w-3 h-3 text-success" />
+                    <span className="text-success">Gemini Active</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="text-text-muted">Basic Mode</span>
+                  </>
+                )}
+              </p>
             </div>
           </motion.div>
         </div>
       </header>
+
+      {/* API Key Warning */}
+      {!geminiActive && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mx-4 mt-4 p-4 rounded-2xl bg-gradient-to-br from-warning/20 via-warning/10 to-transparent border border-warning/30"
+        >
+          <div className="flex items-start gap-3">
+            <div className="w-10 h-10 rounded-xl bg-warning/20 border border-warning/30 flex items-center justify-center flex-shrink-0">
+              <AlertTriangle className="w-5 h-5 text-warning" />
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-medium text-text-primary mb-1">
+                Limited AI Mode
+              </p>
+              <p className="text-xs text-text-secondary mb-3">
+                Add your Gemini API key for intelligent responses. Currently using basic pattern matching.
+              </p>
+              <Link
+                href="/settings"
+                className="inline-flex items-center gap-2 px-3 py-1.5 bg-warning/20 text-warning text-xs font-medium rounded-lg hover:bg-warning/30 transition-colors"
+              >
+                <Settings className="w-3.5 h-3.5" />
+                Configure in Settings
+              </Link>
+            </div>
+          </div>
+        </motion.div>
+      )}
 
       {/* Insights Cards */}
       {insights.length > 0 && (
@@ -363,7 +414,9 @@ export default function AIChatPage() {
           </button>
         </div>
         <p className="text-center text-xs text-text-tertiary mt-3">
-          AI analyzes your data locally. No information leaves your device.
+          {geminiActive
+            ? 'Powered by Google Gemini AI'
+            : 'Basic mode: Add Gemini API key in Settings for smart responses'}
         </p>
       </div>
     </div>
