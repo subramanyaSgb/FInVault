@@ -8,12 +8,25 @@ import {
   type NotificationItem,
 } from '@/lib/notifications'
 
+export interface Notification {
+  id: string
+  type: string
+  title: string
+  message: string
+  priority: 'high' | 'medium' | 'low'
+  read: boolean
+  createdAt: Date
+  actionUrl?: string
+}
+
 /**
  * Hook to manage notifications and reminders
  */
 export function useNotifications(daysAhead: number = 7) {
   const { currentProfile } = useAuthStore()
   const [reminders, setReminders] = useState<NotificationItem[]>([])
+  const [notifications, setNotifications] = useState<Notification[]>([])
+  const [readIds, setReadIds] = useState<Set<string>>(new Set())
   const [isLoading, setIsLoading] = useState(true)
   const [hasPermission, setHasPermission] = useState(false)
 
@@ -21,6 +34,7 @@ export function useNotifications(daysAhead: number = 7) {
   const loadReminders = useCallback(async () => {
     if (!currentProfile) {
       setReminders([])
+      setNotifications([])
       setIsLoading(false)
       return
     }
@@ -29,12 +43,67 @@ export function useNotifications(daysAhead: number = 7) {
     try {
       const items = await getAllReminders(currentProfile.id, daysAhead)
       setReminders(items)
+
+      // Convert reminders to notifications format
+      const notifs: Notification[] = items.map((item) => ({
+        id: item.id,
+        type: item.type,
+        title: item.title,
+        message: item.message,
+        priority: item.priority,
+        read: readIds.has(item.id),
+        createdAt: item.dueDate,
+        actionUrl: getActionUrl(item.type),
+      }))
+      setNotifications(notifs)
     } catch (error) {
       console.error('Failed to load reminders:', error)
     } finally {
       setIsLoading(false)
     }
-  }, [currentProfile, daysAhead])
+  }, [currentProfile, daysAhead, readIds])
+
+  // Get action URL based on notification type
+  const getActionUrl = (type: string): string => {
+    const urlMap: Record<string, string> = {
+      bill: '/transactions',
+      budget: '/budgets',
+      investment: '/investments',
+      insurance: '/insurance',
+      document: '/documents',
+      lend: '/lend-borrow',
+      subscription: '/subscriptions',
+      goal: '/goals',
+      card: '/credit-cards',
+    }
+    return urlMap[type] || '/dashboard'
+  }
+
+  // Mark single notification as read
+  const markAsRead = useCallback((id: string) => {
+    setReadIds((prev) => new Set(prev).add(id))
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === id ? { ...n, read: true } : n))
+    )
+  }, [])
+
+  // Mark all as read
+  const markAllAsRead = useCallback(() => {
+    const allIds = new Set(notifications.map((n) => n.id))
+    setReadIds(allIds)
+    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })))
+  }, [notifications])
+
+  // Delete single notification
+  const deleteNotification = useCallback((id: string) => {
+    setNotifications((prev) => prev.filter((n) => n.id !== id))
+  }, [])
+
+  // Clear all notifications
+  const clearAll = useCallback(() => {
+    setNotifications([])
+    setReadIds(new Set())
+  }, [])
 
   // Request notification permission
   const requestPermission = useCallback(async () => {
@@ -64,12 +133,13 @@ export function useNotifications(daysAhead: number = 7) {
   }, [currentProfile, hasPermission])
 
   // Count by priority
-  const highPriorityCount = reminders.filter(r => r.priority === 'high').length
-  const mediumPriorityCount = reminders.filter(r => r.priority === 'medium').length
-  const totalCount = reminders.length
+  const highPriorityCount = notifications.filter(r => r.priority === 'high' && !r.read).length
+  const mediumPriorityCount = notifications.filter(r => r.priority === 'medium' && !r.read).length
+  const totalCount = notifications.filter(r => !r.read).length
 
   return {
     reminders,
+    notifications,
     isLoading,
     hasPermission,
     highPriorityCount,
@@ -77,6 +147,10 @@ export function useNotifications(daysAhead: number = 7) {
     totalCount,
     loadReminders,
     requestPermission,
+    markAsRead,
+    markAllAsRead,
+    deleteNotification,
+    clearAll,
   }
 }
 

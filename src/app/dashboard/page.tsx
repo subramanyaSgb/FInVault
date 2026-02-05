@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Plus,
@@ -20,6 +21,7 @@ import {
   Bell,
   ChevronRight,
   PiggyBank,
+  LogOut,
 } from 'lucide-react'
 import { useNotifications } from '@/hooks/useNotifications'
 import Link from 'next/link'
@@ -27,7 +29,6 @@ import { useAuthStore } from '@/stores/authStore'
 import { db } from '@/lib/db'
 import type { Transaction } from '@/types'
 import { BottomNav } from '@/components/layouts/BottomNav'
-import { Logo } from '@/components/ui/Logo'
 
 interface DashboardSummary {
   netWorth: number
@@ -40,7 +41,8 @@ interface DashboardSummary {
 }
 
 export default function DashboardPage() {
-  const { currentProfile } = useAuthStore()
+  const router = useRouter()
+  const { currentProfile, logout } = useAuthStore()
   const [summary, setSummary] = useState<DashboardSummary>({
     netWorth: 0,
     totalAssets: 0,
@@ -162,22 +164,18 @@ export default function DashboardPage() {
     <div className="page-container pb-24">
       {/* Header */}
       <header className="sticky top-0 z-40 bg-bg-base/80 backdrop-blur-lg border-b border-border-subtle">
-        <div className="flex items-center justify-between px-4 py-3 pt-safe">
+        <div className="flex items-center justify-between px-4 py-4 pt-safe">
           <motion.div
-            className="flex items-center gap-3"
             initial={{ opacity: 0, x: -10 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.3 }}
           >
-            <Logo size="sm" />
-            <div>
-              <p className="text-xs text-accent font-medium tracking-wide uppercase">
-                {getGreeting()}
-              </p>
-              <h1 className="text-lg font-semibold text-text-primary mt-0.5">
-                {currentProfile?.name.split(' ')[0]}
-              </h1>
-            </div>
+            <p className="text-xs text-accent font-medium tracking-wide uppercase">
+              {getGreeting()}
+            </p>
+            <h1 className="text-xl font-semibold text-text-primary mt-0.5">
+              {currentProfile?.name.split(' ')[0]}
+            </h1>
           </motion.div>
 
           <motion.div
@@ -187,7 +185,7 @@ export default function DashboardPage() {
             transition={{ duration: 0.3 }}
           >
             <Link
-              href="/lend-borrow"
+              href="/notifications"
               className="relative p-2.5 rounded-xl bg-bg-secondary border border-border-subtle hover:border-border-default transition-colors"
             >
               <Bell className="w-5 h-5 text-text-secondary" />
@@ -201,12 +199,15 @@ export default function DashboardPage() {
                 </span>
               )}
             </Link>
-            <Link
-              href="/transactions/add"
-              className="p-2.5 rounded-xl bg-accent hover:bg-accent-light transition-colors shadow-glow"
+            <button
+              onClick={() => {
+                logout()
+                router.push('/')
+              }}
+              className="p-2.5 rounded-xl bg-bg-secondary border border-border-subtle hover:border-error/50 hover:bg-error-muted transition-colors"
             >
-              <Plus className="w-5 h-5 text-bg-base" />
-            </Link>
+              <LogOut className="w-5 h-5 text-text-secondary hover:text-error" />
+            </button>
           </motion.div>
         </div>
       </header>
