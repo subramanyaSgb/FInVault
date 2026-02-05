@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Lock, ArrowLeft, AlertCircle, Shield, Fingerprint, Delete } from 'lucide-react'
+import { ArrowLeft, AlertCircle, Fingerprint, Delete } from 'lucide-react'
 import { useAuthStore } from '@/stores/authStore'
 
 interface PINEntryProps {
@@ -16,21 +16,20 @@ const containerVariants = {
   visible: {
     opacity: 1,
     transition: {
-      staggerChildren: 0.05,
+      staggerChildren: 0.04,
       delayChildren: 0.1,
     },
   },
 }
 
 const itemVariants = {
-  hidden: { opacity: 0, y: 20, filter: 'blur(8px)' },
+  hidden: { opacity: 0, y: 16 },
   visible: {
     opacity: 1,
     y: 0,
-    filter: 'blur(0px)',
     transition: {
-      duration: 0.5,
-      ease: [0.16, 1, 0.3, 1],
+      duration: 0.4,
+      ease: [0.22, 1, 0.36, 1],
     },
   },
 }
@@ -52,12 +51,11 @@ export function PINEntry({ profileId, onSuccess, onBack }: PINEntryProps) {
 
       // Auto-submit when PIN is 4-6 digits
       if (value.length >= 4 && value.length <= 6) {
-        // Small delay to show the last digit
         setTimeout(() => {
           if (value.length >= 4) {
             handleSubmitWithPin(value)
           }
-        }, 200)
+        }, 150)
       }
     }
   }
@@ -82,93 +80,85 @@ export function PINEntry({ profileId, onSuccess, onBack }: PINEntryProps) {
   }
 
   const handleNumPress = (num: string) => {
-    if (pin.length < 6) {
+    if (pin.length < 6 && !isLoading) {
       handlePinInput(pin + num)
     }
   }
 
   return (
-    <div className="min-h-screen bg-[#030303] flex flex-col relative overflow-hidden">
-      {/* Animated background */}
+    <div className="min-h-screen bg-[#0A0A0A] flex flex-col relative overflow-hidden">
+      {/* Subtle ambient background */}
       <div className="absolute inset-0">
-        <motion.div
-          className="absolute top-20 right-0 w-72 h-72 rounded-full"
-          style={{
-            background: 'radial-gradient(circle, rgba(212,175,55,0.08) 0%, transparent 60%)',
-          }}
-          animate={{ scale: [1, 1.1, 1] }}
-          transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
-        />
-        <motion.div
-          className="absolute bottom-40 -left-20 w-64 h-64 rounded-full"
-          style={{
-            background: 'radial-gradient(circle, rgba(201,169,98,0.06) 0%, transparent 60%)',
-          }}
-          animate={{ scale: [1, 1.2, 1] }}
-          transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }}
-        />
-
-        {/* Grid pattern */}
         <div
-          className="absolute inset-0 opacity-[0.015]"
+          className="absolute top-0 left-0 right-0 h-[50vh]"
           style={{
-            backgroundImage: `linear-gradient(rgba(212,175,55,0.3) 1px, transparent 1px),
-                             linear-gradient(90deg, rgba(212,175,55,0.3) 1px, transparent 1px)`,
-            backgroundSize: '60px 60px',
+            background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(180,155,80,0.04) 0%, transparent 70%)',
+          }}
+        />
+        {/* Fine grain texture */}
+        <div
+          className="absolute inset-0 opacity-[0.4]"
+          style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
+            mixBlendMode: 'overlay',
           }}
         />
       </div>
 
       {/* Header */}
-      <div className="p-4 relative z-10">
+      <div className="p-6 relative z-10">
         <button
           onClick={onBack}
-          className="p-3 rounded-xl bg-[#141414] hover:bg-[#1a1a1a] border border-[#2a2a2a] transition-all duration-300"
+          className="p-3 rounded-xl bg-[#141414] hover:bg-[#1A1A1A] border border-[#1F1F1F] transition-colors"
         >
-          <ArrowLeft className="w-5 h-5 text-[#6B6B6B]" />
+          <ArrowLeft className="w-5 h-5 text-[#666666]" />
         </button>
       </div>
 
       {/* Content */}
       <motion.div
-        className="flex-1 px-6 flex flex-col items-center justify-center relative z-10"
+        className="flex-1 px-8 flex flex-col items-center justify-center relative z-10"
         initial="hidden"
         animate="visible"
         variants={containerVariants}
       >
-        <div className="w-full max-w-sm">
+        <div className="w-full max-w-xs">
           {/* Profile Info */}
-          <motion.div variants={itemVariants} className="text-center mb-8">
-            {profile?.avatar ? (
+          <motion.div variants={itemVariants} className="text-center mb-10">
+            {/* Avatar */}
+            {profile?.avatar && !profile.avatar.startsWith('data:image/svg') ? (
               <img
                 src={profile.avatar}
                 alt={profile.name}
-                className="w-24 h-24 rounded-2xl mx-auto mb-5 bg-[#1a1a1a] object-cover border-2 border-[#2a2a2a]"
+                className="w-20 h-20 rounded-full mx-auto mb-5 object-cover ring-2 ring-[#1F1F1F]"
               />
             ) : (
-              <motion.div
-                className="w-24 h-24 rounded-2xl bg-gradient-to-br from-[#D4AF37]/20 to-[#141414] flex items-center justify-center mx-auto mb-5 border border-[#D4AF37]/20"
-                animate={{ scale: [1, 1.02, 1] }}
-                transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-              >
-                <Shield className="w-12 h-12 text-[#D4AF37]" />
-              </motion.div>
+              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[#B49B50] to-[#8B7A3D] flex items-center justify-center mx-auto mb-5">
+                <span className="text-2xl font-medium text-[#0A0A0A]">
+                  {profile?.name.charAt(0).toUpperCase()}
+                </span>
+              </div>
             )}
-            <h2 className="text-2xl font-semibold text-white mb-1.5">{profile?.name}</h2>
-            <p className="text-[#6B6B6B] text-sm">Enter your PIN to unlock</p>
+            <h2
+              className="text-xl font-light text-[#FAFAFA] mb-1 tracking-wide"
+              style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}
+            >
+              {profile?.name}
+            </h2>
+            <p className="text-[13px] text-[#4A4A4A]">Enter PIN to unlock</p>
           </motion.div>
 
           {/* Error Message */}
           <AnimatePresence>
             {error && (
               <motion.div
-                initial={{ opacity: 0, y: -10, scale: 0.95 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                className="flex items-center gap-3 p-4 bg-red-500/10 rounded-xl mb-6 border border-red-500/20"
+                initial={{ opacity: 0, y: -8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                className="flex items-center gap-3 p-3 bg-red-500/10 rounded-xl mb-6 border border-red-500/15"
               >
-                <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0" />
-                <p className="text-sm text-red-400">{error}</p>
+                <AlertCircle className="w-4 h-4 text-red-400 flex-shrink-0" />
+                <p className="text-[12px] text-red-400">{error}</p>
               </motion.div>
             )}
           </AnimatePresence>
@@ -179,61 +169,51 @@ export function PINEntry({ profileId, onSuccess, onBack }: PINEntryProps) {
               {[0, 1, 2, 3, 4, 5].map((index) => (
                 <motion.div
                   key={index}
-                  className={`w-4 h-4 rounded-full transition-all duration-200 ${
+                  className={`w-3 h-3 rounded-full transition-all duration-150 ${
                     index < pin.length
-                      ? 'bg-[#D4AF37] shadow-[0_0_12px_rgba(212,175,55,0.5)]'
-                      : 'bg-[#2a2a2a]'
+                      ? 'bg-[#B49B50]'
+                      : 'bg-[#1F1F1F] border border-[#2A2A2A]'
                   }`}
-                  animate={index < pin.length ? { scale: [1, 1.2, 1] } : {}}
-                  transition={{ duration: 0.2 }}
+                  animate={index < pin.length ? { scale: [1, 1.3, 1] } : {}}
+                  transition={{ duration: 0.15 }}
                 />
               ))}
             </div>
-            <p className="text-center text-[#4a4a4a] text-xs mt-3">4-6 digit PIN</p>
           </motion.div>
 
           {/* Numpad */}
           <motion.div variants={itemVariants} className="grid grid-cols-3 gap-3 mb-6">
-            {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num, index) => (
+            {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
               <motion.button
                 key={num}
                 type="button"
                 onClick={() => handleNumPress(num.toString())}
-                whileTap={{ scale: 0.92 }}
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.2 + index * 0.03 }}
+                whileTap={{ scale: 0.95 }}
                 disabled={isLoading}
-                className="aspect-square rounded-2xl bg-[#141414] border border-[#2a2a2a] text-2xl font-semibold text-white hover:border-[#D4AF37]/40 hover:bg-[#1a1a1a] active:bg-[#D4AF37]/10 active:border-[#D4AF37]/60 transition-all duration-200 disabled:opacity-50"
+                className="aspect-square rounded-2xl bg-[#141414] border border-[#1F1F1F] text-xl font-light text-[#FAFAFA] hover:bg-[#1A1A1A] hover:border-[#2A2A2A] active:bg-[#B49B50]/10 active:border-[#B49B50]/30 transition-all duration-150 disabled:opacity-40"
               >
                 {num}
               </motion.button>
             ))}
 
-            {/* Biometric / Clear */}
+            {/* Biometric or Clear */}
             <motion.button
               type="button"
               onClick={() => setPin('')}
-              whileTap={{ scale: 0.92 }}
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.47 }}
+              whileTap={{ scale: 0.95 }}
               disabled={isLoading}
-              className="aspect-square rounded-2xl bg-[#141414] border border-[#2a2a2a] text-xs font-medium text-[#6B6B6B] hover:text-red-400 hover:border-red-400/30 active:bg-red-500/10 transition-all duration-200 disabled:opacity-50"
+              className="aspect-square rounded-2xl bg-[#141414] border border-[#1F1F1F] flex items-center justify-center text-[#4A4A4A] hover:text-red-400 hover:bg-red-500/5 hover:border-red-500/20 transition-all duration-150 disabled:opacity-40"
             >
-              Clear
+              <span className="text-[11px] font-medium tracking-wide">CLR</span>
             </motion.button>
 
             {/* 0 */}
             <motion.button
               type="button"
               onClick={() => handleNumPress('0')}
-              whileTap={{ scale: 0.92 }}
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.5 }}
+              whileTap={{ scale: 0.95 }}
               disabled={isLoading}
-              className="aspect-square rounded-2xl bg-[#141414] border border-[#2a2a2a] text-2xl font-semibold text-white hover:border-[#D4AF37]/40 hover:bg-[#1a1a1a] active:bg-[#D4AF37]/10 active:border-[#D4AF37]/60 transition-all duration-200 disabled:opacity-50"
+              className="aspect-square rounded-2xl bg-[#141414] border border-[#1F1F1F] text-xl font-light text-[#FAFAFA] hover:bg-[#1A1A1A] hover:border-[#2A2A2A] active:bg-[#B49B50]/10 active:border-[#B49B50]/30 transition-all duration-150 disabled:opacity-40"
             >
               0
             </motion.button>
@@ -242,48 +222,51 @@ export function PINEntry({ profileId, onSuccess, onBack }: PINEntryProps) {
             <motion.button
               type="button"
               onClick={() => setPin(pin.slice(0, -1))}
-              whileTap={{ scale: 0.92 }}
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.53 }}
+              whileTap={{ scale: 0.95 }}
               disabled={isLoading}
-              className="aspect-square rounded-2xl bg-[#141414] border border-[#2a2a2a] flex items-center justify-center text-[#6B6B6B] hover:text-white hover:border-[#3a3a3a] active:bg-[#1a1a1a] transition-all duration-200 disabled:opacity-50"
+              className="aspect-square rounded-2xl bg-[#141414] border border-[#1F1F1F] flex items-center justify-center text-[#4A4A4A] hover:text-[#FAFAFA] hover:bg-[#1A1A1A] transition-all duration-150 disabled:opacity-40"
             >
-              <Delete className="w-6 h-6" />
+              <Delete className="w-5 h-5" />
             </motion.button>
           </motion.div>
 
           {/* Loading indicator */}
-          {isLoading && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="flex items-center justify-center gap-3 py-4"
-            >
-              <div className="w-5 h-5 border-2 border-[#D4AF37]/30 border-t-[#D4AF37] rounded-full animate-spin" />
-              <span className="text-[#D4AF37] text-sm">Verifying...</span>
-            </motion.div>
-          )}
+          <AnimatePresence>
+            {isLoading && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="flex items-center justify-center gap-2 py-4"
+              >
+                <div className="w-4 h-4 border-2 border-[#B49B50]/30 border-t-[#B49B50] rounded-full animate-spin" />
+                <span className="text-[13px] text-[#666666]">Verifying</span>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Biometric Option */}
-          {profile?.biometricEnabled && (
+          {profile?.biometricEnabled && !isLoading && (
             <motion.button
               variants={itemVariants}
               type="button"
-              className="w-full py-4 flex items-center justify-center gap-3 rounded-2xl bg-[#141414] border border-[#2a2a2a] text-[#6B6B6B] hover:text-[#D4AF37] hover:border-[#D4AF37]/30 transition-all duration-300"
+              className="w-full py-3 flex items-center justify-center gap-2 rounded-xl border border-[#1F1F1F] text-[#4A4A4A] hover:text-[#B49B50] hover:border-[#B49B50]/30 transition-colors"
             >
               <Fingerprint className="w-5 h-5" />
-              <span className="text-sm font-medium">Use Biometric</span>
+              <span className="text-[13px]">Use Biometric</span>
             </motion.button>
           )}
 
-          {/* Security Note */}
+          {/* Security footer */}
           <motion.div
             variants={itemVariants}
-            className="flex items-center justify-center gap-2 mt-8 text-[#3a3a3a]"
+            className="flex items-center justify-center gap-2 mt-10"
           >
-            <Lock className="w-3.5 h-3.5" />
-            <p className="text-xs">Your data is encrypted with AES-256-GCM</p>
+            <div className="w-1 h-1 rounded-full bg-[#B49B50]" />
+            <p className="text-[10px] text-[#3A3A3A] tracking-[0.1em] uppercase">
+              AES-256 Encrypted
+            </p>
+            <div className="w-1 h-1 rounded-full bg-[#B49B50]" />
           </motion.div>
         </div>
       </motion.div>

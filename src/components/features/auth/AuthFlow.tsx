@@ -6,7 +6,6 @@ import { ProfileSelection } from './ProfileSelection'
 import { ProfileCreation } from './ProfileCreation'
 import { PINEntry } from './PINEntry'
 import { useAuthStore, initializeAuth } from '@/stores/authStore'
-import { Shield } from 'lucide-react'
 
 type AuthScreen = 'loading' | 'select' | 'create' | 'pin'
 
@@ -23,7 +22,8 @@ export function AuthFlow({ onAuthenticated }: AuthFlowProps) {
     const init = async () => {
       await initializeAuth()
       await loadProfiles()
-      setScreen('select')
+      // Minimum loading time for smooth transition
+      setTimeout(() => setScreen('select'), 800)
     }
 
     init()
@@ -65,69 +65,107 @@ export function AuthFlow({ onAuthenticated }: AuthFlowProps) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="min-h-screen bg-[#030303] flex items-center justify-center relative overflow-hidden"
+          transition={{ duration: 0.4 }}
+          className="min-h-screen bg-[#0A0A0A] flex items-center justify-center relative overflow-hidden"
         >
-          {/* Animated background */}
-          <div className="absolute inset-0">
-            <motion.div
-              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full"
-              style={{
-                background: 'radial-gradient(circle, rgba(212,175,55,0.15) 0%, transparent 60%)',
-              }}
-              animate={{
-                scale: [1, 1.2, 1],
-                opacity: [0.5, 0.8, 0.5],
-              }}
-              transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-            />
-          </div>
+          {/* Subtle ambient glow */}
+          <div
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px]"
+            style={{
+              background: 'radial-gradient(circle, rgba(180,155,80,0.08) 0%, transparent 60%)',
+            }}
+          />
 
           {/* Content */}
           <div className="text-center relative z-10">
-            {/* Logo with pulse */}
+            {/* Animated Logo */}
             <motion.div
-              className="relative inline-block mb-6"
-              animate={{ scale: [1, 1.05, 1] }}
-              transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+              className="relative mb-8"
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
             >
-              <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-[#1a1a1a] to-[#0d0d0d] border border-[#D4AF37]/30 flex items-center justify-center">
-                <Shield className="w-10 h-10 text-[#D4AF37]" />
+              <div className="w-20 h-20 rounded-2xl bg-gradient-to-b from-[#1A1A1A] to-[#111111] flex items-center justify-center border border-[#262626]">
+                {/* Vault door icon */}
+                <svg width="40" height="40" viewBox="0 0 48 48" fill="none" className="text-[#B49B50]">
+                  <motion.circle
+                    cx="24"
+                    cy="24"
+                    r="20"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    fill="none"
+                    initial={{ pathLength: 0 }}
+                    animate={{ pathLength: 1 }}
+                    transition={{ duration: 1.2, ease: 'easeOut' }}
+                  />
+                  <motion.circle
+                    cx="24"
+                    cy="24"
+                    r="12"
+                    stroke="currentColor"
+                    strokeWidth="1"
+                    fill="none"
+                    initial={{ pathLength: 0 }}
+                    animate={{ pathLength: 1 }}
+                    transition={{ duration: 1, delay: 0.2, ease: 'easeOut' }}
+                  />
+                  <motion.circle
+                    cx="24"
+                    cy="24"
+                    r="3"
+                    fill="currentColor"
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ duration: 0.3, delay: 0.6 }}
+                  />
+                </svg>
               </div>
 
-              {/* Spinning ring */}
+              {/* Loading indicator - subtle ring */}
               <motion.div
-                className="absolute -inset-2 rounded-3xl border-2 border-transparent"
-                style={{
-                  borderTopColor: '#D4AF37',
-                  borderRightColor: 'rgba(212,175,55,0.3)',
-                }}
-                animate={{ rotate: 360 }}
-                transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
+                className="absolute -inset-1 rounded-[22px] border border-[#B49B50]/20"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: [0, 1, 0] }}
+                transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
               />
             </motion.div>
 
             {/* Text */}
             <motion.h1
-              className="text-2xl font-display mb-2"
+              className="text-2xl font-light tracking-wide mb-2"
               style={{
-                background: 'linear-gradient(135deg, #D4AF37 0%, #F5E6A3 50%, #C9A962 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
+                fontFamily: "'Cormorant Garamond', Georgia, serif",
+                color: '#FAFAFA',
               }}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
+              transition={{ delay: 0.3, duration: 0.5 }}
             >
               FinVault
             </motion.h1>
-            <motion.p
-              className="text-[#4a4a4a] text-sm"
+
+            {/* Loading dots */}
+            <motion.div
+              className="flex items-center justify-center gap-1.5 mt-4"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.5 }}
             >
-              Initializing secure vault...
-            </motion.p>
+              {[0, 1, 2].map((i) => (
+                <motion.div
+                  key={i}
+                  className="w-1 h-1 rounded-full bg-[#B49B50]"
+                  animate={{ opacity: [0.3, 1, 0.3] }}
+                  transition={{
+                    duration: 1,
+                    repeat: Infinity,
+                    delay: i * 0.2,
+                    ease: 'easeInOut',
+                  }}
+                />
+              ))}
+            </motion.div>
           </div>
         </motion.div>
       )}
@@ -137,7 +175,8 @@ export function AuthFlow({ onAuthenticated }: AuthFlowProps) {
           key="select"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          exit={{ opacity: 0, x: -100 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.3 }}
         >
           <ProfileSelection onSelect={handleProfileSelect} onCreateNew={handleCreateNew} />
         </motion.div>
@@ -146,9 +185,10 @@ export function AuthFlow({ onAuthenticated }: AuthFlowProps) {
       {screen === 'create' && (
         <motion.div
           key="create"
-          initial={{ opacity: 0, x: 100 }}
+          initial={{ opacity: 0, x: 40 }}
           animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: -100 }}
+          exit={{ opacity: 0, x: -40 }}
+          transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
         >
           <ProfileCreation onComplete={handleProfileCreated} onBack={handleBackToSelect} />
         </motion.div>
@@ -157,9 +197,10 @@ export function AuthFlow({ onAuthenticated }: AuthFlowProps) {
       {screen === 'pin' && selectedProfileId && (
         <motion.div
           key="pin"
-          initial={{ opacity: 0, x: 100 }}
+          initial={{ opacity: 0, x: 40 }}
           animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: -100 }}
+          exit={{ opacity: 0, x: -40 }}
+          transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
         >
           <PINEntry
             profileId={selectedProfileId}

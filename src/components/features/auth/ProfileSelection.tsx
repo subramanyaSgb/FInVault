@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Shield, User, Trash2, ChevronRight, Plus, Lock, Sparkles } from 'lucide-react'
+import { User, Trash2, ChevronRight, Plus, Lock } from 'lucide-react'
 import { useAuthStore } from '@/stores/authStore'
 
 interface ProfileSelectionProps {
@@ -15,31 +15,21 @@ const containerVariants = {
   visible: {
     opacity: 1,
     transition: {
-      staggerChildren: 0.12,
-      delayChildren: 0.3,
+      staggerChildren: 0.1,
+      delayChildren: 0.2,
     },
   },
 }
 
 const itemVariants = {
-  hidden: { opacity: 0, y: 30, filter: 'blur(10px)' },
+  hidden: { opacity: 0, y: 20 },
   visible: {
     opacity: 1,
     y: 0,
-    filter: 'blur(0px)',
     transition: {
-      duration: 0.7,
-      ease: [0.16, 1, 0.3, 1],
+      duration: 0.6,
+      ease: [0.22, 1, 0.36, 1],
     },
-  },
-}
-
-const floatAnimation = {
-  y: [0, -8, 0],
-  transition: {
-    duration: 4,
-    ease: 'easeInOut',
-    repeat: Infinity,
   },
 }
 
@@ -64,49 +54,22 @@ export function ProfileSelection({ onSelect, onCreateNew }: ProfileSelectionProp
   }
 
   return (
-    <div className="min-h-screen bg-[#030303] flex flex-col relative overflow-hidden">
-      {/* Animated background layers */}
-      <div className="absolute inset-0 overflow-hidden">
-        {/* Primary gold glow - top */}
-        <motion.div
-          className="absolute -top-32 left-1/2 -translate-x-1/2 w-[500px] h-[500px] rounded-full"
-          style={{
-            background: 'radial-gradient(circle, rgba(212,175,55,0.15) 0%, rgba(212,175,55,0.05) 40%, transparent 70%)',
-          }}
-          animate={{
-            scale: [1, 1.1, 1],
-            opacity: [0.6, 0.8, 0.6],
-          }}
-          transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
-        />
-
-        {/* Secondary accent - bottom left */}
-        <motion.div
-          className="absolute -bottom-40 -left-40 w-80 h-80 rounded-full"
-          style={{
-            background: 'radial-gradient(circle, rgba(201,169,98,0.1) 0%, transparent 60%)',
-          }}
-          animate={{
-            scale: [1, 1.2, 1],
-          }}
-          transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }}
-        />
-
-        {/* Subtle grid pattern overlay */}
+    <div className="min-h-screen bg-[#0A0A0A] flex flex-col relative overflow-hidden">
+      {/* Refined ambient background */}
+      <div className="absolute inset-0">
+        {/* Subtle top gradient */}
         <div
-          className="absolute inset-0 opacity-[0.02]"
+          className="absolute top-0 left-0 right-0 h-[60vh]"
           style={{
-            backgroundImage: `linear-gradient(rgba(212,175,55,0.3) 1px, transparent 1px),
-                             linear-gradient(90deg, rgba(212,175,55,0.3) 1px, transparent 1px)`,
-            backgroundSize: '60px 60px',
+            background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(180,155,80,0.06) 0%, transparent 70%)',
           }}
         />
-
-        {/* Noise texture */}
+        {/* Fine grain texture */}
         <div
-          className="absolute inset-0 opacity-[0.015]"
+          className="absolute inset-0 opacity-[0.4]"
           style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
+            backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
+            mixBlendMode: 'overlay',
           }}
         />
       </div>
@@ -116,123 +79,124 @@ export function ProfileSelection({ onSelect, onCreateNew }: ProfileSelectionProp
         initial="hidden"
         animate="visible"
         variants={containerVariants}
-        className="relative z-10 flex-1 flex flex-col px-6 py-8 safe-area-inset"
+        className="relative z-10 flex-1 flex flex-col px-8 py-12 safe-area-inset"
       >
         {/* Logo Section */}
-        <motion.div variants={itemVariants} className="flex-1 flex flex-col items-center justify-center pt-8">
-          {/* Vault Logo */}
-          <motion.div className="relative mb-8" animate={floatAnimation}>
-            {/* Outer glow ring */}
-            <motion.div
-              className="absolute inset-0 rounded-[28px]"
-              style={{
-                background: 'linear-gradient(135deg, rgba(212,175,55,0.4) 0%, rgba(201,169,98,0.1) 100%)',
-                filter: 'blur(20px)',
-              }}
-              animate={{
-                opacity: [0.5, 0.8, 0.5],
-                scale: [1, 1.05, 1],
-              }}
-              transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-            />
-
-            {/* Main logo container */}
-            <div className="relative w-28 h-28 rounded-[28px] bg-gradient-to-br from-[#1a1a1a] to-[#0d0d0d] border border-[#D4AF37]/30 flex items-center justify-center overflow-hidden">
-              {/* Inner shine effect */}
+        <motion.div variants={itemVariants} className="flex-1 flex flex-col items-center justify-center">
+          {/* Monogram Logo */}
+          <motion.div
+            className="mb-10"
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <div className="relative">
+              {/* Logo container */}
+              <div className="w-24 h-24 rounded-[20px] bg-gradient-to-b from-[#1A1A1A] to-[#111111] flex items-center justify-center border border-[#262626] shadow-2xl">
+                {/* Vault door lines */}
+                <svg width="48" height="48" viewBox="0 0 48 48" fill="none" className="text-[#B49B50]">
+                  {/* Outer circle */}
+                  <circle cx="24" cy="24" r="20" stroke="currentColor" strokeWidth="1.5" fill="none" />
+                  {/* Inner circle */}
+                  <circle cx="24" cy="24" r="12" stroke="currentColor" strokeWidth="1" fill="none" />
+                  {/* Center dot */}
+                  <circle cx="24" cy="24" r="3" fill="currentColor" />
+                  {/* Cross lines */}
+                  <line x1="24" y1="4" x2="24" y2="12" stroke="currentColor" strokeWidth="1.5" />
+                  <line x1="24" y1="36" x2="24" y2="44" stroke="currentColor" strokeWidth="1.5" />
+                  <line x1="4" y1="24" x2="12" y2="24" stroke="currentColor" strokeWidth="1.5" />
+                  <line x1="36" y1="24" x2="44" y2="24" stroke="currentColor" strokeWidth="1.5" />
+                </svg>
+              </div>
+              {/* Subtle glow */}
               <div
-                className="absolute inset-0"
+                className="absolute inset-0 rounded-[20px] -z-10"
                 style={{
-                  background: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 50%)',
+                  background: 'radial-gradient(circle, rgba(180,155,80,0.15) 0%, transparent 70%)',
+                  transform: 'scale(1.5)',
+                  filter: 'blur(20px)',
                 }}
               />
-
-              {/* Shield icon */}
-              <Shield className="w-14 h-14 text-[#D4AF37]" strokeWidth={1.5} />
-
-              {/* Sparkle accent */}
-              <motion.div
-                className="absolute -top-1 -right-1 w-8 h-8 rounded-full bg-gradient-to-br from-[#D4AF37] to-[#C9A962] flex items-center justify-center shadow-lg"
-                animate={{
-                  scale: [1, 1.15, 1],
-                  rotate: [0, 5, -5, 0],
-                }}
-                transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
-              >
-                <Sparkles className="w-4 h-4 text-[#0a0a0a]" />
-              </motion.div>
             </div>
           </motion.div>
 
           {/* Title */}
-          <motion.div variants={itemVariants} className="text-center mb-4">
+          <motion.div variants={itemVariants} className="text-center mb-12">
             <h1
-              className="text-5xl font-display tracking-tight mb-3"
+              className="text-[42px] font-light tracking-[0.02em] mb-3"
               style={{
-                background: 'linear-gradient(135deg, #D4AF37 0%, #F5E6A3 50%, #C9A962 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                textShadow: '0 0 60px rgba(212,175,55,0.3)',
+                fontFamily: "'Cormorant Garamond', Georgia, serif",
+                color: '#FAFAFA',
               }}
             >
               FinVault
             </h1>
-            <p className="text-[#6B6B6B] text-base tracking-wide">
-              Privacy-first personal finance
+            <p
+              className="text-[13px] tracking-[0.2em] uppercase"
+              style={{ color: '#666666' }}
+            >
+              Private Finance Manager
             </p>
           </motion.div>
         </motion.div>
 
         {/* Profile Cards Section */}
-        <motion.div variants={itemVariants} className="space-y-3 mb-6">
+        <motion.div variants={itemVariants} className="space-y-3 mb-8">
           <AnimatePresence>
             {profiles.map((profile, index) => (
               <motion.button
                 key={profile.id}
-                initial={{ opacity: 0, x: -30, filter: 'blur(10px)' }}
-                animate={{ opacity: 1, x: 0, filter: 'blur(0px)' }}
-                exit={{ opacity: 0, x: 30, scale: 0.9 }}
-                transition={{ delay: index * 0.08, duration: 0.5 }}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ delay: index * 0.05, duration: 0.4 }}
                 onClick={() => onSelect(profile.id)}
-                className="w-full p-4 rounded-2xl bg-gradient-to-br from-[#141414] to-[#0a0a0a] border border-[#2a2a2a] hover:border-[#D4AF37]/40 transition-all duration-300 group relative overflow-hidden"
+                className="w-full group relative"
               >
-                {/* Hover glow effect */}
-                <div className="absolute inset-0 bg-gradient-to-r from-[#D4AF37]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                <div className="p-5 rounded-2xl bg-[#141414] border border-[#1F1F1F] hover:border-[#333333] transition-all duration-300">
+                  <div className="flex items-center gap-4">
+                    {/* Avatar */}
+                    {profile.avatar && !profile.avatar.startsWith('data:image/svg') ? (
+                      <img
+                        src={profile.avatar}
+                        alt={profile.name}
+                        className="w-12 h-12 rounded-full object-cover ring-2 ring-[#1F1F1F]"
+                      />
+                    ) : (
+                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#B49B50] to-[#8B7A3D] flex items-center justify-center">
+                        <span className="text-lg font-medium text-[#0A0A0A]">
+                          {profile.name.charAt(0).toUpperCase()}
+                        </span>
+                      </div>
+                    )}
 
-                <div className="flex items-center gap-4 relative z-10">
-                  {profile.avatar ? (
-                    <img
-                      src={profile.avatar}
-                      alt={profile.name}
-                      className="w-14 h-14 rounded-xl bg-[#1a1a1a] object-cover border border-[#2a2a2a]"
-                    />
-                  ) : (
-                    <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-[#D4AF37]/20 to-[#1a1a1a] flex items-center justify-center border border-[#D4AF37]/20">
-                      <User className="w-7 h-7 text-[#D4AF37]" />
+                    {/* Info */}
+                    <div className="flex-1 text-left">
+                      <h3 className="text-[16px] font-medium text-[#FAFAFA] tracking-wide">
+                        {profile.name}
+                      </h3>
+                      <div className="flex items-center gap-1.5 mt-1">
+                        <Lock className="w-3 h-3 text-[#4A4A4A]" />
+                        <span className="text-[12px] text-[#4A4A4A] tracking-wide">
+                          {profile.biometricEnabled ? 'Biometric + PIN' : 'PIN protected'}
+                        </span>
+                      </div>
                     </div>
-                  )}
-                  <div className="flex-1 text-left">
-                    <h3 className="font-semibold text-white text-lg group-hover:text-[#D4AF37] transition-colors">
-                      {profile.name}
-                    </h3>
-                    <div className="flex items-center gap-1.5 mt-0.5">
-                      <Lock className="w-3 h-3 text-[#4a4a4a]" />
-                      <p className="text-sm text-[#4a4a4a]">
-                        {profile.biometricEnabled ? 'Biometric + PIN' : 'PIN protected'}
-                      </p>
+
+                    {/* Arrow */}
+                    <div className="w-10 h-10 rounded-full bg-[#1A1A1A] flex items-center justify-center group-hover:bg-[#222222] transition-colors">
+                      <ChevronRight className="w-5 h-5 text-[#4A4A4A] group-hover:text-[#B49B50] transition-colors" />
                     </div>
-                  </div>
-                  <div className="w-10 h-10 rounded-xl bg-[#1a1a1a] flex items-center justify-center group-hover:bg-[#D4AF37]/10 transition-colors">
-                    <ChevronRight className="w-5 h-5 text-[#4a4a4a] group-hover:text-[#D4AF37] transition-colors" />
                   </div>
                 </div>
 
                 {/* Delete button */}
                 <button
                   onClick={(e) => handleDelete(profile.id, e)}
-                  className={`absolute top-2 right-2 p-2 rounded-lg transition-all duration-300 ${
+                  className={`absolute top-3 right-3 p-2 rounded-lg transition-all duration-200 ${
                     deleting === profile.id
-                      ? 'bg-red-500/20 text-red-400 scale-100'
-                      : 'bg-transparent text-[#3a3a3a] hover:text-red-400 scale-0 group-hover:scale-100'
+                      ? 'bg-red-500/15 text-red-400'
+                      : 'text-transparent group-hover:text-[#4A4A4A] hover:text-red-400 hover:bg-red-500/10'
                   }`}
                 >
                   <Trash2 className="w-4 h-4" />
@@ -241,45 +205,43 @@ export function ProfileSelection({ onSelect, onCreateNew }: ProfileSelectionProp
             ))}
           </AnimatePresence>
 
-          {/* Create New Profile Button */}
+          {/* Create New Profile */}
           <motion.button
             variants={itemVariants}
             onClick={onCreateNew}
-            className="w-full p-5 rounded-2xl border-2 border-dashed border-[#2a2a2a] hover:border-[#D4AF37]/50 hover:bg-[#D4AF37]/5 transition-all duration-300 group"
+            className="w-full p-5 rounded-2xl border border-dashed border-[#2A2A2A] hover:border-[#B49B50]/40 hover:bg-[#B49B50]/5 transition-all duration-300 group"
           >
             <div className="flex items-center justify-center gap-3">
-              <div className="w-12 h-12 rounded-xl bg-[#141414] flex items-center justify-center border border-[#2a2a2a] group-hover:border-[#D4AF37]/30 group-hover:bg-[#D4AF37]/10 transition-all">
-                <Plus className="w-6 h-6 text-[#4a4a4a] group-hover:text-[#D4AF37] transition-colors" />
+              <div className="w-10 h-10 rounded-full bg-[#1A1A1A] flex items-center justify-center group-hover:bg-[#B49B50]/10 transition-colors">
+                <Plus className="w-5 h-5 text-[#4A4A4A] group-hover:text-[#B49B50] transition-colors" />
               </div>
-              <span className="font-medium text-[#6B6B6B] group-hover:text-[#D4AF37] transition-colors">
+              <span className="text-[14px] text-[#666666] group-hover:text-[#B49B50] tracking-wide transition-colors">
                 Create New Profile
               </span>
             </div>
           </motion.button>
         </motion.div>
 
-        {/* Empty state */}
+        {/* Empty State */}
         {profiles.length === 0 && (
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 0.8 }}
-            className="text-[#D4AF37]/60 text-sm text-center mb-6"
+            transition={{ delay: 0.6 }}
+            className="text-[13px] text-[#4A4A4A] text-center mb-6"
           >
-            No profiles found. Create your first profile to get started.
+            Create your first profile to begin.
           </motion.p>
         )}
 
         {/* Footer */}
-        <motion.div
-          variants={itemVariants}
-          className="text-center pb-4"
-        >
-          <div className="flex items-center justify-center gap-2 text-[#3a3a3a]">
-            <Lock className="w-3.5 h-3.5" />
-            <p className="text-xs tracking-wide">
-              Your data is encrypted and stored locally on your device
+        <motion.div variants={itemVariants} className="text-center pb-4">
+          <div className="flex items-center justify-center gap-2">
+            <div className="w-1 h-1 rounded-full bg-[#B49B50]" />
+            <p className="text-[11px] text-[#3A3A3A] tracking-[0.1em] uppercase">
+              AES-256 Encrypted
             </p>
+            <div className="w-1 h-1 rounded-full bg-[#B49B50]" />
           </div>
         </motion.div>
       </motion.div>
