@@ -24,6 +24,8 @@ import {
   Loader2,
   CheckCircle,
   AlertCircle,
+  Navigation,
+  Check,
 } from 'lucide-react'
 import { useAuthStore } from '@/stores/authStore'
 import { useRouter } from 'next/navigation'
@@ -37,8 +39,9 @@ import {
   downloadFile,
   printReport,
 } from '@/lib/backup'
+import { allNavItems, defaultBottomNavItems } from '@/components/layouts/BottomNav'
 
-type SettingsSection = 'main' | 'profile' | 'security' | 'notifications' | 'appearance' | 'data' | 'about'
+type SettingsSection = 'main' | 'profile' | 'security' | 'notifications' | 'appearance' | 'navigation' | 'data' | 'about'
 
 const currencies = [
   { code: 'INR', symbol: '₹', name: 'Indian Rupee' },
@@ -282,6 +285,12 @@ export default function SettingsPage() {
           label="Appearance"
           description="Theme, currency, language"
           onClick={() => setSection('appearance')}
+        />
+        <MenuItem
+          icon={<Navigation className="w-5 h-5" />}
+          label="Navigation"
+          description="Customize bottom navigation"
+          onClick={() => setSection('navigation')}
         />
       </motion.div>
 
@@ -635,6 +644,139 @@ export default function SettingsPage() {
     </div>
   )
 
+  const renderNavigationSection = () => {
+    const currentNavItems = currentProfile.settings.bottomNavItems || defaultBottomNavItems
+    const maxItems = 4
+
+    const toggleNavItem = (itemId: string) => {
+      let newItems: string[]
+
+      if (currentNavItems.includes(itemId)) {
+        // Remove item
+        newItems = currentNavItems.filter(id => id !== itemId)
+      } else {
+        // Add item (if under max)
+        if (currentNavItems.length >= maxItems) {
+          // Replace the last item
+          newItems = [...currentNavItems.slice(0, maxItems - 1), itemId]
+        } else {
+          newItems = [...currentNavItems, itemId]
+        }
+      }
+
+      updateSettings({ bottomNavItems: newItems })
+    }
+
+    const moveItem = (itemId: string, direction: 'up' | 'down') => {
+      const index = currentNavItems.indexOf(itemId)
+      if (index === -1) return
+
+      const newIndex = direction === 'up' ? index - 1 : index + 1
+      if (newIndex < 0 || newIndex >= currentNavItems.length) return
+
+      const newItems = [...currentNavItems]
+      const temp = newItems[index]
+      newItems[index] = newItems[newIndex] as string
+      newItems[newIndex] = temp as string
+
+      updateSettings({ bottomNavItems: newItems })
+    }
+
+    return (
+      <div className="space-y-4">
+        {/* Info */}
+        <div className="bg-accent-alpha/30 rounded-card p-4 border border-accent-primary/20">
+          <p className="text-sm text-text-secondary">
+            <strong className="text-accent-primary">Tip:</strong> Select up to {maxItems} items to show in your bottom navigation bar.
+            Other items will appear in the &quot;More&quot; menu.
+          </p>
+        </div>
+
+        {/* Selected Items (Primary Nav) */}
+        <div className="bg-bg-secondary rounded-card p-4 border border-white/5">
+          <h4 className="font-semibold text-text-primary mb-4 flex items-center gap-2">
+            <Navigation className="w-5 h-5 text-accent-primary" />
+            Primary Navigation ({currentNavItems.length}/{maxItems})
+          </h4>
+          <div className="space-y-2">
+            {currentNavItems.map((itemId, index) => {
+              const item = allNavItems.find(nav => nav.id === itemId)
+              if (!item) return null
+              const Icon = item.icon
+
+              return (
+                <div
+                  key={item.id}
+                  className="flex items-center gap-3 p-3 bg-bg-tertiary rounded-lg border border-accent-primary/30"
+                >
+                  <Icon className="w-5 h-5 text-accent-primary" />
+                  <span className="flex-1 text-text-primary font-medium">{item.label}</span>
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => moveItem(item.id, 'up')}
+                      disabled={index === 0}
+                      className="p-1.5 rounded hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed"
+                    >
+                      <ArrowLeft className="w-4 h-4 text-text-tertiary rotate-90" />
+                    </button>
+                    <button
+                      onClick={() => moveItem(item.id, 'down')}
+                      disabled={index === currentNavItems.length - 1}
+                      className="p-1.5 rounded hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed"
+                    >
+                      <ArrowLeft className="w-4 h-4 text-text-tertiary -rotate-90" />
+                    </button>
+                    <button
+                      onClick={() => toggleNavItem(item.id)}
+                      className="p-1.5 rounded hover:bg-error/20 text-error"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+
+        {/* Available Items */}
+        <div className="bg-bg-secondary rounded-card p-4 border border-white/5">
+          <h4 className="font-semibold text-text-primary mb-4">Available Items</h4>
+          <div className="grid grid-cols-2 gap-2">
+            {allNavItems.map(item => {
+              const isSelected = currentNavItems.includes(item.id)
+              const Icon = item.icon
+
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => toggleNavItem(item.id)}
+                  className={`flex items-center gap-3 p-3 rounded-lg border transition-all ${
+                    isSelected
+                      ? 'border-accent-primary bg-accent-alpha text-accent-primary'
+                      : 'border-white/10 hover:bg-bg-tertiary text-text-secondary hover:text-text-primary'
+                  }`}
+                >
+                  <Icon className="w-5 h-5" />
+                  <span className="flex-1 text-left text-sm font-medium">{item.label}</span>
+                  {isSelected && <Check className="w-4 h-4" />}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+
+        {/* Reset Button */}
+        <button
+          onClick={() => updateSettings({ bottomNavItems: defaultBottomNavItems })}
+          className="w-full py-3 border border-white/10 text-text-secondary rounded-button hover:bg-bg-tertiary transition-colors"
+        >
+          Reset to Default
+        </button>
+      </div>
+    )
+  }
+
   const renderDataSection = () => (
     <div className="space-y-4">
       {/* Status Message */}
@@ -851,6 +993,8 @@ export default function SettingsPage() {
         return 'Notifications'
       case 'appearance':
         return 'Appearance'
+      case 'navigation':
+        return 'Navigation'
       case 'data':
         return 'Data Management'
       case 'about':
@@ -891,6 +1035,7 @@ export default function SettingsPage() {
             {section === 'security' && renderSecuritySection()}
             {section === 'notifications' && renderNotificationsSection()}
             {section === 'appearance' && renderAppearanceSection()}
+            {section === 'navigation' && renderNavigationSection()}
             {section === 'data' && renderDataSection()}
             {section === 'about' && renderAboutSection()}
           </motion.div>

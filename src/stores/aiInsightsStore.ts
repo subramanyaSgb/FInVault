@@ -2,6 +2,13 @@ import { create } from 'zustand'
 import { db } from '@/lib/db'
 import type { Transaction, AIChatMessage } from '@/types'
 
+interface MonthlyData {
+  month: string
+  income: number
+  expenses: number
+  savings: number
+}
+
 interface AIInsightsState {
   chatHistory: AIChatMessage[]
   isProcessing: boolean
@@ -17,6 +24,7 @@ interface AIInsightsState {
   getAnomalies: (profileId: string, days: number) => Promise<Anomaly[]>
   getBudgetRecommendations: (profileId: string) => Promise<BudgetRecommendation[]>
   predictBills: (profileId: string) => Promise<PredictedBill[]>
+  getMonthlyTrend: (profileId: string, months: number) => Promise<MonthlyData[]>
 }
 
 interface SpendingAnalysis {
@@ -387,6 +395,42 @@ export const useAIInsightsStore = create<AIInsightsState>()((set, get) => ({
     }
 
     return predictions.sort((a, b) => a.dueDate.getTime() - b.dueDate.getTime())
+  },
+
+  getMonthlyTrend: async (profileId, months) => {
+    const result: MonthlyData[] = []
+    const now = new Date()
+
+    for (let i = months - 1; i >= 0; i--) {
+      const date = new Date(now.getFullYear(), now.getMonth() - i, 1)
+      const startOfMonth = new Date(date.getFullYear(), date.getMonth(), 1)
+      const endOfMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0, 23, 59, 59)
+
+      const transactions = await db.transactions
+        .where('[profileId+date]')
+        .between([profileId, startOfMonth], [profileId, endOfMonth])
+        .toArray()
+
+      const income = transactions
+        .filter(tx => tx.type === 'income')
+        .reduce((sum, tx) => sum + tx.amount, 0)
+
+      const expenses = transactions
+        .filter(tx => tx.type === 'expense')
+        .reduce((sum, tx) => sum + tx.amount, 0)
+
+      const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+      const monthName = monthNames[date.getMonth()]
+
+      result.push({
+        month: monthName || date.toLocaleDateString('en-US', { month: 'short' }),
+        income,
+        expenses,
+        savings: income - expenses,
+      })
+    }
+
+    return result
   },
 }))
 

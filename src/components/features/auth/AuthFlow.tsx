@@ -6,6 +6,7 @@ import { ProfileSelection } from './ProfileSelection'
 import { ProfileCreation } from './ProfileCreation'
 import { PINEntry } from './PINEntry'
 import { useAuthStore, initializeAuth } from '@/stores/authStore'
+import { Shield } from 'lucide-react'
 
 type AuthScreen = 'loading' | 'select' | 'create' | 'pin'
 
@@ -53,7 +54,6 @@ export function AuthFlow({ onAuthenticated }: AuthFlowProps) {
   }
 
   const handleProfileCreated = () => {
-    // After profile creation, the user is already authenticated
     onAuthenticated()
   }
 
@@ -65,13 +65,69 @@ export function AuthFlow({ onAuthenticated }: AuthFlowProps) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="min-h-screen bg-bg-primary flex items-center justify-center"
+          className="min-h-screen bg-[#030303] flex items-center justify-center relative overflow-hidden"
         >
-          <div className="text-center">
-            <div className="w-16 h-16 rounded-full bg-accent-alpha flex items-center justify-center mx-auto mb-4">
-              <div className="w-8 h-8 border-2 border-accent-primary/30 border-t-accent-primary rounded-full animate-spin" />
-            </div>
-            <p className="text-text-secondary">Loading FinVault...</p>
+          {/* Animated background */}
+          <div className="absolute inset-0">
+            <motion.div
+              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full"
+              style={{
+                background: 'radial-gradient(circle, rgba(212,175,55,0.15) 0%, transparent 60%)',
+              }}
+              animate={{
+                scale: [1, 1.2, 1],
+                opacity: [0.5, 0.8, 0.5],
+              }}
+              transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+            />
+          </div>
+
+          {/* Content */}
+          <div className="text-center relative z-10">
+            {/* Logo with pulse */}
+            <motion.div
+              className="relative inline-block mb-6"
+              animate={{ scale: [1, 1.05, 1] }}
+              transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+            >
+              <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-[#1a1a1a] to-[#0d0d0d] border border-[#D4AF37]/30 flex items-center justify-center">
+                <Shield className="w-10 h-10 text-[#D4AF37]" />
+              </div>
+
+              {/* Spinning ring */}
+              <motion.div
+                className="absolute -inset-2 rounded-3xl border-2 border-transparent"
+                style={{
+                  borderTopColor: '#D4AF37',
+                  borderRightColor: 'rgba(212,175,55,0.3)',
+                }}
+                animate={{ rotate: 360 }}
+                transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
+              />
+            </motion.div>
+
+            {/* Text */}
+            <motion.h1
+              className="text-2xl font-display mb-2"
+              style={{
+                background: 'linear-gradient(135deg, #D4AF37 0%, #F5E6A3 50%, #C9A962 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+              }}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+            >
+              FinVault
+            </motion.h1>
+            <motion.p
+              className="text-[#4a4a4a] text-sm"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.5 }}
+            >
+              Initializing secure vault...
+            </motion.p>
           </div>
         </motion.div>
       )}

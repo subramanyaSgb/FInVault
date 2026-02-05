@@ -20,6 +20,8 @@ import {
   Gem,
   Bitcoin,
   BarChart3,
+  RefreshCw,
+  Clock,
 } from 'lucide-react'
 import { useInvestmentStore } from '@/stores/investmentStore'
 import { useAuthStore } from '@/stores/authStore'
@@ -60,10 +62,13 @@ export default function InvestmentsPage() {
   const {
     investments,
     isLoading,
+    isRefreshingPrices,
+    lastPriceRefresh,
     loadInvestments,
     createInvestment,
     updateInvestment,
     deleteInvestment,
+    refreshPrices,
     getPortfolioSummary,
     getAssetAllocation,
   } = useInvestmentStore()
@@ -80,6 +85,7 @@ export default function InvestmentsPage() {
   })
   const [assetAllocation, setAssetAllocation] = useState<{ type: string; value: number; percentage: number }[]>([])
   const [activeTab, setActiveTab] = useState<'all' | 'sip' | 'watchlist'>('all')
+  const [refreshMessage, setRefreshMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
   const [formData, setFormData] = useState<InvestmentFormData>({
     type: 'mutual_fund',
     name: '',
@@ -106,10 +112,53 @@ export default function InvestmentsPage() {
 
   const formatCurrency = (amount: number) => {
     if (!currentProfile) return ''
-    const symbol = currentProfile.settings.currency === 'INR' ? '₹' :
-                   currentProfile.settings.currency === 'USD' ? '$' :
-                   currentProfile.settings.currency === 'EUR' ? '€' : '₹'
+    const symbol =
+      currentProfile.settings.currency === 'INR'
+        ? '₹'
+        : currentProfile.settings.currency === 'USD'
+          ? '$'
+          : currentProfile.settings.currency === 'EUR'
+            ? '€'
+            : '₹'
     return `${symbol}${amount.toLocaleString('en-IN')}`
+  }
+
+  const formatLastUpdate = (date: Date | null) => {
+    if (!date) return null
+    const now = new Date()
+    const diff = Math.floor((now.getTime() - new Date(date).getTime()) / 1000 / 60)
+    if (diff < 1) return 'Just now'
+    if (diff < 60) return `${diff}m ago`
+    if (diff < 1440) return `${Math.floor(diff / 60)}h ago`
+    return `${Math.floor(diff / 1440)}d ago`
+  }
+
+  const handleRefreshPrices = async () => {
+    if (!currentProfile || isRefreshingPrices) return
+
+    setRefreshMessage(null)
+    const result = await refreshPrices(currentProfile.id)
+
+    if (result.updated > 0) {
+      setRefreshMessage({
+        type: 'success',
+        text: `Updated ${result.updated} investment${result.updated > 1 ? 's' : ''}`,
+      })
+      getPortfolioSummary(currentProfile.id).then(setPortfolioSummary)
+    } else if (result.failed > 0) {
+      setRefreshMessage({
+        type: 'error',
+        text: `Failed to fetch prices. ${result.errors[0] || ''}`,
+      })
+    } else {
+      setRefreshMessage({
+        type: 'error',
+        text: 'No investments with symbols to update',
+      })
+    }
+
+    // Clear message after 5 seconds
+    setTimeout(() => setRefreshMessage(null), 5000)
   }
 
   const filteredInvestments = useMemo(() => {
@@ -277,17 +326,54 @@ export default function InvestmentsPage() {
               <h1 className="text-lg font-semibold text-text-primary">Portfolio</h1>
             </div>
           </div>
-          <button
-            onClick={() => {
-              setEditingInvestment(null)
-              resetForm()
-              setShowAddModal(true)
-            }}
-            className="p-2 bg-accent-alpha rounded-full"
-          >
-            <Plus className="w-5 h-5 text-accent-primary" />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleRefreshPrices}
+              disabled={isRefreshingPrices}
+              className="p-2 hover:bg-bg-secondary rounded-full transition-colors disabled:opacity-50"
+              title="Refresh Prices"
+            >
+              <RefreshCw
+                className={`w-5 h-5 text-text-secondary ${isRefreshingPrices ? 'animate-spin' : ''}`}
+              />
+            </button>
+            <button
+              onClick={() => {
+                setEditingInvestment(null)
+                resetForm()
+                setShowAddModal(true)
+              }}
+              className="p-2 bg-accent-alpha rounded-full"
+            >
+              <Plus className="w-5 h-5 text-accent-primary" />
+            </button>
+          </div>
         </div>
+        {/* Refresh Status Bar */}
+        {(lastPriceRefresh || refreshMessage) && (
+          <div className="px-4 pb-2 flex items-center justify-between">
+            {lastPriceRefresh && (
+              <div className="flex items-center gap-1 text-xs text-text-tertiary">
+                <Clock className="w-3 h-3" />
+                <span>Updated {formatLastUpdate(lastPriceRefresh)}</span>
+              </div>
+            )}
+            {refreshMessage && (
+              <motion.div
+                initial={{ opacity: 0, x: 10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0 }}
+                className={`text-xs px-2 py-1 rounded ${
+                  refreshMessage.type === 'success'
+                    ? 'bg-success-bg text-success'
+                    : 'bg-error-bg text-error'
+                }`}
+              >
+                {refreshMessage.text}
+              </motion.div>
+            )}
+          </div>
+        )}
       </header>
 
       <main className="p-4 space-y-6">

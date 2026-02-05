@@ -37,6 +37,7 @@ export interface UserSettings {
   p2pSyncEnabled: boolean;
   autoLockTimeout: number;
   screenshotProtection: boolean;
+  bottomNavItems?: string[]; // IDs of nav items to show in primary bottom nav (max 4)
 }
 
 export interface SecuritySettings {
@@ -355,6 +356,7 @@ export interface Investment {
   goalIds?: string[];
   dividends: Dividend[];
   notes?: string;
+  lastPriceUpdate?: Date;
   createdAt: Date;
   updatedAt: Date;
 }

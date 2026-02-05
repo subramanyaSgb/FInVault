@@ -1,18 +1,33 @@
 import { create } from 'zustand'
 import { db } from '@/lib/db'
+import { fetchMultiplePrices, type PriceResult } from '@/lib/priceService'
 import type { Investment, Dividend } from '@/types'
+
+interface PriceRefreshResult {
+  updated: number
+  failed: number
+  errors: string[]
+}
 
 interface InvestmentState {
   investments: Investment[]
   isLoading: boolean
-  
+  isRefreshingPrices: boolean
+  lastPriceRefresh: Date | null
+
   // Actions
   loadInvestments: (profileId: string) => Promise<void>
-  createInvestment: (investment: Omit<Investment, 'id' | 'createdAt' | 'updatedAt'>) => Promise<Investment>
+  createInvestment: (
+    investment: Omit<Investment, 'id' | 'createdAt' | 'updatedAt'>
+  ) => Promise<Investment>
   updateInvestment: (id: string, updates: Partial<Investment>) => Promise<void>
   deleteInvestment: (id: string) => Promise<void>
   addDividend: (investmentId: string, dividend: Omit<Dividend, 'id'>) => Promise<void>
-  
+
+  // Price Refresh
+  refreshPrices: (profileId: string) => Promise<PriceRefreshResult>
+  refreshSinglePrice: (id: string) => Promise<PriceResult>
+
   // Analysis
   getPortfolioSummary: (profileId: string) => Promise<PortfolioSummary>
   getAssetAllocation: (profileId: string) => Promise<AssetAllocation[]>
@@ -37,6 +52,8 @@ interface AssetAllocation {
 export const useInvestmentStore = create<InvestmentState>()((set, get) => ({
   investments: [],
   isLoading: false,
+  isRefreshingPrices: false,
+  lastPriceRefresh: null,
 
   loadInvestments: async (profileId: string) => {
     const investments = await db.investments
@@ -97,20 +114,142 @@ export const useInvestmentStore = create<InvestmentState>()((set, get) => ({
     await get().loadInvestments(investment.profileId)
   },
 
+  refreshPrices: async (profileId: string): Promise<PriceRefreshResult> => {
+    set({ isRefreshingPrices: true })
+
+    const result: PriceRefreshResult = { updated: 0, failed: 0, errors: [] }
+
+    try {
+      const investments = await db.investments.where('profileId').equals(profileId).toArray()
+
+      // Filter investments that have symbols and can be price-fetched
+      const fetchableInvestments = investments.filter(
+        (inv) =>
+          (inv.symbol || inv.isin) &&
+          ['stock', 'stocks', 'equity', 'mutual_fund', 'mf', 'crypto', 'etf'].includes(
+            inv.type.toLowerCase()
+          )
+      )
+
+      if (fetchableInvestments.length === 0) {
+        set({ isRefreshingPrices: false })
+        return result
+      }
+
+      // Fetch prices for all investments
+      const priceResults = await fetchMultiplePrices(
+        fetchableInvestments.map((inv) => ({
+          id: inv.id,
+          type: inv.type,
+          symbol: inv.symbol,
+          isin: inv.isin,
+        }))
+      )
+
+      // Update each investment with new price
+      const now = new Date()
+      for (const [id, priceResult] of priceResults) {
+        if (priceResult.success && priceResult.data) {
+          const inv = fetchableInvestments.find((i) => i.id === id)
+          if (inv && inv.units) {
+            // Calculate new current value based on units and price
+            const newValue = inv.units * priceResult.data.price
+            await db.investments.update(id, {
+              currentValue: newValue,
+              nav: priceResult.data.price,
+              lastPriceUpdate: now,
+              updatedAt: now,
+            })
+            result.updated++
+          } else if (inv) {
+            // No units, just update NAV for reference
+            await db.investments.update(id, {
+              nav: priceResult.data.price,
+              lastPriceUpdate: now,
+              updatedAt: now,
+            })
+            result.updated++
+          }
+        } else {
+          result.failed++
+          if (priceResult.error) {
+            const inv = fetchableInvestments.find((i) => i.id === id)
+            result.errors.push(`${inv?.name || id}: ${priceResult.error}`)
+          }
+        }
+      }
+
+      // Reload investments
+      await get().loadInvestments(profileId)
+      set({ lastPriceRefresh: now, isRefreshingPrices: false })
+
+      return result
+    } catch (error) {
+      set({ isRefreshingPrices: false })
+      result.errors.push(error instanceof Error ? error.message : 'Unknown error')
+      return result
+    }
+  },
+
+  refreshSinglePrice: async (id: string): Promise<PriceResult> => {
+    const investment = await db.investments.get(id)
+    if (!investment) {
+      return { success: false, error: 'Investment not found' }
+    }
+
+    if (!investment.symbol && !investment.isin) {
+      return { success: false, error: 'No symbol or ISIN for price lookup' }
+    }
+
+    const { fetchInvestmentPrice } = await import('@/lib/priceService')
+    const result = await fetchInvestmentPrice(investment.type, investment.symbol, investment.isin)
+
+    if (result.success && result.data) {
+      const now = new Date()
+      const updates: Partial<Investment> = {
+        nav: result.data.price,
+        lastPriceUpdate: now,
+        updatedAt: now,
+      }
+
+      if (investment.units) {
+        updates.currentValue = investment.units * result.data.price
+      }
+
+      await db.investments.update(id, updates)
+      await get().loadInvestments(investment.profileId)
+    }
+
+    return result
+  },
+
   getPortfolioSummary: async (profileId: string) => {
-    const investments = await db.investments
-      .where('profileId')
-      .equals(profileId)
-      .toArray()
+    const investments = await db.investments.where('profileId').equals(profileId).toArray()
 
     const totalInvested = investments.reduce((sum, inv) => sum + inv.investedAmount, 0)
     const currentValue = investments.reduce((sum, inv) => sum + inv.currentValue, 0)
     const totalReturns = currentValue - totalInvested
     const returnsPercentage = totalInvested > 0 ? (totalReturns / totalInvested) * 100 : 0
 
-    // Mock day change (in real app, would fetch from API)
-    const dayChange = currentValue * 0.002 // 0.2% daily change
-    const dayChangePercentage = 0.2
+    // Calculate day change from price-refreshed investments
+    // If no price updates today, show 0
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+
+    let dayChange = 0
+    let dayChangePercentage = 0
+
+    const recentlyUpdated = investments.filter(
+      (inv) => inv.lastPriceUpdate && new Date(inv.lastPriceUpdate) >= today
+    )
+
+    if (recentlyUpdated.length > 0) {
+      // Estimate day change as small percentage of current value for recently updated
+      // In a real app, you'd track previous close prices
+      const updatedValue = recentlyUpdated.reduce((sum, inv) => sum + inv.currentValue, 0)
+      dayChange = updatedValue * 0.002 // Placeholder - real implementation would track previous prices
+      dayChangePercentage = currentValue > 0 ? (dayChange / currentValue) * 100 : 0
+    }
 
     return {
       totalInvested,

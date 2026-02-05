@@ -18,41 +18,73 @@ import {
   Calculator,
   HandCoins,
   Wallet,
+  BarChart3,
   LucideIcon,
 } from 'lucide-react'
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
+import { useAuthStore } from '@/stores/authStore'
 
-interface NavItem {
+export interface NavItem {
+  id: string
   icon: LucideIcon
   label: string
   href: string
 }
 
-const primaryNavItems: NavItem[] = [
-  { icon: Home, label: 'Home', href: '/dashboard' },
-  { icon: Receipt, label: 'Transactions', href: '/transactions' },
-  { icon: TrendingUp, label: 'Investments', href: '/investments' },
-  { icon: CreditCard, label: 'Cards', href: '/credit-cards' },
+// All available nav items with unique IDs
+export const allNavItems: NavItem[] = [
+  { id: 'dashboard', icon: Home, label: 'Home', href: '/dashboard' },
+  { id: 'transactions', icon: Receipt, label: 'Transactions', href: '/transactions' },
+  { id: 'investments', icon: TrendingUp, label: 'Investments', href: '/investments' },
+  { id: 'credit-cards', icon: CreditCard, label: 'Cards', href: '/credit-cards' },
+  { id: 'accounts', icon: Wallet, label: 'Accounts', href: '/accounts' },
+  { id: 'budgets', icon: Calculator, label: 'Budgets', href: '/budgets' },
+  { id: 'goals', icon: Target, label: 'Goals', href: '/goals' },
+  { id: 'loans', icon: PiggyBank, label: 'Loans', href: '/loans' },
+  { id: 'insurance', icon: Shield, label: 'Insurance', href: '/insurance' },
+  { id: 'documents', icon: FileText, label: 'Documents', href: '/documents' },
+  { id: 'subscriptions', icon: Receipt, label: 'Subscriptions', href: '/subscriptions' },
+  { id: 'lend-borrow', icon: HandCoins, label: 'Lend/Borrow', href: '/lend-borrow' },
+  { id: 'ai-chat', icon: MessageSquare, label: 'AI Chat', href: '/ai-chat' },
+  { id: 'reports', icon: BarChart3, label: 'Reports', href: '/reports' },
+  { id: 'fire', icon: Calculator, label: 'FIRE Calc', href: '/fire' },
+  { id: 'debt-payoff', icon: Calculator, label: 'Debt Payoff', href: '/debt-payoff' },
+  { id: 'settings', icon: Settings, label: 'Settings', href: '/settings' },
 ]
 
-const moreNavItems: NavItem[] = [
-  { icon: PiggyBank, label: 'Loans', href: '/loans' },
-  { icon: FileText, label: 'Documents', href: '/documents' },
-  { icon: Target, label: 'Goals', href: '/goals' },
-  { icon: Shield, label: 'Insurance', href: '/insurance' },
-  { icon: Wallet, label: 'Accounts', href: '/accounts' },
-  { icon: Calculator, label: 'Budgets', href: '/budgets' },
-  { icon: HandCoins, label: 'Lend/Borrow', href: '/lend-borrow' },
-  { icon: Receipt, label: 'Subscriptions', href: '/subscriptions' },
-  { icon: MessageSquare, label: 'AI Chat', href: '/ai-chat' },
-  { icon: Calculator, label: 'FIRE Calc', href: '/fire-calculator' },
-  { icon: Calculator, label: 'Debt Payoff', href: '/debt-payoff' },
-  { icon: Settings, label: 'Settings', href: '/settings' },
-]
+// Default primary nav items (shown in bottom bar)
+export const defaultBottomNavItems = ['dashboard', 'transactions', 'investments', 'credit-cards']
 
 const BottomNav = () => {
   const pathname = usePathname()
   const [showMore, setShowMore] = useState(false)
+  const { currentProfile } = useAuthStore()
+
+  // Get customized nav items from user settings or use defaults
+  const selectedNavIds = useMemo(() => {
+    return currentProfile?.settings?.bottomNavItems || defaultBottomNavItems
+  }, [currentProfile?.settings?.bottomNavItems])
+
+  // Split items into primary (bottom bar) and more (overlay menu)
+  const { primaryNavItems, moreNavItems } = useMemo(() => {
+    const primary: NavItem[] = []
+    const more: NavItem[] = []
+
+    // First add selected items in order
+    selectedNavIds.forEach(id => {
+      const item = allNavItems.find(nav => nav.id === id)
+      if (item) primary.push(item)
+    })
+
+    // Add remaining items to more menu
+    allNavItems.forEach(item => {
+      if (!selectedNavIds.includes(item.id)) {
+        more.push(item)
+      }
+    })
+
+    return { primaryNavItems: primary.slice(0, 4), moreNavItems: more }
+  }, [selectedNavIds])
 
   const isActive = (href: string) => {
     if (href === '/dashboard') return pathname === '/dashboard' || pathname === '/'
