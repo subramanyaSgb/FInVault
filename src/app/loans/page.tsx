@@ -20,6 +20,7 @@ import {
   Clock,
   CheckCircle2,
   AlertCircle,
+  Banknote,
 } from 'lucide-react'
 import { useLoanStore } from '@/stores/loanStore'
 import { useAuthStore } from '@/stores/authStore'
@@ -137,6 +138,24 @@ const LOAN_TYPES: { type: LoanType; label: string; icon: React.ReactNode }[] = [
   { type: 'other', label: 'Other', icon: <Wallet className="w-5 h-5" /> },
 ]
 
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.08 },
+  },
+}
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20, filter: 'blur(10px)' },
+  visible: {
+    opacity: 1,
+    y: 0,
+    filter: 'blur(0px)',
+    transition: { duration: 0.4 },
+  },
+}
+
 export default function LoansPage() {
   const { currentProfile } = useAuthStore()
   const {
@@ -192,7 +211,7 @@ export default function LoansPage() {
   const calculateEMI = (principal: number, rate: number, tenure: number) => {
     const monthlyRate = rate / 100 / 12
     if (monthlyRate === 0) return principal / tenure
-    const emi = principal * monthlyRate * Math.pow(1 + monthlyRate, tenure) / 
+    const emi = principal * monthlyRate * Math.pow(1 + monthlyRate, tenure) /
                 (Math.pow(1 + monthlyRate, tenure) - 1)
     return Math.round(emi)
   }
@@ -325,10 +344,10 @@ export default function LoansPage() {
     return (
       <div className="min-h-screen bg-bg-primary p-4">
         <div className="animate-pulse space-y-4">
-          <div className="h-32 bg-bg-secondary rounded-card" />
+          <div className="h-32 bg-bg-secondary rounded-2xl" />
           <div className="space-y-3">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="h-48 bg-bg-secondary rounded-card" />
+              <div key={i} className="h-48 bg-bg-secondary rounded-2xl" />
             ))}
           </div>
         </div>
@@ -337,11 +356,15 @@ export default function LoansPage() {
   }
 
   return (
-    <div className="min-h-screen bg-bg-primary">
-      {/* Header */}
-      <header className="sticky top-0 z-40 bg-bg-primary/80 backdrop-blur-md border-b border-white/5">
-        <div className="flex items-center justify-between p-4">
-          <div className="flex items-center gap-3">
+    <div className="min-h-screen bg-bg-primary pb-20">
+      {/* Premium Glass Header */}
+      <header className="sticky top-0 z-40 bg-bg-primary/60 backdrop-blur-xl border-b border-glass-border">
+        <div className="flex items-center justify-between px-4 py-4">
+          <motion.div
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="flex items-center gap-3"
+          >
             <button
               onClick={() => window.history.back()}
               className="p-2 hover:bg-bg-secondary rounded-full transition-colors"
@@ -349,529 +372,620 @@ export default function LoansPage() {
               <ArrowLeft className="w-5 h-5 text-text-secondary" />
             </button>
             <div>
-              <p className="text-xs text-text-tertiary uppercase tracking-wider">Loans</p>
-              <h1 className="text-lg font-semibold text-text-primary">Active Loans</h1>
+              <p className="text-xs text-accent font-medium tracking-wide uppercase">Loans</p>
+              <h1 className="text-xl font-semibold text-text-primary mt-0.5">Active Loans</h1>
             </div>
-          </div>
-          <div className="flex gap-2">
-            <button
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="flex gap-2"
+          >
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
               onClick={() => setShowEMICalculator(true)}
-              className="p-2 bg-bg-secondary rounded-full"
+              className="w-10 h-10 rounded-xl bg-info/20 border border-info/30 flex items-center justify-center hover:bg-info/30 transition-all"
             >
-              <Calculator className="w-5 h-5 text-accent-primary" />
-            </button>
-            <button
+              <Calculator className="w-5 h-5 text-info" />
+            </motion.button>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
               onClick={() => {
                 setEditingLoan(null)
                 resetForm()
                 setShowAddModal(true)
               }}
-              className="p-2 bg-accent-alpha rounded-full"
+              className="w-10 h-10 rounded-xl bg-accent/20 border border-accent/30 flex items-center justify-center hover:bg-accent/30 transition-all"
             >
-              <Plus className="w-5 h-5 text-accent-primary" />
-            </button>
-          </div>
+              <Plus className="w-5 h-5 text-accent" />
+            </motion.button>
+          </motion.div>
         </div>
       </header>
 
-      <main className="p-4 space-y-6">
-        {/* Total Summary */}
+      <motion.main
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+        className="p-4 space-y-6"
+      >
+        {/* Premium Summary Card */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-gradient-to-br from-bg-secondary to-bg-tertiary rounded-card p-6 border border-white/5"
+          variants={itemVariants}
+          className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-bg-secondary to-bg-tertiary border border-border-subtle p-5"
         >
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <p className="text-xs text-text-tertiary uppercase tracking-wider mb-1">
-                Total Outstanding
-              </p>
-              <p className="text-2xl font-bold text-error">{formatCurrency(totalOutstanding)}</p>
+          {/* Glow decorations */}
+          <div
+            className="absolute -top-20 -right-20 w-40 h-40 pointer-events-none"
+            style={{ background: 'radial-gradient(circle, rgba(239, 68, 68, 0.12) 0%, transparent 70%)' }}
+          />
+          <div
+            className="absolute -bottom-20 -left-20 w-40 h-40 pointer-events-none"
+            style={{ background: 'radial-gradient(circle, rgba(245, 158, 11, 0.08) 0%, transparent 70%)' }}
+          />
+
+          <div className="relative">
+            {/* Stats Grid */}
+            <div className="grid grid-cols-2 gap-4 mb-5">
+              <div className="relative overflow-hidden rounded-xl bg-bg-primary/40 border border-border-subtle p-4">
+                <div className="absolute -top-4 -right-4 w-10 h-10 bg-error/10 rounded-full blur-xl" />
+                <div className="w-10 h-10 rounded-lg bg-error/20 flex items-center justify-center mb-3">
+                  <Banknote className="w-5 h-5 text-error" />
+                </div>
+                <p className="text-[10px] text-text-muted uppercase tracking-wider mb-1">Total Outstanding</p>
+                <p className="text-2xl font-display font-bold text-error">{formatCurrency(totalOutstanding)}</p>
+              </div>
+
+              <div className="relative overflow-hidden rounded-xl bg-bg-primary/40 border border-border-subtle p-4">
+                <div className="absolute -top-4 -right-4 w-10 h-10 bg-warning/10 rounded-full blur-xl" />
+                <div className="w-10 h-10 rounded-lg bg-warning/20 flex items-center justify-center mb-3">
+                  <Calendar className="w-5 h-5 text-warning" />
+                </div>
+                <p className="text-[10px] text-text-muted uppercase tracking-wider mb-1">Monthly EMI</p>
+                <p className="text-2xl font-display font-bold text-warning">{formatCurrency(totalEMI)}</p>
+              </div>
             </div>
-            <div>
-              <p className="text-xs text-text-tertiary uppercase tracking-wider mb-1">
-                Monthly EMI
-              </p>
-              <p className="text-2xl font-bold text-warning">{formatCurrency(totalEMI)}</p>
-            </div>
-          </div>
-          <div className="mt-4 p-3 bg-accent-alpha rounded-lg">
-            <div className="flex items-center gap-2">
-              <Clock className="w-4 h-4 text-accent-primary" />
-              <span className="text-sm text-text-secondary">
-                Total monthly obligation:{' '}
-                <span className="text-accent-primary font-semibold">
-                  {formatCurrency(totalEMI)}
+
+            {/* Info banner */}
+            <div className="relative overflow-hidden rounded-xl bg-accent/10 border border-accent/20 p-4">
+              <div className="absolute -top-6 -right-6 w-12 h-12 bg-accent/20 rounded-full blur-xl" />
+              <div className="relative flex items-center gap-3">
+                <Clock className="w-5 h-5 text-accent" />
+                <span className="text-sm text-text-secondary">
+                  Total monthly obligation:{' '}
+                  <span className="text-accent font-semibold">
+                    {formatCurrency(totalEMI)}
+                  </span>
                 </span>
-              </span>
+              </div>
             </div>
           </div>
         </motion.div>
 
-        {/* EMI Calculator Card */}
+        {/* Premium EMI Calculator Card */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="bg-bg-secondary rounded-card p-5 border border-white/5 cursor-pointer"
+          variants={itemVariants}
+          className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-info/20 via-info/10 to-transparent border border-info/30 p-4 cursor-pointer transition-all duration-300 hover:border-info/50 hover:shadow-[0_0_20px_rgba(59,130,246,0.15)]"
           onClick={() => setShowEMICalculator(true)}
         >
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-full bg-accent-alpha flex items-center justify-center">
-              <Calculator className="w-6 h-6 text-accent-primary" />
+          <div className="absolute -top-10 -right-10 w-24 h-24 bg-info/20 rounded-full blur-2xl group-hover:bg-info/30 transition-colors" />
+          <div className="relative flex items-center gap-4">
+            <div className="w-12 h-12 rounded-xl bg-info/20 border border-info/30 flex items-center justify-center group-hover:scale-110 transition-transform">
+              <Calculator className="w-6 h-6 text-info" />
             </div>
             <div className="flex-1">
               <h3 className="font-semibold text-text-primary">EMI Calculator</h3>
-              <p className="text-sm text-text-secondary">
-                Calculate EMIs for any loan amount
-              </p>
+              <p className="text-sm text-text-secondary">Calculate EMIs for any loan amount</p>
             </div>
-            <ArrowLeft className="w-5 h-5 text-text-tertiary rotate-180" />
+            <ArrowLeft className="w-5 h-5 text-info rotate-180" />
           </div>
         </motion.div>
 
         {/* Loans List */}
-        <div className="space-y-4">
-          <h2 className="text-h4 font-semibold text-text-primary">Your Loans</h2>
+        <motion.div variants={itemVariants} className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-semibold text-text-primary uppercase tracking-wider">Your Loans</h3>
+            <span className="text-xs text-text-muted">{loans.length} loans</span>
+          </div>
+
           {loans.length === 0 ? (
-            <div className="text-center py-12 bg-bg-secondary rounded-card">
-              <Wallet className="w-12 h-12 text-text-tertiary mx-auto mb-4" />
-              <p className="text-text-secondary">No loans added yet</p>
-              <p className="text-sm text-text-tertiary mt-1">
-                Track your loans and EMIs here
-              </p>
-            </div>
-          ) : (
-            loans.map((loan, index) => {
-              const daysUntilEMI = getDaysUntilEMI(loan.emiDate)
-              const payoffDate = calculatePayoffDate(loan)
-              const progressPercentage = ((loan.principalAmount - loan.outstandingAmount) / loan.principalAmount) * 100
-
-              return (
-                <motion.div
-                  key={loan.id}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                  className="bg-bg-secondary rounded-card p-5 border border-white/5"
+            <motion.div
+              variants={itemVariants}
+              className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-bg-secondary to-bg-tertiary border border-border-subtle p-8 text-center"
+            >
+              <div
+                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 pointer-events-none"
+                style={{ background: 'radial-gradient(circle, rgba(201, 165, 92, 0.08) 0%, transparent 70%)' }}
+              />
+              <div className="relative">
+                <div className="w-16 h-16 rounded-2xl bg-accent/10 border border-accent/20 flex items-center justify-center mx-auto mb-4">
+                  <Wallet className="w-8 h-8 text-accent/60" />
+                </div>
+                <h3 className="text-lg font-semibold text-text-primary mb-2">No loans added yet</h3>
+                <p className="text-text-secondary text-sm mb-6">Track your loans and EMIs here</p>
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => {
+                    resetForm()
+                    setShowAddModal(true)
+                  }}
+                  className="px-6 py-3 bg-gradient-to-r from-accent to-accent-secondary text-bg-primary font-semibold rounded-xl shadow-[0_0_20px_rgba(201,165,92,0.3)] hover:shadow-[0_0_30px_rgba(201,165,92,0.4)] transition-all"
                 >
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 rounded-full bg-accent-alpha flex items-center justify-center">
-                        {getLoanIcon(loan.type)}
+                  Add Your First Loan
+                </motion.button>
+              </div>
+            </motion.div>
+          ) : (
+            <div className="space-y-3">
+              {loans.map((loan, index) => {
+                const daysUntilEMI = getDaysUntilEMI(loan.emiDate)
+                const payoffDate = calculatePayoffDate(loan)
+                const progressPercentage = ((loan.principalAmount - loan.outstandingAmount) / loan.principalAmount) * 100
+
+                return (
+                  <motion.div
+                    key={loan.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                    className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-bg-secondary to-bg-tertiary border border-border-subtle p-5 transition-all duration-300 hover:border-accent/30 hover:shadow-[0_0_15px_rgba(201,165,92,0.08)]"
+                  >
+                    {/* Hover glow */}
+                    <div className="absolute -top-10 -right-10 w-20 h-20 bg-accent/0 rounded-full blur-2xl group-hover:bg-accent/10 transition-all" />
+
+                    <div className="relative">
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-12 h-12 rounded-xl bg-accent/10 border border-accent/20 flex items-center justify-center text-accent group-hover:scale-110 transition-transform">
+                            {getLoanIcon(loan.type)}
+                          </div>
+                          <div>
+                            <h3 className="font-semibold text-text-primary">{getLoanLabel(loan.type)}</h3>
+                            <p className="text-sm text-text-secondary">{loan.lender}</p>
+                          </div>
+                        </div>
+                        <div className="flex gap-1">
+                          <button
+                            onClick={() => handleEdit(loan)}
+                            className="p-2 rounded-lg text-text-tertiary hover:text-accent hover:bg-accent/10 transition-colors"
+                          >
+                            <Edit2 className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(loan.id)}
+                            className="p-2 rounded-lg text-text-tertiary hover:text-error hover:bg-error/10 transition-colors"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
                       </div>
-                      <div>
-                        <h3 className="font-semibold text-text-primary">{getLoanLabel(loan.type)}</h3>
-                        <p className="text-sm text-text-secondary">{loan.lender}</p>
+
+                      {/* Loan Details */}
+                      <div className="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                          <p className="text-xs text-text-tertiary mb-1">Outstanding</p>
+                          <p className="text-xl font-semibold text-error">
+                            {formatCurrency(loan.outstandingAmount)}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-text-tertiary mb-1">Monthly EMI</p>
+                          <p className="text-xl font-semibold text-text-primary">
+                            {formatCurrency(loan.emiAmount)}
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                    <div className="flex gap-1">
-                      <button
-                        onClick={() => handleEdit(loan)}
-                        className="p-2 hover:bg-bg-tertiary rounded-full transition-colors"
-                      >
-                        <Edit2 className="w-4 h-4 text-text-secondary" />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(loan.id)}
-                        className="p-2 hover:bg-bg-tertiary rounded-full transition-colors"
-                      >
-                        <Trash2 className="w-4 h-4 text-error" />
-                      </button>
-                    </div>
-                  </div>
 
-                  {/* Loan Details */}
-                  <div className="grid grid-cols-2 gap-4 mb-4">
-                    <div>
-                      <p className="text-xs text-text-tertiary mb-1">Outstanding</p>
-                      <p className="text-lg font-semibold text-error">
-                        {formatCurrency(loan.outstandingAmount)}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-text-tertiary mb-1">Monthly EMI</p>
-                      <p className="text-lg font-semibold text-text-primary">
-                        {formatCurrency(loan.emiAmount)}
-                      </p>
-                    </div>
-                  </div>
+                      {/* Progress Bar */}
+                      <div className="mb-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-xs text-text-secondary">Repayment Progress</span>
+                          <span className="text-xs font-semibold text-success">
+                            {progressPercentage.toFixed(1)}%
+                          </span>
+                        </div>
+                        <div className="w-full h-2.5 bg-bg-primary/50 rounded-full overflow-hidden">
+                          <motion.div
+                            initial={{ width: 0 }}
+                            animate={{ width: `${progressPercentage}%` }}
+                            transition={{ duration: 0.6, ease: 'easeOut', delay: index * 0.05 }}
+                            className="h-full rounded-full bg-gradient-to-r from-success to-emerald-400"
+                            style={{ boxShadow: '0 0 10px rgba(34, 197, 94, 0.4)' }}
+                          />
+                        </div>
+                        <p className="text-xs text-text-tertiary mt-1.5">
+                          {formatCurrency(loan.principalAmount - loan.outstandingAmount)} paid of{' '}
+                          {formatCurrency(loan.principalAmount)}
+                        </p>
+                      </div>
 
-                  {/* Progress Bar */}
-                  <div className="mb-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs text-text-secondary">Repayment Progress</span>
-                      <span className="text-xs font-medium text-success">
-                        {progressPercentage.toFixed(1)}%
-                      </span>
-                    </div>
-                    <div className="w-full h-2 bg-bg-tertiary rounded-full overflow-hidden">
-                      <motion.div
-                        initial={{ width: 0 }}
-                        animate={{ width: `${progressPercentage}%` }}
-                        transition={{ duration: 0.5, ease: 'easeOut' }}
-                        className="h-full rounded-full bg-success"
-                      />
-                    </div>
-                    <p className="text-xs text-text-tertiary mt-1">
-                      {formatCurrency(loan.principalAmount - loan.outstandingAmount)} paid of{' '}
-                      {formatCurrency(loan.principalAmount)}
-                    </p>
-                  </div>
+                      {/* EMI & Payoff Info */}
+                      <div className="grid grid-cols-2 gap-3">
+                        <div
+                          className={`flex items-center gap-2 p-3 rounded-xl border ${
+                            daysUntilEMI <= 3
+                              ? 'bg-error/10 border-error/20'
+                              : 'bg-success/10 border-success/20'
+                          }`}
+                        >
+                          {daysUntilEMI <= 3 ? (
+                            <AlertCircle className="w-4 h-4 text-error" />
+                          ) : (
+                            <Calendar className="w-4 h-4 text-success" />
+                          )}
+                          <span
+                            className={`text-sm font-medium ${daysUntilEMI <= 3 ? 'text-error' : 'text-success'}`}
+                          >
+                            EMI in {daysUntilEMI} days
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2 p-3 rounded-xl bg-accent/10 border border-accent/20">
+                          <TrendingDown className="w-4 h-4 text-accent" />
+                          <span className="text-sm font-medium text-accent">
+                            Payoff by {payoffDate.toLocaleDateString('en-IN', { month: 'short', year: '2-digit' })}
+                          </span>
+                        </div>
+                      </div>
 
-                  {/* EMI & Payoff Info */}
-                  <div className="grid grid-cols-2 gap-3">
-                    <div
-                      className={`flex items-center gap-2 p-3 rounded-lg ${
-                        daysUntilEMI <= 3 ? 'bg-error-bg' : 'bg-success-bg'
-                      }`}
-                    >
-                      {daysUntilEMI <= 3 ? (
-                        <AlertCircle className="w-4 h-4 text-error" />
-                      ) : (
-                        <Calendar className="w-4 h-4 text-success" />
+                      {/* Prepayment Info */}
+                      {loan.prepayments.length > 0 && (
+                        <div className="mt-3 p-3 rounded-xl bg-success/10 border border-success/20">
+                          <div className="flex items-center gap-2">
+                            <CheckCircle2 className="w-4 h-4 text-success" />
+                            <span className="text-sm text-success font-medium">
+                              {loan.prepayments.length} prepayment(s) made
+                            </span>
+                          </div>
+                        </div>
                       )}
-                      <span
-                        className={`text-sm ${daysUntilEMI <= 3 ? 'text-error' : 'text-success'}`}
-                      >
-                        EMI in {daysUntilEMI} days
-                      </span>
                     </div>
-                    <div className="flex items-center gap-2 p-3 rounded-lg bg-accent-alpha">
-                      <TrendingDown className="w-4 h-4 text-accent-primary" />
-                      <span className="text-sm text-accent-primary">
-                        Payoff by {payoffDate.toLocaleDateString('en-IN', { month: 'short', year: '2-digit' })}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Prepayment Info */}
-                  {loan.prepayments.length > 0 && (
-                    <div className="mt-3 p-3 bg-bg-tertiary rounded-lg">
-                      <div className="flex items-center gap-2">
-                        <CheckCircle2 className="w-4 h-4 text-success" />
-                        <span className="text-sm text-text-secondary">
-                          {loan.prepayments.length} prepayment(s) made
-                        </span>
-                      </div>
-                    </div>
-                  )}
-                </motion.div>
-              )
-            })
+                  </motion.div>
+                )
+              })}
+            </div>
           )}
-        </div>
-      </main>
+        </motion.div>
+      </motion.main>
 
-      {/* Add/Edit Loan Modal */}
+      {/* Premium Add/Edit Loan Modal */}
       <AnimatePresence>
         {showAddModal && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-bg-primary/95 backdrop-blur-md flex items-center justify-center p-4"
+            className="fixed inset-0 z-50 bg-bg-primary/95 backdrop-blur-xl flex items-center justify-center p-4"
           >
             <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-bg-secondary rounded-card p-6 w-full max-w-md max-h-[90vh] overflow-y-auto"
+              initial={{ scale: 0.95, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 20 }}
+              className="relative overflow-hidden bg-gradient-to-br from-bg-secondary to-bg-tertiary rounded-2xl border border-border-subtle p-6 w-full max-w-md max-h-[90vh] overflow-y-auto"
             >
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-h4 font-semibold text-text-primary">
-                  {editingLoan ? 'Edit Loan' : 'Add Loan'}
-                </h2>
-                <button
-                  onClick={() => setShowAddModal(false)}
-                  className="p-2 hover:bg-bg-tertiary rounded-full transition-colors"
-                >
-                  <X className="w-5 h-5 text-text-secondary" />
-                </button>
-              </div>
+              {/* Modal glow decoration */}
+              <div
+                className="absolute -top-20 -right-20 w-40 h-40 pointer-events-none"
+                style={{ background: 'radial-gradient(circle, rgba(201, 165, 92, 0.1) 0%, transparent 70%)' }}
+              />
 
-              <form onSubmit={handleSubmit} className="space-y-4">
-                {/* Loan Type */}
-                <div>
-                  <label className="text-sm text-text-secondary block mb-2">Loan Type</label>
-                  <div className="grid grid-cols-3 gap-2">
-                    {LOAN_TYPES.map((lt) => (
-                      <button
-                        key={lt.type}
-                        type="button"
-                        onClick={() => setFormData({ ...formData, type: lt.type })}
-                        className={`flex flex-col items-center gap-1 p-3 rounded-xl border-2 transition-all ${
-                          formData.type === lt.type
-                            ? 'border-accent-primary bg-accent-primary/15 shadow-[0_0_12px_rgba(201,169,98,0.25)] scale-[1.02]'
-                            : 'border-white/10 hover:bg-bg-tertiary hover:border-white/20'
-                        }`}
-                      >
-                        <span className={formData.type === lt.type ? 'text-accent-primary' : 'text-text-tertiary'}>
-                          {lt.icon}
-                        </span>
-                        <span className={`text-xs font-medium transition-colors ${
-                          formData.type === lt.type ? 'text-accent-primary' : 'text-text-secondary'
-                        }`}>{lt.label}</span>
-                      </button>
-                    ))}
+              <div className="relative">
+                <div className="flex items-center justify-between mb-6">
+                  <div>
+                    <p className="text-xs text-accent font-medium tracking-wide uppercase">Loan</p>
+                    <h2 className="text-xl font-semibold text-text-primary mt-0.5">
+                      {editingLoan ? 'Edit Loan' : 'Add Loan'}
+                    </h2>
                   </div>
+                  <button
+                    onClick={() => setShowAddModal(false)}
+                    className="p-2 rounded-xl hover:bg-bg-tertiary transition-colors"
+                  >
+                    <X className="w-5 h-5 text-text-secondary" />
+                  </button>
                 </div>
 
-                <div>
-                  <label className="text-sm text-text-secondary block mb-2">Lender/Bank</label>
-                  <input
-                    type="text"
-                    value={formData.lender}
-                    onChange={(e) => setFormData({ ...formData, lender: e.target.value })}
-                    className="w-full bg-bg-tertiary border border-white/10 rounded-input px-4 py-3 text-text-primary focus:border-accent-primary focus:outline-none"
-                    placeholder="e.g., SBI Bank"
-                    required
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
+                <form onSubmit={handleSubmit} className="space-y-5">
+                  {/* Loan Type */}
                   <div>
-                    <label className="text-sm text-text-secondary block mb-2">Principal Amount</label>
-                    <input
-                      type="number"
-                      value={formData.principalAmount}
-                      onChange={(e) =>
-                        setFormData({ ...formData, principalAmount: Number(e.target.value) })
-                      }
-                      className="w-full bg-bg-tertiary border border-white/10 rounded-input px-4 py-3 text-text-primary focus:border-accent-primary focus:outline-none"
-                      placeholder="100000"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm text-text-secondary block mb-2">Outstanding</label>
-                    <input
-                      type="number"
-                      value={formData.outstandingAmount}
-                      onChange={(e) =>
-                        setFormData({ ...formData, outstandingAmount: Number(e.target.value) })
-                      }
-                      className="w-full bg-bg-tertiary border border-white/10 rounded-input px-4 py-3 text-text-primary focus:border-accent-primary focus:outline-none"
-                      placeholder="50000"
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-sm text-text-secondary block mb-2">Interest Rate (%)</label>
-                    <input
-                      type="number"
-                      step="0.1"
-                      value={formData.interestRate}
-                      onChange={(e) =>
-                        setFormData({ ...formData, interestRate: Number(e.target.value) })
-                      }
-                      className="w-full bg-bg-tertiary border border-white/10 rounded-input px-4 py-3 text-text-primary focus:border-accent-primary focus:outline-none"
-                      placeholder="10"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm text-text-secondary block mb-2">Tenure (months)</label>
-                    <input
-                      type="number"
-                      value={formData.tenure}
-                      onChange={(e) =>
-                        setFormData({ ...formData, tenure: Number(e.target.value) })
-                      }
-                      className="w-full bg-bg-tertiary border border-white/10 rounded-input px-4 py-3 text-text-primary focus:border-accent-primary focus:outline-none"
-                      placeholder="12"
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-sm text-text-secondary block mb-2">EMI Amount</label>
-                    <input
-                      type="number"
-                      value={formData.emiAmount}
-                      onChange={(e) =>
-                        setFormData({ ...formData, emiAmount: Number(e.target.value) })
-                      }
-                      className="w-full bg-bg-tertiary border border-white/10 rounded-input px-4 py-3 text-text-primary focus:border-accent-primary focus:outline-none"
-                      placeholder="5000"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm text-text-secondary block mb-2">EMI Date</label>
-                    <input
-                      type="number"
-                      min="1"
-                      max="31"
-                      value={formData.emiDate}
-                      onChange={(e) =>
-                        setFormData({ ...formData, emiDate: Number(e.target.value) })
-                      }
-                      className="w-full bg-bg-tertiary border border-white/10 rounded-input px-4 py-3 text-text-primary focus:border-accent-primary focus:outline-none"
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="text-sm text-text-secondary block mb-2">Start Date</label>
-                  <input
-                    type="date"
-                    value={formData.startDate.toISOString().split('T')[0]}
-                    onChange={(e) => setFormData({ ...formData, startDate: new Date(e.target.value) })}
-                    className="w-full bg-bg-tertiary border border-white/10 rounded-input px-4 py-3 text-text-primary focus:border-accent-primary focus:outline-none"
-                    required
-                  />
-                </div>
-
-                {/* Dynamic Type-Specific Fields */}
-                {loanTypeSpecificFields[formData.type]?.length > 0 && (
-                  <div className="pt-4 border-t border-white/10">
-                    <p className="text-xs text-accent-primary uppercase tracking-wider mb-4">
-                      {LOAN_TYPES.find(lt => lt.type === formData.type)?.label} Details
-                    </p>
-                    <div className="space-y-4">
-                      {loanTypeSpecificFields[formData.type].map((fieldConfig) => (
-                        <div key={fieldConfig.field}>
-                          <label className="text-sm text-text-secondary block mb-2">
-                            {fieldConfig.label}
-                          </label>
-                          {fieldConfig.type === 'select' ? (
-                            <select
-                              value={(formData[fieldConfig.field] as string) || ''}
-                              onChange={(e) =>
-                                setFormData({ ...formData, [fieldConfig.field]: e.target.value })
-                              }
-                              className="w-full bg-bg-tertiary border border-white/10 rounded-input px-4 py-3 text-text-primary focus:border-accent-primary focus:outline-none"
-                            >
-                              <option value="">{fieldConfig.placeholder}</option>
-                              {fieldConfig.options?.map((opt) => (
-                                <option key={opt} value={opt}>
-                                  {opt}
-                                </option>
-                              ))}
-                            </select>
-                          ) : (
-                            <input
-                              type={fieldConfig.type}
-                              value={(formData[fieldConfig.field] as string | number) || ''}
-                              onChange={(e) =>
-                                setFormData({
-                                  ...formData,
-                                  [fieldConfig.field]:
-                                    fieldConfig.type === 'number'
-                                      ? Number(e.target.value)
-                                      : e.target.value,
-                                })
-                              }
-                              className="w-full bg-bg-tertiary border border-white/10 rounded-input px-4 py-3 text-text-primary focus:border-accent-primary focus:outline-none"
-                              placeholder={fieldConfig.placeholder}
-                            />
-                          )}
-                        </div>
+                    <label className="text-sm text-text-secondary block mb-3">Loan Type</label>
+                    <div className="grid grid-cols-3 gap-2">
+                      {LOAN_TYPES.map((lt) => (
+                        <button
+                          key={lt.type}
+                          type="button"
+                          onClick={() => setFormData({ ...formData, type: lt.type })}
+                          className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border transition-all ${
+                            formData.type === lt.type
+                              ? 'border-accent bg-accent/10 scale-105 shadow-[0_0_12px_rgba(201,165,92,0.25)]'
+                              : 'border-border-subtle hover:bg-bg-tertiary hover:border-accent/30'
+                          }`}
+                        >
+                          <span className={formData.type === lt.type ? 'text-accent' : 'text-text-tertiary'}>
+                            {lt.icon}
+                          </span>
+                          <span className={`text-xs font-medium ${
+                            formData.type === lt.type ? 'text-accent' : 'text-text-secondary'
+                          }`}>{lt.label}</span>
+                        </button>
                       ))}
                     </div>
                   </div>
-                )}
 
-                <button
-                  type="submit"
-                  className="w-full py-3 bg-accent-primary text-bg-primary font-semibold rounded-button hover:bg-accent-secondary transition-colors"
-                >
-                  {editingLoan ? 'Update Loan' : 'Add Loan'}
-                </button>
-              </form>
+                  <div>
+                    <label className="text-sm text-text-secondary block mb-2">Lender/Bank</label>
+                    <input
+                      type="text"
+                      value={formData.lender}
+                      onChange={(e) => setFormData({ ...formData, lender: e.target.value })}
+                      className="w-full bg-bg-primary/50 border border-border-subtle rounded-xl px-4 py-3 text-text-primary focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/50 transition-all"
+                      placeholder="e.g., SBI Bank"
+                      required
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-sm text-text-secondary block mb-2">Principal Amount</label>
+                      <input
+                        type="number"
+                        value={formData.principalAmount || ''}
+                        onChange={(e) =>
+                          setFormData({ ...formData, principalAmount: Number(e.target.value) })
+                        }
+                        className="w-full bg-bg-primary/50 border border-border-subtle rounded-xl px-4 py-3 text-text-primary focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/50 transition-all"
+                        placeholder="100000"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm text-text-secondary block mb-2">Outstanding</label>
+                      <input
+                        type="number"
+                        value={formData.outstandingAmount || ''}
+                        onChange={(e) =>
+                          setFormData({ ...formData, outstandingAmount: Number(e.target.value) })
+                        }
+                        className="w-full bg-bg-primary/50 border border-border-subtle rounded-xl px-4 py-3 text-text-primary focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/50 transition-all"
+                        placeholder="50000"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-sm text-text-secondary block mb-2">Interest Rate (%)</label>
+                      <input
+                        type="number"
+                        step="0.1"
+                        value={formData.interestRate || ''}
+                        onChange={(e) =>
+                          setFormData({ ...formData, interestRate: Number(e.target.value) })
+                        }
+                        className="w-full bg-bg-primary/50 border border-border-subtle rounded-xl px-4 py-3 text-text-primary focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/50 transition-all"
+                        placeholder="10"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm text-text-secondary block mb-2">Tenure (months)</label>
+                      <input
+                        type="number"
+                        value={formData.tenure || ''}
+                        onChange={(e) =>
+                          setFormData({ ...formData, tenure: Number(e.target.value) })
+                        }
+                        className="w-full bg-bg-primary/50 border border-border-subtle rounded-xl px-4 py-3 text-text-primary focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/50 transition-all"
+                        placeholder="12"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-sm text-text-secondary block mb-2">EMI Amount</label>
+                      <input
+                        type="number"
+                        value={formData.emiAmount || ''}
+                        onChange={(e) =>
+                          setFormData({ ...formData, emiAmount: Number(e.target.value) })
+                        }
+                        className="w-full bg-bg-primary/50 border border-border-subtle rounded-xl px-4 py-3 text-text-primary focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/50 transition-all"
+                        placeholder="5000"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm text-text-secondary block mb-2">EMI Date</label>
+                      <input
+                        type="number"
+                        min="1"
+                        max="31"
+                        value={formData.emiDate || ''}
+                        onChange={(e) =>
+                          setFormData({ ...formData, emiDate: Number(e.target.value) })
+                        }
+                        className="w-full bg-bg-primary/50 border border-border-subtle rounded-xl px-4 py-3 text-text-primary focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/50 transition-all"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-sm text-text-secondary block mb-2">Start Date</label>
+                    <input
+                      type="date"
+                      value={formData.startDate.toISOString().split('T')[0]}
+                      onChange={(e) => setFormData({ ...formData, startDate: new Date(e.target.value) })}
+                      className="w-full bg-bg-primary/50 border border-border-subtle rounded-xl px-4 py-3 text-text-primary focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/50 transition-all"
+                      required
+                    />
+                  </div>
+
+                  {/* Dynamic Type-Specific Fields */}
+                  {loanTypeSpecificFields[formData.type]?.length > 0 && (
+                    <div className="pt-4 border-t border-border-subtle">
+                      <p className="text-xs text-accent uppercase tracking-wider mb-4 font-medium">
+                        {LOAN_TYPES.find(lt => lt.type === formData.type)?.label} Details
+                      </p>
+                      <div className="space-y-4">
+                        {loanTypeSpecificFields[formData.type].map((fieldConfig) => (
+                          <div key={fieldConfig.field}>
+                            <label className="text-sm text-text-secondary block mb-2">
+                              {fieldConfig.label}
+                            </label>
+                            {fieldConfig.type === 'select' ? (
+                              <select
+                                value={(formData[fieldConfig.field] as string) || ''}
+                                onChange={(e) =>
+                                  setFormData({ ...formData, [fieldConfig.field]: e.target.value })
+                                }
+                                className="w-full bg-bg-primary/50 border border-border-subtle rounded-xl px-4 py-3 text-text-primary focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/50 transition-all"
+                              >
+                                <option value="">{fieldConfig.placeholder}</option>
+                                {fieldConfig.options?.map((opt) => (
+                                  <option key={opt} value={opt}>
+                                    {opt}
+                                  </option>
+                                ))}
+                              </select>
+                            ) : (
+                              <input
+                                type={fieldConfig.type}
+                                value={(formData[fieldConfig.field] as string | number) || ''}
+                                onChange={(e) =>
+                                  setFormData({
+                                    ...formData,
+                                    [fieldConfig.field]:
+                                      fieldConfig.type === 'number'
+                                        ? Number(e.target.value)
+                                        : e.target.value,
+                                  })
+                                }
+                                className="w-full bg-bg-primary/50 border border-border-subtle rounded-xl px-4 py-3 text-text-primary focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/50 transition-all"
+                                placeholder={fieldConfig.placeholder}
+                              />
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <motion.button
+                    type="submit"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="w-full py-3.5 bg-gradient-to-r from-accent to-accent-secondary text-bg-primary font-semibold rounded-xl shadow-[0_0_20px_rgba(201,165,92,0.3)] hover:shadow-[0_0_30px_rgba(201,165,92,0.4)] transition-all"
+                  >
+                    {editingLoan ? 'Update Loan' : 'Add Loan'}
+                  </motion.button>
+                </form>
+              </div>
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* EMI Calculator Modal */}
+      {/* Premium EMI Calculator Modal */}
       <AnimatePresence>
         {showEMICalculator && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-bg-primary/95 backdrop-blur-md flex items-center justify-center p-4"
+            className="fixed inset-0 z-50 bg-bg-primary/95 backdrop-blur-xl flex items-center justify-center p-4"
           >
             <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-bg-secondary rounded-card p-6 w-full max-w-md"
+              initial={{ scale: 0.95, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 20 }}
+              className="relative overflow-hidden bg-gradient-to-br from-bg-secondary to-bg-tertiary rounded-2xl border border-border-subtle p-6 w-full max-w-md"
             >
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-h4 font-semibold text-text-primary">EMI Calculator</h2>
-                <button
-                  onClick={() => setShowEMICalculator(false)}
-                  className="p-2 hover:bg-bg-tertiary rounded-full transition-colors"
-                >
-                  <X className="w-5 h-5 text-text-secondary" />
-                </button>
-              </div>
+              {/* Modal glow decoration */}
+              <div
+                className="absolute -top-20 -right-20 w-40 h-40 pointer-events-none"
+                style={{ background: 'radial-gradient(circle, rgba(59, 130, 246, 0.1) 0%, transparent 70%)' }}
+              />
 
-              <div className="space-y-4">
-                <div>
-                  <label className="text-sm text-text-secondary block mb-2">Principal Amount</label>
-                  <input
-                    type="number"
-                    value={calculatorValues.principal}
-                    onChange={(e) =>
-                      setCalculatorValues({ ...calculatorValues, principal: Number(e.target.value) })
-                    }
-                    className="w-full bg-bg-tertiary border border-white/10 rounded-input px-4 py-3 text-text-primary focus:border-accent-primary focus:outline-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-sm text-text-secondary block mb-2">Interest Rate (% per annum)</label>
-                  <input
-                    type="number"
-                    step="0.1"
-                    value={calculatorValues.rate}
-                    onChange={(e) =>
-                      setCalculatorValues({ ...calculatorValues, rate: Number(e.target.value) })
-                    }
-                    className="w-full bg-bg-tertiary border border-white/10 rounded-input px-4 py-3 text-text-primary focus:border-accent-primary focus:outline-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-sm text-text-secondary block mb-2">Tenure (months)</label>
-                  <input
-                    type="number"
-                    value={calculatorValues.tenure}
-                    onChange={(e) =>
-                      setCalculatorValues({ ...calculatorValues, tenure: Number(e.target.value) })
-                    }
-                    className="w-full bg-bg-tertiary border border-white/10 rounded-input px-4 py-3 text-text-primary focus:border-accent-primary focus:outline-none"
-                  />
-                </div>
-
-                {/* Results */}
-                <div className="mt-6 p-4 bg-accent-alpha rounded-lg">
-                  <div className="text-center mb-4">
-                    <p className="text-sm text-text-secondary mb-1">Monthly EMI</p>
-                    <p className="text-3xl font-bold text-accent-primary">
-                      {formatCurrency(calculatedEMI)}
-                    </p>
+              <div className="relative">
+                <div className="flex items-center justify-between mb-6">
+                  <div>
+                    <p className="text-xs text-info font-medium tracking-wide uppercase">Calculator</p>
+                    <h2 className="text-xl font-semibold text-text-primary mt-0.5">EMI Calculator</h2>
                   </div>
-                  <div className="grid grid-cols-2 gap-4 pt-4 border-t border-white/10">
-                    <div>
-                      <p className="text-xs text-text-tertiary">Total Interest</p>
-                      <p className="text-lg font-semibold text-warning">{formatCurrency(totalInterest)}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-text-tertiary">Total Payment</p>
-                      <p className="text-lg font-semibold text-text-primary">
-                        {formatCurrency(calculatedEMI * calculatorValues.tenure)}
-                      </p>
+                  <button
+                    onClick={() => setShowEMICalculator(false)}
+                    className="p-2 rounded-xl hover:bg-bg-tertiary transition-colors"
+                  >
+                    <X className="w-5 h-5 text-text-secondary" />
+                  </button>
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-sm text-text-secondary block mb-2">Principal Amount</label>
+                    <input
+                      type="number"
+                      value={calculatorValues.principal}
+                      onChange={(e) =>
+                        setCalculatorValues({ ...calculatorValues, principal: Number(e.target.value) })
+                      }
+                      className="w-full bg-bg-primary/50 border border-border-subtle rounded-xl px-4 py-3 text-text-primary focus:border-info focus:outline-none focus:ring-1 focus:ring-info/50 transition-all"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-sm text-text-secondary block mb-2">Interest Rate (% per annum)</label>
+                    <input
+                      type="number"
+                      step="0.1"
+                      value={calculatorValues.rate}
+                      onChange={(e) =>
+                        setCalculatorValues({ ...calculatorValues, rate: Number(e.target.value) })
+                      }
+                      className="w-full bg-bg-primary/50 border border-border-subtle rounded-xl px-4 py-3 text-text-primary focus:border-info focus:outline-none focus:ring-1 focus:ring-info/50 transition-all"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-sm text-text-secondary block mb-2">Tenure (months)</label>
+                    <input
+                      type="number"
+                      value={calculatorValues.tenure}
+                      onChange={(e) =>
+                        setCalculatorValues({ ...calculatorValues, tenure: Number(e.target.value) })
+                      }
+                      className="w-full bg-bg-primary/50 border border-border-subtle rounded-xl px-4 py-3 text-text-primary focus:border-info focus:outline-none focus:ring-1 focus:ring-info/50 transition-all"
+                    />
+                  </div>
+
+                  {/* Results */}
+                  <div className="relative overflow-hidden rounded-xl bg-info/10 border border-info/20 p-5 mt-6">
+                    <div className="absolute -top-10 -right-10 w-20 h-20 bg-info/20 rounded-full blur-xl" />
+                    <div className="relative">
+                      <div className="text-center mb-5">
+                        <p className="text-sm text-text-secondary mb-1">Monthly EMI</p>
+                        <p className="text-4xl font-display font-bold text-info">
+                          {formatCurrency(calculatedEMI)}
+                        </p>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4 pt-4 border-t border-info/20">
+                        <div>
+                          <p className="text-xs text-text-tertiary uppercase tracking-wider mb-1">Total Interest</p>
+                          <p className="text-lg font-semibold text-warning">{formatCurrency(totalInterest)}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-text-tertiary uppercase tracking-wider mb-1">Total Payment</p>
+                          <p className="text-lg font-semibold text-text-primary">
+                            {formatCurrency(calculatedEMI * calculatorValues.tenure)}
+                          </p>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -880,9 +994,6 @@ export default function LoansPage() {
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* Bottom Padding */}
-      <div className="h-20" />
     </div>
   )
 }

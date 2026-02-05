@@ -12,6 +12,7 @@ import {
   TrendingUp,
   TrendingDown,
   Wallet,
+  ArrowUpRight,
 } from 'lucide-react'
 import { format, isSameDay } from 'date-fns'
 import { useTransactionStore } from '@/stores/transactionStore'
@@ -30,6 +31,16 @@ interface GroupedTransactions {
   transactions: Transaction[]
   totalIncome: number
   totalExpense: number
+}
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { staggerChildren: 0.05 } }
+}
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 15, filter: 'blur(8px)' },
+  visible: { opacity: 1, y: 0, filter: 'blur(0px)', transition: { duration: 0.3 } }
 }
 
 export default function TransactionsPage() {
@@ -223,23 +234,31 @@ export default function TransactionsPage() {
 
   return (
     <ProtectedRoute>
-      <div className="page-container pb-24">
-        {/* Header */}
-        <header className="sticky top-0 z-40 bg-bg-base/80 backdrop-blur-lg border-b border-border-subtle">
-          <div className="flex items-center justify-between px-4 py-3 pt-safe">
-            <div>
-              <h1 className="text-lg font-semibold text-text-primary">Transactions</h1>
-              <p className="text-xs text-text-muted mt-0.5">{stats.totalCount} total</p>
-            </div>
+      <div className="min-h-screen bg-bg-primary pb-24">
+        {/* Premium Glass Header */}
+        <header className="sticky top-0 z-40 bg-bg-primary/60 backdrop-blur-xl border-b border-glass-border">
+          <div className="flex items-center justify-between px-4 py-4">
+            <motion.div
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              <p className="text-xs text-accent font-medium tracking-wide uppercase">Finance</p>
+              <h1 className="text-xl font-semibold text-text-primary mt-0.5">Transactions</h1>
+            </motion.div>
 
-            <div className="flex items-center gap-2">
+            <motion.div
+              initial={{ opacity: 0, x: 10 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="flex items-center gap-2"
+            >
               {isSelectionMode ? (
                 <>
-                  <span className="text-xs text-text-secondary">{selectedTransactions.size} selected</span>
+                  <span className="text-xs text-text-secondary px-2">{selectedTransactions.size} selected</span>
                   <button
                     onClick={handleBulkDelete}
                     disabled={selectedTransactions.size === 0}
-                    className="p-2 text-error hover:bg-error-muted rounded-lg transition-colors disabled:opacity-50"
+                    className="p-2.5 text-error hover:bg-error/10 rounded-xl border border-error/30 transition-colors disabled:opacity-50"
                   >
                     <Trash2 className="w-5 h-5" />
                   </button>
@@ -248,7 +267,7 @@ export default function TransactionsPage() {
                       setSelectedTransactions(new Set())
                       setIsSelectionMode(false)
                     }}
-                    className="p-2 text-text-secondary hover:text-text-primary rounded-lg hover:bg-surface-2 transition-colors"
+                    className="p-2.5 text-text-secondary hover:text-text-primary rounded-xl hover:bg-bg-tertiary border border-glass-border transition-colors"
                   >
                     <X className="w-5 h-5" />
                   </button>
@@ -258,60 +277,73 @@ export default function TransactionsPage() {
                   <button
                     onClick={handleRefresh}
                     disabled={isRefreshing}
-                    className="p-2 text-text-secondary hover:text-text-primary rounded-lg hover:bg-surface-2 transition-colors"
+                    className="p-2.5 text-text-secondary hover:text-accent rounded-xl hover:bg-accent/10 border border-glass-border transition-all duration-300"
                   >
                     <RefreshCw className={`w-5 h-5 ${isRefreshing ? 'animate-spin' : ''}`} />
                   </button>
                   <button
                     onClick={() => router.push('/transactions/add')}
-                    className="btn-primary py-2 px-3"
+                    className="flex items-center gap-1.5 px-4 py-2.5 bg-accent/20 hover:bg-accent/30 text-accent font-medium rounded-xl border border-accent/30 transition-all duration-300"
                   >
                     <Plus className="w-4 h-4" />
                     <span className="hidden sm:inline">Add</span>
                   </button>
                 </>
               )}
-            </div>
+            </motion.div>
           </div>
 
-          {/* Stats Cards */}
-          <div className="flex gap-2 px-4 pb-3">
-            <div className="flex-1 card p-3">
-              <div className="flex items-center gap-2 mb-1">
-                <div className="w-6 h-6 rounded-md bg-success-muted flex items-center justify-center">
-                  <TrendingUp className="w-3 h-3 text-success" />
+          {/* Premium Stats Cards */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="grid grid-cols-3 gap-2 px-4 pb-4"
+          >
+            {/* Income Card */}
+            <div className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-success/15 via-success/10 to-transparent border border-success/20 p-3 transition-all duration-300 hover:border-success/40">
+              <div className="absolute -top-4 -right-4 w-10 h-10 bg-success/20 rounded-full blur-xl group-hover:bg-success/30 transition-colors" />
+              <div className="relative">
+                <div className="flex items-center gap-1.5 mb-1">
+                  <div className="w-6 h-6 rounded-lg bg-success/20 flex items-center justify-center">
+                    <TrendingUp className="w-3 h-3 text-success" />
+                  </div>
+                  <p className="text-[9px] text-text-muted uppercase tracking-wider">Income</p>
                 </div>
-                <p className="text-[10px] text-text-muted uppercase">Income</p>
+                <p className="text-sm font-semibold text-success">{formatAmount(stats.totalIncome)}</p>
               </div>
-              <p className="text-sm font-semibold text-success">{formatAmount(stats.totalIncome)}</p>
             </div>
 
-            <div className="flex-1 card p-3">
-              <div className="flex items-center gap-2 mb-1">
-                <div className="w-6 h-6 rounded-md bg-error-muted flex items-center justify-center">
-                  <TrendingDown className="w-3 h-3 text-error" />
+            {/* Expenses Card */}
+            <div className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-error/15 via-error/10 to-transparent border border-error/20 p-3 transition-all duration-300 hover:border-error/40">
+              <div className="absolute -top-4 -right-4 w-10 h-10 bg-error/20 rounded-full blur-xl group-hover:bg-error/30 transition-colors" />
+              <div className="relative">
+                <div className="flex items-center gap-1.5 mb-1">
+                  <div className="w-6 h-6 rounded-lg bg-error/20 flex items-center justify-center">
+                    <TrendingDown className="w-3 h-3 text-error" />
+                  </div>
+                  <p className="text-[9px] text-text-muted uppercase tracking-wider">Expenses</p>
                 </div>
-                <p className="text-[10px] text-text-muted uppercase">Expenses</p>
+                <p className="text-sm font-semibold text-error">{formatAmount(stats.totalExpense)}</p>
               </div>
-              <p className="text-sm font-semibold text-error">{formatAmount(stats.totalExpense)}</p>
             </div>
 
-            <div className="flex-1 card p-3">
-              <div className="flex items-center gap-2 mb-1">
-                <div className="w-6 h-6 rounded-md bg-accent-muted flex items-center justify-center">
-                  <Wallet className="w-3 h-3 text-accent" />
+            {/* Net Card */}
+            <div className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-accent/15 via-accent/10 to-transparent border border-accent/20 p-3 transition-all duration-300 hover:border-accent/40">
+              <div className="absolute -top-4 -right-4 w-10 h-10 bg-accent/20 rounded-full blur-xl group-hover:bg-accent/30 transition-colors" />
+              <div className="relative">
+                <div className="flex items-center gap-1.5 mb-1">
+                  <div className="w-6 h-6 rounded-lg bg-accent/20 flex items-center justify-center">
+                    <Wallet className="w-3 h-3 text-accent" />
+                  </div>
+                  <p className="text-[9px] text-text-muted uppercase tracking-wider">Net</p>
                 </div>
-                <p className="text-[10px] text-text-muted uppercase">Net</p>
+                <p className={`text-sm font-semibold ${stats.totalIncome - stats.totalExpense >= 0 ? 'text-success' : 'text-error'}`}>
+                  {formatAmount(stats.totalIncome - stats.totalExpense)}
+                </p>
               </div>
-              <p
-                className={`text-sm font-semibold ${
-                  stats.totalIncome - stats.totalExpense >= 0 ? 'text-success' : 'text-error'
-                }`}
-              >
-                {formatAmount(stats.totalIncome - stats.totalExpense)}
-              </p>
             </div>
-          </div>
+          </motion.div>
         </header>
 
         {/* Filters */}
@@ -329,59 +361,77 @@ export default function TransactionsPage() {
         </div>
 
         {/* Transaction List */}
-        <div className="px-4">
+        <motion.div
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+          className="px-4"
+        >
           {isLoading && transactions.length === 0 ? (
-            <div className="flex items-center justify-center py-12">
-              <div className="w-8 h-8 border-2 border-accent/30 border-t-accent rounded-full animate-spin" />
+            <div className="flex items-center justify-center py-16">
+              <div className="w-10 h-10 border-2 border-accent/30 border-t-accent rounded-full animate-spin" />
             </div>
           ) : error ? (
-            <div className="text-center py-12 card">
+            <motion.div
+              variants={itemVariants}
+              className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-error/10 to-transparent border border-error/20 p-8 text-center"
+            >
               <p className="text-error mb-4">{error}</p>
-              <button onClick={handleRefresh} className="btn-primary">
+              <button onClick={handleRefresh} className="px-6 py-2.5 bg-accent text-bg-primary font-medium rounded-xl">
                 Retry
               </button>
-            </div>
+            </motion.div>
           ) : groups.length === 0 ? (
+            /* Premium Empty State */
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="text-center py-16 card"
+              variants={itemVariants}
+              className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-bg-secondary to-bg-tertiary border border-border-subtle p-8 text-center"
             >
-              <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-accent-subtle flex items-center justify-center">
-                <Wallet className="w-8 h-8 text-accent/60" />
+              <div className="absolute inset-0 bg-gradient-to-b from-accent/5 to-transparent pointer-events-none" />
+              <div className="relative">
+                <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-accent/10 border border-accent/20 flex items-center justify-center">
+                  <Wallet className="w-8 h-8 text-accent/60" />
+                </div>
+                <p className="text-sm font-medium text-text-secondary mb-1">No transactions found</p>
+                <p className="text-xs text-text-muted mb-4">
+                  {filters.searchQuery || Object.keys(filters).length > 0
+                    ? 'Try adjusting your filters'
+                    : 'Add your first transaction to get started'}
+                </p>
+                <button
+                  onClick={() => router.push('/transactions/add')}
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-accent text-bg-primary font-semibold rounded-xl hover:bg-accent-light transition-colors"
+                >
+                  <Plus className="w-4 h-4" />
+                  Add Transaction
+                </button>
               </div>
-              <p className="text-sm font-medium text-text-secondary mb-1">No transactions found</p>
-              <p className="text-xs text-text-muted mb-4">
-                {filters.searchQuery || Object.keys(filters).length > 0
-                  ? 'Try adjusting your filters'
-                  : 'Add your first transaction'}
-              </p>
-              <button onClick={() => router.push('/transactions/add')} className="btn-primary">
-                Add Transaction
-              </button>
             </motion.div>
           ) : (
             <div className="space-y-4">
               {groups.map((group, groupIndex) => (
                 <motion.div
                   key={format(group.date, 'yyyy-MM-dd')}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: groupIndex * 0.03 }}
+                  variants={itemVariants}
                 >
                   {/* Date Header */}
-                  <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center justify-between mb-2 px-1">
                     <div className="flex items-center gap-2">
-                      <Calendar className="w-4 h-4 text-text-muted" />
+                      <div className="w-6 h-6 rounded-lg bg-accent/10 flex items-center justify-center">
+                        <Calendar className="w-3 h-3 text-accent" />
+                      </div>
                       <span className="text-xs font-medium text-text-secondary">
                         {isSameDay(group.date, new Date())
                           ? 'Today'
                           : format(group.date, 'EEE, MMM d')}
                       </span>
                     </div>
-                    <div className="flex items-center gap-2 text-xs">
+                    <div className="flex items-center gap-3 text-xs">
                       {group.totalIncome > 0 && (
-                        <span className="text-success">+{formatAmount(group.totalIncome)}</span>
+                        <span className="flex items-center gap-1 text-success">
+                          <ArrowUpRight className="w-3 h-3" />
+                          {formatAmount(group.totalIncome)}
+                        </span>
                       )}
                       {group.totalExpense > 0 && (
                         <span className="text-error">-{formatAmount(group.totalExpense)}</span>
@@ -416,7 +466,7 @@ export default function TransactionsPage() {
                               initial={{ opacity: 0, height: 0 }}
                               animate={{ opacity: 1, height: 'auto' }}
                               exit={{ opacity: 0, height: 0 }}
-                              className="mt-1 p-3 bg-error-muted rounded-lg flex items-center justify-between border border-error/20"
+                              className="mt-1 p-3 bg-error/10 rounded-xl flex items-center justify-between border border-error/20"
                             >
                               <span className="text-xs text-error">Tap delete again to confirm</span>
                               <button
@@ -447,16 +497,16 @@ export default function TransactionsPage() {
               )}
             </div>
           )}
-        </div>
+        </motion.div>
 
-        {/* FAB */}
+        {/* Premium FAB */}
         {!isSelectionMode && (
           <motion.button
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
             whileTap={{ scale: 0.9 }}
             onClick={() => router.push('/transactions/add')}
-            className="fixed bottom-20 right-4 w-14 h-14 bg-accent hover:bg-accent-light text-bg-base rounded-2xl shadow-glow flex items-center justify-center sm:hidden transition-colors"
+            className="fixed bottom-24 right-4 w-14 h-14 bg-gradient-to-br from-accent to-accent-light text-bg-primary rounded-2xl shadow-[0_0_20px_rgba(201,165,92,0.3)] flex items-center justify-center sm:hidden transition-all duration-300 hover:shadow-[0_0_30px_rgba(201,165,92,0.5)]"
           >
             <Plus className="w-6 h-6" />
           </motion.button>

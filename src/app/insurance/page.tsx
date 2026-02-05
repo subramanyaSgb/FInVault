@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Plus, Shield, AlertCircle, Trash2, Edit2, X, ArrowLeft, Calendar, Users } from 'lucide-react'
+import { Plus, Shield, AlertCircle, Trash2, Edit2, X, ArrowLeft, Calendar, Users, Banknote } from 'lucide-react'
 import { useAuthStore } from '@/stores/authStore'
 import { useInsuranceStore } from '@/stores/insuranceStore'
 import type { Insurance, InsuranceType, Nominee } from '@/types'
@@ -36,29 +36,22 @@ interface InsuranceFormData {
   startDate: string
   endDate: string
   nominees: Nominee[]
-  // Dynamic fields based on type
-  // Life Insurance
   maturityAmount?: number
   policyTerm?: number
   riders?: string
-  // Health Insurance
   deductible?: number
   copayPercentage?: number
   roomType?: string
   waitingPeriod?: number
-  // Vehicle Insurance
   vehicleNumber?: string
   vehicleModel?: string
   idv?: number
-  // Property Insurance
   propertyType?: string
   propertyAddress?: string
-  // Travel Insurance
   destination?: string
   tripDuration?: number
 }
 
-// Type-specific field configurations
 const typeSpecificFields: Record<InsuranceType, { label: string; field: keyof InsuranceFormData; type: string; placeholder: string }[]> = {
   life: [
     { label: 'Maturity Amount', field: 'maturityAmount', type: 'number', placeholder: 'Amount at maturity' },
@@ -103,6 +96,24 @@ const initialFormData: InsuranceFormData = {
   startDate: formatDateForInput(new Date()),
   endDate: formatDateForInput(new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)),
   nominees: [],
+}
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.08 },
+  },
+}
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20, filter: 'blur(10px)' },
+  visible: {
+    opacity: 1,
+    y: 0,
+    filter: 'blur(0px)',
+    transition: { duration: 0.4 },
+  },
 }
 
 export default function InsurancePage() {
@@ -296,11 +307,23 @@ export default function InsurancePage() {
     }
   }
 
+  const getDaysUntilPremium = (date: Date) => {
+    const today = new Date()
+    const premiumDate = new Date(date)
+    const diffTime = premiumDate.getTime() - today.getTime()
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+  }
+
   return (
     <div className="min-h-screen bg-bg-primary pb-20">
-      <header className="sticky top-0 z-40 bg-bg-primary/80 backdrop-blur-md border-b border-white/5 p-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
+      {/* Premium Glass Header */}
+      <header className="sticky top-0 z-40 bg-bg-primary/60 backdrop-blur-xl border-b border-glass-border">
+        <div className="flex items-center justify-between px-4 py-4">
+          <motion.div
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="flex items-center gap-3"
+          >
             <button
               onClick={() => window.history.back()}
               className="p-2 hover:bg-bg-secondary rounded-full transition-colors"
@@ -308,445 +331,534 @@ export default function InsurancePage() {
               <ArrowLeft className="w-5 h-5 text-text-secondary" />
             </button>
             <div>
-              <p className="text-xs text-text-tertiary uppercase tracking-wider">Insurance</p>
-              <h1 className="text-lg font-semibold text-text-primary">Your Policies</h1>
+              <p className="text-xs text-accent font-medium tracking-wide uppercase">Insurance</p>
+              <h1 className="text-xl font-semibold text-text-primary mt-0.5">Your Policies</h1>
             </div>
-          </div>
-          <button
+          </motion.div>
+          <motion.button
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
             onClick={() => handleOpenModal()}
-            className="p-2 bg-accent-alpha rounded-full"
+            className="w-10 h-10 rounded-xl bg-accent/20 border border-accent/30 flex items-center justify-center hover:bg-accent/30 transition-all"
           >
-            <Plus className="w-5 h-5 text-accent-primary" />
-          </button>
+            <Plus className="w-5 h-5 text-accent" />
+          </motion.button>
         </div>
       </header>
 
-      <main className="p-4 space-y-6">
-        {/* Coverage Summary */}
-        <div className="bg-gradient-to-br from-bg-secondary to-bg-tertiary rounded-card p-6 border border-white/5">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 rounded-full bg-accent-alpha flex items-center justify-center">
-              <Shield className="w-5 h-5 text-accent-primary" />
+      <motion.main
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+        className="p-4 space-y-6"
+      >
+        {/* Premium Coverage Summary */}
+        <motion.div
+          variants={itemVariants}
+          className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-bg-secondary to-bg-tertiary border border-border-subtle p-5"
+        >
+          {/* Glow decorations */}
+          <div
+            className="absolute -top-20 -right-20 w-40 h-40 pointer-events-none"
+            style={{ background: 'radial-gradient(circle, rgba(201, 165, 92, 0.12) 0%, transparent 70%)' }}
+          />
+          <div
+            className="absolute -bottom-20 -left-20 w-40 h-40 pointer-events-none"
+            style={{ background: 'radial-gradient(circle, rgba(34, 197, 94, 0.08) 0%, transparent 70%)' }}
+          />
+
+          <div className="relative">
+            <div className="flex items-center gap-4 mb-5">
+              <div className="w-14 h-14 rounded-2xl bg-success/20 border border-success/30 flex items-center justify-center">
+                <Shield className="w-7 h-7 text-success" />
+              </div>
+              <div>
+                <p className="text-xs text-text-tertiary uppercase tracking-wider">Total Coverage</p>
+                <p className="text-3xl font-display font-bold text-gradient-gold">
+                  {formatCurrency(Object.values(coverage).reduce((a, b) => a + b, 0))}
+                </p>
+              </div>
+            </div>
+
+            {Object.keys(coverage).length > 0 && (
+              <div className="grid grid-cols-2 gap-3">
+                {Object.entries(coverage).map(([type, amount]) => (
+                  <div key={type} className="relative overflow-hidden rounded-xl bg-bg-primary/40 border border-border-subtle p-3">
+                    <div className="absolute -top-4 -right-4 w-8 h-8 bg-accent/10 rounded-full blur-xl" />
+                    <p className="text-[10px] text-text-muted uppercase tracking-wider capitalize">{type}</p>
+                    <p className="text-sm font-semibold text-text-primary">{formatCurrency(amount)}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </motion.div>
+
+        {/* Premium Annual Cost Card */}
+        <motion.div
+          variants={itemVariants}
+          className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-bg-secondary to-bg-tertiary border border-border-subtle p-4"
+        >
+          <div className="absolute -top-8 -right-8 w-16 h-16 bg-warning/10 rounded-full blur-xl" />
+          <div className="relative flex items-center gap-4">
+            <div className="w-12 h-12 rounded-xl bg-warning/20 border border-warning/30 flex items-center justify-center">
+              <Banknote className="w-6 h-6 text-warning" />
             </div>
             <div>
-              <p className="text-sm text-text-secondary">Total Coverage</p>
-              <p className="text-2xl font-bold text-text-primary">
-                {formatCurrency(Object.values(coverage).reduce((a, b) => a + b, 0))}
-              </p>
+              <p className="text-xs text-text-tertiary uppercase tracking-wider">Annual Premium Cost</p>
+              <p className="text-2xl font-display font-bold text-warning">{formatCurrency(annualTotal)}</p>
+              <p className="text-xs text-text-muted mt-0.5">Across all policies</p>
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            {Object.entries(coverage).map(([type, amount]) => (
-              <div key={type} className="bg-bg-primary/50 rounded-lg p-3">
-                <p className="text-xs text-text-tertiary capitalize">{type}</p>
-                <p className="text-sm font-semibold text-text-primary">{formatCurrency(amount)}</p>
-              </div>
-            ))}
-          </div>
-        </div>
+        </motion.div>
 
-        {/* Annual Premium */}
-        <div className="bg-bg-secondary rounded-card p-4 border border-white/5">
-          <p className="text-sm text-text-secondary mb-1">Annual Premium Cost</p>
-          <p className="text-xl font-bold text-text-primary">{formatCurrency(annualTotal)}</p>
-          <p className="text-xs text-text-tertiary mt-1">Across all policies</p>
-        </div>
-
-        {/* Upcoming Premiums */}
+        {/* Upcoming Premiums Alert */}
         {upcoming.length > 0 && (
-          <div className="bg-warning-bg rounded-card p-4 border border-warning/20">
-            <div className="flex items-center gap-2 mb-3">
-              <AlertCircle className="w-5 h-5 text-warning" />
-              <h3 className="font-semibold text-warning">Upcoming Premiums</h3>
+          <motion.div
+            variants={itemVariants}
+            className="relative overflow-hidden rounded-2xl bg-warning/10 border border-warning/20 p-4"
+          >
+            <div className="absolute -top-10 -right-10 w-20 h-20 bg-warning/20 rounded-full blur-xl" />
+            <div className="relative">
+              <div className="flex items-center gap-2 mb-3">
+                <AlertCircle className="w-5 h-5 text-warning" />
+                <h3 className="font-semibold text-warning">Upcoming Premiums</h3>
+              </div>
+              <div className="space-y-2">
+                {upcoming.slice(0, 3).map(item => {
+                  const daysUntil = getDaysUntilPremium(item.nextPremiumDate)
+                  return (
+                    <div key={item.id} className="flex items-center justify-between p-3 rounded-xl bg-bg-primary/40">
+                      <div>
+                        <p className="text-sm font-medium text-text-primary">{item.policyName}</p>
+                        <p className="text-xs text-text-secondary">
+                          Due in {daysUntil} days
+                        </p>
+                      </div>
+                      <p className="text-sm font-semibold text-warning">
+                        {formatCurrency(item.premiumAmount)}
+                      </p>
+                    </div>
+                  )
+                })}
+              </div>
             </div>
-            <div className="space-y-2">
-              {upcoming.slice(0, 3).map(item => (
-                <div key={item.id} className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-text-primary">{item.policyName}</p>
-                    <p className="text-xs text-text-secondary">
-                      Due{' '}
-                      {new Date(item.nextPremiumDate).toLocaleDateString('en-IN', {
-                        day: 'numeric',
-                        month: 'short',
-                      })}
-                    </p>
-                  </div>
-                  <p className="text-sm font-semibold text-warning">
-                    {formatCurrency(item.premiumAmount)}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
+          </motion.div>
         )}
 
         {/* Insurance List */}
-        <div>
-          <h3 className="text-h4 font-semibold text-text-primary mb-4">Your Policies</h3>
-          <div className="space-y-3">
-            {insurance.length === 0 ? (
-              <div className="text-center py-8 bg-bg-secondary rounded-card">
-                <Shield className="w-12 h-12 text-text-tertiary mx-auto mb-3" />
-                <p className="text-text-secondary">No insurance policies added</p>
-                <p className="text-sm text-text-tertiary mt-1">
-                  Add your first policy to track coverage
-                </p>
+        <motion.div variants={itemVariants} className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-semibold text-text-primary uppercase tracking-wider">Your Policies</h3>
+            <span className="text-xs text-text-muted">{insurance.length} policies</span>
+          </div>
+
+          {insurance.length === 0 ? (
+            <motion.div
+              variants={itemVariants}
+              className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-bg-secondary to-bg-tertiary border border-border-subtle p-8 text-center"
+            >
+              <div
+                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 pointer-events-none"
+                style={{ background: 'radial-gradient(circle, rgba(34, 197, 94, 0.08) 0%, transparent 70%)' }}
+              />
+              <div className="relative">
+                <div className="w-16 h-16 rounded-2xl bg-success/10 border border-success/20 flex items-center justify-center mx-auto mb-4">
+                  <Shield className="w-8 h-8 text-success/60" />
+                </div>
+                <h3 className="text-lg font-semibold text-text-primary mb-2">No insurance policies added</h3>
+                <p className="text-text-secondary text-sm mb-6">Add your first policy to track coverage</p>
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => handleOpenModal()}
+                  className="px-6 py-3 bg-gradient-to-r from-accent to-accent-secondary text-bg-primary font-semibold rounded-xl shadow-[0_0_20px_rgba(201,165,92,0.3)] hover:shadow-[0_0_30px_rgba(201,165,92,0.4)] transition-all"
+                >
+                  Add Your First Policy
+                </motion.button>
               </div>
-            ) : (
-              insurance.map((item, index) => (
+            </motion.div>
+          ) : (
+            <div className="space-y-3">
+              {insurance.map((item, index) => (
                 <motion.div
                   key={item.id}
-                  initial={{ opacity: 0, y: 20 }}
+                  initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.05 }}
-                  className="bg-bg-secondary rounded-card p-4 border border-white/5"
+                  className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-bg-secondary to-bg-tertiary border border-border-subtle p-4 transition-all duration-300 hover:border-accent/30 hover:shadow-[0_0_15px_rgba(201,165,92,0.08)]"
                 >
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-start gap-3">
-                      <span className="text-2xl">
-                        {insuranceTypes.find(t => t.type === item.type)?.icon || '📋'}
-                      </span>
-                      <div>
-                        <h4 className="font-semibold text-text-primary">{item.policyName}</h4>
-                        <p className="text-sm text-text-secondary">{item.provider}</p>
-                        <p className="text-xs text-text-tertiary mt-1">Policy: {item.policyNumber}</p>
-                        <div className="flex items-center gap-3 mt-2">
-                          <span className="text-xs bg-accent-alpha text-accent-primary px-2 py-1 rounded">
-                            Sum: {formatCurrency(item.sumAssured)}
-                          </span>
-                          <span className="text-xs bg-bg-tertiary text-text-secondary px-2 py-1 rounded">
-                            {item.premiumFrequency.replace('_', ' ')}
-                          </span>
+                  {/* Hover glow */}
+                  <div className="absolute -top-10 -right-10 w-20 h-20 bg-accent/0 rounded-full blur-2xl group-hover:bg-accent/10 transition-all" />
+
+                  <div className="relative">
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-start gap-3">
+                        <div className="w-12 h-12 rounded-xl bg-accent/10 border border-accent/20 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">
+                          {insuranceTypes.find(t => t.type === item.type)?.icon || '📋'}
+                        </div>
+                        <div>
+                          <h4 className="font-semibold text-text-primary">{item.policyName}</h4>
+                          <p className="text-sm text-text-secondary">{item.provider}</p>
+                          <p className="text-xs text-text-tertiary mt-1">Policy: {item.policyNumber}</p>
+                          <div className="flex items-center gap-2 mt-2">
+                            <span className="text-xs bg-accent/10 text-accent border border-accent/20 px-2.5 py-1 rounded-lg font-medium">
+                              {formatCurrency(item.sumAssured)}
+                            </span>
+                            <span className="text-xs bg-bg-primary/50 text-text-secondary px-2 py-1 rounded-lg capitalize">
+                              {item.premiumFrequency.replace('_', ' ')}
+                            </span>
+                          </div>
                         </div>
                       </div>
+                      <div className="flex gap-1">
+                        <button
+                          onClick={() => handleOpenModal(item)}
+                          className="p-2 rounded-lg text-text-tertiary hover:text-accent hover:bg-accent/10 transition-colors"
+                        >
+                          <Edit2 className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(item.id)}
+                          className="p-2 rounded-lg text-text-tertiary hover:text-error hover:bg-error/10 transition-colors"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </div>
-                    <div className="flex gap-1">
-                      <button
-                        onClick={() => handleOpenModal(item)}
-                        className="p-2 hover:bg-bg-tertiary rounded-full transition-colors"
-                      >
-                        <Edit2 className="w-4 h-4 text-text-secondary" />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(item.id)}
-                        className="p-2 hover:bg-bg-tertiary rounded-full transition-colors"
-                      >
-                        <Trash2 className="w-4 h-4 text-error" />
-                      </button>
-                    </div>
-                  </div>
-                  {item.nominees && item.nominees.length > 0 && (
-                    <div className="mt-3 flex items-center gap-2">
-                      <Users className="w-4 h-4 text-text-tertiary" />
-                      <p className="text-xs text-text-tertiary">
-                        {item.nominees.length} nominee{item.nominees.length > 1 ? 's' : ''}: {item.nominees.map(n => n.name).join(', ')}
+
+                    {item.nominees && item.nominees.length > 0 && (
+                      <div className="mt-3 flex items-center gap-2 p-2 rounded-lg bg-bg-primary/30">
+                        <Users className="w-4 h-4 text-text-tertiary" />
+                        <p className="text-xs text-text-tertiary">
+                          {item.nominees.length} nominee{item.nominees.length > 1 ? 's' : ''}: {item.nominees.map(n => n.name).join(', ')}
+                        </p>
+                      </div>
+                    )}
+
+                    <div className="mt-3 pt-3 border-t border-border-subtle flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Calendar className="w-4 h-4 text-accent" />
+                        <p className="text-sm text-text-secondary">
+                          Premium: <span className="font-medium text-text-primary">{formatCurrency(item.premiumAmount)}</span>
+                        </p>
+                      </div>
+                      <p className="text-xs text-text-muted">
+                        Next:{' '}
+                        <span className="text-accent font-medium">
+                          {new Date(item.nextPremiumDate).toLocaleDateString('en-IN', {
+                            day: 'numeric',
+                            month: 'short',
+                          })}
+                        </span>
                       </p>
                     </div>
-                  )}
-                  <div className="mt-3 pt-3 border-t border-white/5 flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Calendar className="w-4 h-4 text-text-tertiary" />
-                      <p className="text-sm text-text-secondary">
-                        Premium: {formatCurrency(item.premiumAmount)}
-                      </p>
-                    </div>
-                    <p className="text-xs text-text-tertiary">
-                      Next:{' '}
-                      {new Date(item.nextPremiumDate).toLocaleDateString('en-IN', {
-                        day: 'numeric',
-                        month: 'short',
-                      })}
-                    </p>
                   </div>
                 </motion.div>
-              ))
-            )}
-          </div>
-        </div>
-      </main>
+              ))}
+            </div>
+          )}
+        </motion.div>
+      </motion.main>
 
-      {/* Add/Edit Insurance Modal */}
+      {/* Premium Add/Edit Modal */}
       <AnimatePresence>
         {isModalOpen && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-bg-primary/95 backdrop-blur-md flex items-center justify-center p-4"
+            className="fixed inset-0 z-50 bg-bg-primary/95 backdrop-blur-xl flex items-center justify-center p-4"
           >
             <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-bg-secondary rounded-card p-6 w-full max-w-md max-h-[90vh] overflow-y-auto"
+              initial={{ scale: 0.95, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 20 }}
+              className="relative overflow-hidden bg-gradient-to-br from-bg-secondary to-bg-tertiary rounded-2xl border border-border-subtle p-6 w-full max-w-md max-h-[90vh] overflow-y-auto"
             >
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-h4 font-semibold text-text-primary">
-                  {editingInsurance ? 'Edit Policy' : 'Add Insurance Policy'}
-                </h2>
-                <button
-                  onClick={handleCloseModal}
-                  className="p-2 hover:bg-bg-tertiary rounded-full transition-colors"
-                >
-                  <X className="w-5 h-5 text-text-secondary" />
-                </button>
-              </div>
+              {/* Modal glow decoration */}
+              <div
+                className="absolute -top-20 -right-20 w-40 h-40 pointer-events-none"
+                style={{ background: 'radial-gradient(circle, rgba(201, 165, 92, 0.1) 0%, transparent 70%)' }}
+              />
 
-              <form onSubmit={handleSubmit} className="space-y-4">
-                {/* Insurance Type */}
-                <div>
-                  <label className="text-sm text-text-secondary block mb-2">Insurance Type</label>
-                  <div className="grid grid-cols-3 gap-2">
-                    {insuranceTypes.map(it => (
-                      <button
-                        key={it.type}
-                        type="button"
-                        onClick={() => setFormData({ ...formData, type: it.type })}
-                        className={`flex flex-col items-center gap-1 p-3 rounded-xl border-2 transition-all ${
-                          formData.type === it.type
-                            ? 'border-accent-primary bg-accent-primary/15 shadow-[0_0_12px_rgba(201,169,98,0.25)] scale-[1.02]'
-                            : 'border-white/10 hover:bg-bg-tertiary hover:border-white/20'
-                        }`}
-                      >
-                        <span className="text-xl">{it.icon}</span>
-                        <span className={`text-xs font-medium transition-colors ${
-                          formData.type === it.type ? 'text-accent-primary' : 'text-text-secondary'
-                        }`}>{it.label.replace(' Insurance', '')}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Provider & Policy Name */}
-                <div className="grid grid-cols-2 gap-4">
+              <div className="relative">
+                <div className="flex items-center justify-between mb-6">
                   <div>
-                    <label className="text-sm text-text-secondary block mb-2">Provider/Company</label>
-                    <input
-                      type="text"
-                      value={formData.provider}
-                      onChange={e => setFormData({ ...formData, provider: e.target.value })}
-                      className="w-full bg-bg-tertiary border border-white/10 rounded-input px-4 py-3 text-text-primary focus:border-accent-primary focus:outline-none"
-                      placeholder="e.g., LIC, HDFC Life"
-                      required
-                    />
+                    <p className="text-xs text-accent font-medium tracking-wide uppercase">Insurance</p>
+                    <h2 className="text-xl font-semibold text-text-primary mt-0.5">
+                      {editingInsurance ? 'Edit Policy' : 'Add Insurance Policy'}
+                    </h2>
                   </div>
-                  <div>
-                    <label className="text-sm text-text-secondary block mb-2">Policy Name</label>
-                    <input
-                      type="text"
-                      value={formData.policyName}
-                      onChange={e => setFormData({ ...formData, policyName: e.target.value })}
-                      className="w-full bg-bg-tertiary border border-white/10 rounded-input px-4 py-3 text-text-primary focus:border-accent-primary focus:outline-none"
-                      placeholder="e.g., Term Plan"
-                      required
-                    />
-                  </div>
-                </div>
-
-                {/* Policy Number */}
-                <div>
-                  <label className="text-sm text-text-secondary block mb-2">Policy Number</label>
-                  <input
-                    type="text"
-                    value={formData.policyNumber}
-                    onChange={e => setFormData({ ...formData, policyNumber: e.target.value })}
-                    className="w-full bg-bg-tertiary border border-white/10 rounded-input px-4 py-3 text-text-primary focus:border-accent-primary focus:outline-none"
-                    placeholder="e.g., POL123456789"
-                    required
-                  />
-                </div>
-
-                {/* Sum Assured & Premium */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-sm text-text-secondary block mb-2">Sum Assured</label>
-                    <input
-                      type="number"
-                      value={formData.sumAssured || ''}
-                      onChange={e => setFormData({ ...formData, sumAssured: Number(e.target.value) })}
-                      className="w-full bg-bg-tertiary border border-white/10 rounded-input px-4 py-3 text-text-primary focus:border-accent-primary focus:outline-none"
-                      placeholder="5000000"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm text-text-secondary block mb-2">Premium Amount</label>
-                    <input
-                      type="number"
-                      value={formData.premiumAmount || ''}
-                      onChange={e => setFormData({ ...formData, premiumAmount: Number(e.target.value) })}
-                      className="w-full bg-bg-tertiary border border-white/10 rounded-input px-4 py-3 text-text-primary focus:border-accent-primary focus:outline-none"
-                      placeholder="25000"
-                      required
-                    />
-                  </div>
-                </div>
-
-                {/* Premium Frequency */}
-                <div>
-                  <label className="text-sm text-text-secondary block mb-2">Premium Frequency</label>
-                  <select
-                    value={formData.premiumFrequency}
-                    onChange={e =>
-                      setFormData({
-                        ...formData,
-                        premiumFrequency: e.target.value as InsuranceFormData['premiumFrequency'],
-                      })
-                    }
-                    className="w-full bg-bg-tertiary border border-white/10 rounded-input px-4 py-3 text-text-primary focus:border-accent-primary focus:outline-none"
+                  <button
+                    onClick={handleCloseModal}
+                    className="p-2 rounded-xl hover:bg-bg-tertiary transition-colors"
                   >
-                    {premiumFrequencies.map(freq => (
-                      <option key={freq.value} value={freq.value}>
-                        {freq.label}
-                      </option>
-                    ))}
-                  </select>
+                    <X className="w-5 h-5 text-text-secondary" />
+                  </button>
                 </div>
 
-                {/* Dates */}
-                <div className="grid grid-cols-2 gap-4">
+                <form onSubmit={handleSubmit} className="space-y-5">
+                  {/* Insurance Type */}
                   <div>
-                    <label className="text-sm text-text-secondary block mb-2">Start Date</label>
-                    <input
-                      type="date"
-                      value={formData.startDate}
-                      onChange={e => setFormData({ ...formData, startDate: e.target.value })}
-                      className="w-full bg-bg-tertiary border border-white/10 rounded-input px-4 py-3 text-text-primary focus:border-accent-primary focus:outline-none"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm text-text-secondary block mb-2">End Date</label>
-                    <input
-                      type="date"
-                      value={formData.endDate}
-                      onChange={e => setFormData({ ...formData, endDate: e.target.value })}
-                      className="w-full bg-bg-tertiary border border-white/10 rounded-input px-4 py-3 text-text-primary focus:border-accent-primary focus:outline-none"
-                      required
-                    />
-                  </div>
-                </div>
-
-                {/* Dynamic Type-Specific Fields */}
-                {typeSpecificFields[formData.type]?.length > 0 && (
-                  <div className="space-y-4 pt-4 border-t border-white/10">
-                    <p className="text-sm font-medium text-accent-primary">
-                      {insuranceTypes.find(t => t.type === formData.type)?.label} Details
-                    </p>
-                    <div className="grid grid-cols-2 gap-4">
-                      {typeSpecificFields[formData.type]?.map((fieldConfig) => (
-                        <div key={fieldConfig.field} className={fieldConfig.field === 'propertyAddress' || fieldConfig.field === 'riders' ? 'col-span-2' : ''}>
-                          <label className="text-sm text-text-secondary block mb-2">{fieldConfig.label}</label>
-                          <input
-                            type={fieldConfig.type}
-                            value={(formData[fieldConfig.field] as string | number) || ''}
-                            onChange={e => setFormData({
-                              ...formData,
-                              [fieldConfig.field]: fieldConfig.type === 'number' ? Number(e.target.value) : e.target.value
-                            })}
-                            className="w-full bg-bg-tertiary border border-white/10 rounded-input px-4 py-3 text-text-primary focus:border-accent-primary focus:outline-none"
-                            placeholder={fieldConfig.placeholder}
-                          />
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Nominees Section */}
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <label className="text-sm text-text-secondary">Nominees</label>
-                    <button
-                      type="button"
-                      onClick={() => setShowNomineeForm(true)}
-                      className="text-xs text-accent-primary hover:text-accent-secondary"
-                    >
-                      + Add Nominee
-                    </button>
-                  </div>
-
-                  {formData.nominees.length > 0 && (
-                    <div className="space-y-2 mb-3">
-                      {formData.nominees.map(nominee => (
-                        <div
-                          key={nominee.id}
-                          className="flex items-center justify-between bg-bg-tertiary rounded-lg px-3 py-2"
+                    <label className="text-sm text-text-secondary block mb-3">Insurance Type</label>
+                    <div className="grid grid-cols-3 gap-2">
+                      {insuranceTypes.map(it => (
+                        <button
+                          key={it.type}
+                          type="button"
+                          onClick={() => setFormData({ ...formData, type: it.type })}
+                          className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border transition-all ${
+                            formData.type === it.type
+                              ? 'border-accent bg-accent/10 scale-105 shadow-[0_0_12px_rgba(201,165,92,0.25)]'
+                              : 'border-border-subtle hover:bg-bg-tertiary hover:border-accent/30'
+                          }`}
                         >
-                          <div>
-                            <p className="text-sm text-text-primary">{nominee.name}</p>
-                            <p className="text-xs text-text-tertiary">
-                              {nominee.relationship} • {nominee.percentage}%
-                            </p>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveNominee(nominee.id)}
-                            className="p-1 text-text-tertiary hover:text-error"
-                          >
-                            <X className="w-4 h-4" />
-                          </button>
-                        </div>
+                          <span className="text-xl">{it.icon}</span>
+                          <span className={`text-xs font-medium ${
+                            formData.type === it.type ? 'text-accent' : 'text-text-secondary'
+                          }`}>{it.label.replace(' Insurance', '')}</span>
+                        </button>
                       ))}
                     </div>
-                  )}
+                  </div>
 
-                  {showNomineeForm && (
-                    <div className="bg-bg-tertiary rounded-lg p-3 space-y-3">
+                  {/* Provider & Policy Name */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-sm text-text-secondary block mb-2">Provider</label>
                       <input
                         type="text"
-                        value={nomineeData.name || ''}
-                        onChange={e => setNomineeData({ ...nomineeData, name: e.target.value })}
-                        className="w-full bg-bg-primary border border-white/10 rounded-input px-3 py-2 text-sm text-text-primary focus:border-accent-primary focus:outline-none"
-                        placeholder="Nominee Name"
+                        value={formData.provider}
+                        onChange={e => setFormData({ ...formData, provider: e.target.value })}
+                        className="w-full bg-bg-primary/50 border border-border-subtle rounded-xl px-4 py-3 text-text-primary focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/50 transition-all"
+                        placeholder="e.g., LIC"
+                        required
                       />
-                      <div className="grid grid-cols-2 gap-2">
-                        <input
-                          type="text"
-                          value={nomineeData.relationship || ''}
-                          onChange={e => setNomineeData({ ...nomineeData, relationship: e.target.value })}
-                          className="w-full bg-bg-primary border border-white/10 rounded-input px-3 py-2 text-sm text-text-primary focus:border-accent-primary focus:outline-none"
-                          placeholder="Relationship"
-                        />
-                        <input
-                          type="number"
-                          value={nomineeData.percentage || ''}
-                          onChange={e => setNomineeData({ ...nomineeData, percentage: Number(e.target.value) })}
-                          className="w-full bg-bg-primary border border-white/10 rounded-input px-3 py-2 text-sm text-text-primary focus:border-accent-primary focus:outline-none"
-                          placeholder="Share %"
-                          min="1"
-                          max="100"
-                        />
-                      </div>
-                      <div className="flex gap-2">
-                        <button
-                          type="button"
-                          onClick={handleAddNominee}
-                          className="flex-1 py-2 bg-accent-primary text-bg-primary text-sm font-semibold rounded-button"
-                        >
-                          Add
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setShowNomineeForm(false)}
-                          className="flex-1 py-2 border border-white/10 text-text-secondary text-sm rounded-button"
-                        >
-                          Cancel
-                        </button>
+                    </div>
+                    <div>
+                      <label className="text-sm text-text-secondary block mb-2">Policy Name</label>
+                      <input
+                        type="text"
+                        value={formData.policyName}
+                        onChange={e => setFormData({ ...formData, policyName: e.target.value })}
+                        className="w-full bg-bg-primary/50 border border-border-subtle rounded-xl px-4 py-3 text-text-primary focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/50 transition-all"
+                        placeholder="e.g., Term Plan"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  {/* Policy Number */}
+                  <div>
+                    <label className="text-sm text-text-secondary block mb-2">Policy Number</label>
+                    <input
+                      type="text"
+                      value={formData.policyNumber}
+                      onChange={e => setFormData({ ...formData, policyNumber: e.target.value })}
+                      className="w-full bg-bg-primary/50 border border-border-subtle rounded-xl px-4 py-3 text-text-primary focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/50 transition-all"
+                      placeholder="e.g., POL123456789"
+                      required
+                    />
+                  </div>
+
+                  {/* Sum Assured & Premium */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-sm text-text-secondary block mb-2">Sum Assured</label>
+                      <input
+                        type="number"
+                        value={formData.sumAssured || ''}
+                        onChange={e => setFormData({ ...formData, sumAssured: Number(e.target.value) })}
+                        className="w-full bg-bg-primary/50 border border-border-subtle rounded-xl px-4 py-3 text-text-primary focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/50 transition-all"
+                        placeholder="5000000"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm text-text-secondary block mb-2">Premium Amount</label>
+                      <input
+                        type="number"
+                        value={formData.premiumAmount || ''}
+                        onChange={e => setFormData({ ...formData, premiumAmount: Number(e.target.value) })}
+                        className="w-full bg-bg-primary/50 border border-border-subtle rounded-xl px-4 py-3 text-text-primary focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/50 transition-all"
+                        placeholder="25000"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  {/* Premium Frequency */}
+                  <div>
+                    <label className="text-sm text-text-secondary block mb-2">Premium Frequency</label>
+                    <select
+                      value={formData.premiumFrequency}
+                      onChange={e =>
+                        setFormData({
+                          ...formData,
+                          premiumFrequency: e.target.value as InsuranceFormData['premiumFrequency'],
+                        })
+                      }
+                      className="w-full bg-bg-primary/50 border border-border-subtle rounded-xl px-4 py-3 text-text-primary focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/50 transition-all"
+                    >
+                      {premiumFrequencies.map(freq => (
+                        <option key={freq.value} value={freq.value}>
+                          {freq.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Dates */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-sm text-text-secondary block mb-2">Start Date</label>
+                      <input
+                        type="date"
+                        value={formData.startDate}
+                        onChange={e => setFormData({ ...formData, startDate: e.target.value })}
+                        className="w-full bg-bg-primary/50 border border-border-subtle rounded-xl px-4 py-3 text-text-primary focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/50 transition-all"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm text-text-secondary block mb-2">End Date</label>
+                      <input
+                        type="date"
+                        value={formData.endDate}
+                        onChange={e => setFormData({ ...formData, endDate: e.target.value })}
+                        className="w-full bg-bg-primary/50 border border-border-subtle rounded-xl px-4 py-3 text-text-primary focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/50 transition-all"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  {/* Dynamic Type-Specific Fields */}
+                  {typeSpecificFields[formData.type]?.length > 0 && (
+                    <div className="space-y-4 pt-4 border-t border-border-subtle">
+                      <p className="text-xs text-accent uppercase tracking-wider font-medium">
+                        {insuranceTypes.find(t => t.type === formData.type)?.label} Details
+                      </p>
+                      <div className="grid grid-cols-2 gap-4">
+                        {typeSpecificFields[formData.type]?.map((fieldConfig) => (
+                          <div key={fieldConfig.field} className={fieldConfig.field === 'propertyAddress' || fieldConfig.field === 'riders' ? 'col-span-2' : ''}>
+                            <label className="text-sm text-text-secondary block mb-2">{fieldConfig.label}</label>
+                            <input
+                              type={fieldConfig.type}
+                              value={(formData[fieldConfig.field] as string | number) || ''}
+                              onChange={e => setFormData({
+                                ...formData,
+                                [fieldConfig.field]: fieldConfig.type === 'number' ? Number(e.target.value) : e.target.value
+                              })}
+                              className="w-full bg-bg-primary/50 border border-border-subtle rounded-xl px-4 py-3 text-text-primary focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/50 transition-all"
+                              placeholder={fieldConfig.placeholder}
+                            />
+                          </div>
+                        ))}
                       </div>
                     </div>
                   )}
-                </div>
 
-                {/* Submit Button */}
-                <button
-                  type="submit"
-                  className="w-full py-3 bg-accent-primary text-bg-primary font-semibold rounded-button hover:bg-accent-secondary transition-colors"
-                >
-                  {editingInsurance ? 'Update Policy' : 'Add Policy'}
-                </button>
-              </form>
+                  {/* Nominees Section */}
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <label className="text-sm text-text-secondary">Nominees</label>
+                      <button
+                        type="button"
+                        onClick={() => setShowNomineeForm(true)}
+                        className="text-xs text-accent hover:text-accent-secondary font-medium"
+                      >
+                        + Add Nominee
+                      </button>
+                    </div>
+
+                    {formData.nominees.length > 0 && (
+                      <div className="space-y-2 mb-3">
+                        {formData.nominees.map(nominee => (
+                          <div
+                            key={nominee.id}
+                            className="flex items-center justify-between bg-bg-primary/40 rounded-xl px-3 py-2 border border-border-subtle"
+                          >
+                            <div>
+                              <p className="text-sm text-text-primary font-medium">{nominee.name}</p>
+                              <p className="text-xs text-text-tertiary">
+                                {nominee.relationship} • {nominee.percentage}%
+                              </p>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveNominee(nominee.id)}
+                              className="p-1 text-text-tertiary hover:text-error transition-colors"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {showNomineeForm && (
+                      <div className="bg-bg-primary/40 rounded-xl p-3 space-y-3 border border-border-subtle">
+                        <input
+                          type="text"
+                          value={nomineeData.name || ''}
+                          onChange={e => setNomineeData({ ...nomineeData, name: e.target.value })}
+                          className="w-full bg-bg-tertiary border border-border-subtle rounded-xl px-3 py-2 text-sm text-text-primary focus:border-accent focus:outline-none transition-all"
+                          placeholder="Nominee Name"
+                        />
+                        <div className="grid grid-cols-2 gap-2">
+                          <input
+                            type="text"
+                            value={nomineeData.relationship || ''}
+                            onChange={e => setNomineeData({ ...nomineeData, relationship: e.target.value })}
+                            className="w-full bg-bg-tertiary border border-border-subtle rounded-xl px-3 py-2 text-sm text-text-primary focus:border-accent focus:outline-none transition-all"
+                            placeholder="Relationship"
+                          />
+                          <input
+                            type="number"
+                            value={nomineeData.percentage || ''}
+                            onChange={e => setNomineeData({ ...nomineeData, percentage: Number(e.target.value) })}
+                            className="w-full bg-bg-tertiary border border-border-subtle rounded-xl px-3 py-2 text-sm text-text-primary focus:border-accent focus:outline-none transition-all"
+                            placeholder="Share %"
+                            min="1"
+                            max="100"
+                          />
+                        </div>
+                        <div className="flex gap-2">
+                          <motion.button
+                            type="button"
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            onClick={handleAddNominee}
+                            className="flex-1 py-2 bg-accent text-bg-primary text-sm font-semibold rounded-xl"
+                          >
+                            Add
+                          </motion.button>
+                          <button
+                            type="button"
+                            onClick={() => setShowNomineeForm(false)}
+                            className="flex-1 py-2 border border-border-subtle text-text-secondary text-sm rounded-xl hover:bg-bg-tertiary transition-colors"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Submit Button */}
+                  <motion.button
+                    type="submit"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="w-full py-3.5 bg-gradient-to-r from-accent to-accent-secondary text-bg-primary font-semibold rounded-xl shadow-[0_0_20px_rgba(201,165,92,0.3)] hover:shadow-[0_0_30px_rgba(201,165,92,0.4)] transition-all"
+                  >
+                    {editingInsurance ? 'Update Policy' : 'Add Policy'}
+                  </motion.button>
+                </form>
+              </div>
             </motion.div>
           </motion.div>
         )}
