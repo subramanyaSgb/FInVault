@@ -63,7 +63,7 @@ const themes = [
 
 export default function SettingsPage() {
   const router = useRouter()
-  const { currentProfile, updateSettings, changePIN, logout, enrollBiometric, disableBiometric } = useAuthStore()
+  const { currentProfile, updateSettings, changePIN, logout, enrollBiometric, disableBiometric, deleteProfile } = useAuthStore()
   const [section, setSection] = useState<SettingsSection>('main')
   const [showChangePIN, setShowChangePIN] = useState(false)
   const [pinData, setPinData] = useState({ oldPin: '', newPin: '', confirmPin: '' })
@@ -109,6 +109,11 @@ export default function SettingsPage() {
   const [showApiKey, setShowApiKey] = useState(false)
   const [aiSaveSuccess, setAiSaveSuccess] = useState(false)
   const geminiStatus = getGeminiKeyStatus()
+
+  // Delete profile state
+  const [showDeleteProfile, setShowDeleteProfile] = useState(false)
+  const [deleteConfirmText, setDeleteConfirmText] = useState('')
+  const [isDeleting, setIsDeleting] = useState(false)
 
   if (!currentProfile) {
     return (
@@ -412,20 +417,27 @@ export default function SettingsPage() {
         </div>
       </div>
 
-      <div className="bg-error-bg rounded-card p-4 border border-error/20">
-        <h4 className="font-semibold text-error mb-2 flex items-center gap-2">
-          <Trash2 className="w-4 h-4" />
-          Danger Zone
-        </h4>
-        <p className="text-sm text-text-secondary mb-3">
-          Deleting your profile will permanently remove all your data.
-        </p>
-        <button
-          onClick={() => alert('Profile deletion requires confirmation - feature coming soon')}
-          className="px-4 py-2 bg-error text-white rounded-button text-sm"
-        >
-          Delete Profile
-        </button>
+      <div className="bg-error-bg/50 rounded-card p-5 border border-error/30 relative overflow-hidden">
+        {/* Danger glow */}
+        <div
+          className="absolute -top-10 -right-10 w-24 h-24 pointer-events-none"
+          style={{ background: 'radial-gradient(circle, rgba(239, 68, 68, 0.15) 0%, transparent 70%)' }}
+        />
+        <div className="relative">
+          <h4 className="font-semibold text-error mb-2 flex items-center gap-2">
+            <Trash2 className="w-5 h-5" />
+            Danger Zone
+          </h4>
+          <p className="text-sm text-text-secondary mb-4">
+            Permanently delete your profile and all associated data. This action cannot be undone.
+          </p>
+          <button
+            onClick={() => setShowDeleteProfile(true)}
+            className="w-full py-3 bg-error/20 text-error font-semibold rounded-xl border border-error/30 hover:bg-error hover:text-white transition-all duration-300"
+          >
+            Delete Profile
+          </button>
+        </div>
       </div>
     </div>
   )
@@ -1583,6 +1595,117 @@ export default function SettingsPage() {
                   </div>
                 </div>
               )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Delete Profile Modal */}
+      <AnimatePresence>
+        {showDeleteProfile && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-bg-primary/95 backdrop-blur-md flex items-center justify-center p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-bg-secondary rounded-2xl p-6 w-full max-w-sm border border-error/30 relative overflow-hidden"
+            >
+              {/* Danger glow */}
+              <div
+                className="absolute -top-20 -right-20 w-40 h-40 pointer-events-none"
+                style={{ background: 'radial-gradient(circle, rgba(239, 68, 68, 0.2) 0%, transparent 70%)' }}
+              />
+
+              <div className="relative">
+                <div className="text-center mb-6">
+                  <div className="w-16 h-16 rounded-2xl bg-error/20 mx-auto mb-4 flex items-center justify-center border border-error/30">
+                    <Trash2 className="w-8 h-8 text-error" />
+                  </div>
+                  <h3 className="text-xl font-bold text-error">Delete Profile</h3>
+                  <p className="text-sm text-text-secondary mt-2">
+                    This will permanently delete your profile &quot;{currentProfile.name}&quot; and all associated data including:
+                  </p>
+                </div>
+
+                <div className="bg-error/10 rounded-xl p-4 mb-4 border border-error/20">
+                  <ul className="text-sm text-text-secondary space-y-2">
+                    <li className="flex items-center gap-2">
+                      <div className="w-1.5 h-1.5 rounded-full bg-error" />
+                      All transactions
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <div className="w-1.5 h-1.5 rounded-full bg-error" />
+                      All accounts & credit cards
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <div className="w-1.5 h-1.5 rounded-full bg-error" />
+                      Budgets, goals & investments
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <div className="w-1.5 h-1.5 rounded-full bg-error" />
+                      Documents & settings
+                    </li>
+                  </ul>
+                </div>
+
+                <div className="mb-4">
+                  <label className="text-sm text-text-secondary block mb-2">
+                    Type <span className="text-error font-semibold">DELETE</span> to confirm
+                  </label>
+                  <input
+                    type="text"
+                    value={deleteConfirmText}
+                    onChange={e => setDeleteConfirmText(e.target.value)}
+                    className="w-full bg-bg-tertiary border border-error/30 rounded-xl px-4 py-3 text-text-primary focus:border-error focus:outline-none"
+                    placeholder="Type DELETE"
+                  />
+                </div>
+
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => {
+                      setShowDeleteProfile(false)
+                      setDeleteConfirmText('')
+                    }}
+                    disabled={isDeleting}
+                    className="flex-1 py-3 border border-white/10 text-text-primary rounded-xl hover:bg-bg-tertiary transition-colors disabled:opacity-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={async () => {
+                      if (deleteConfirmText !== 'DELETE') return
+                      setIsDeleting(true)
+                      try {
+                        await deleteProfile(currentProfile.id)
+                        router.push('/')
+                      } catch (error) {
+                        console.error('Failed to delete profile:', error)
+                        setIsDeleting(false)
+                      }
+                    }}
+                    disabled={deleteConfirmText !== 'DELETE' || isDeleting}
+                    className="flex-1 py-3 bg-error text-white font-semibold rounded-xl disabled:opacity-50 flex items-center justify-center gap-2 hover:bg-error/90 transition-colors"
+                  >
+                    {isDeleting ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Deleting...
+                      </>
+                    ) : (
+                      <>
+                        <Trash2 className="w-4 h-4" />
+                        Delete Forever
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
             </motion.div>
           </motion.div>
         )}

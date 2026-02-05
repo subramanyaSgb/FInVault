@@ -13,7 +13,38 @@ export function Providers({ children }: ProvidersProps) {
   const [isInitialized, setIsInitialized] = useState(false)
   const pathname = usePathname()
   const router = useRouter()
-  const { isAuthenticated, profiles } = useAuthStore()
+  const { isAuthenticated, profiles, currentProfile } = useAuthStore()
+
+  // Theme management
+  useEffect(() => {
+    const applyTheme = () => {
+      const theme = currentProfile?.settings?.theme || 'dark'
+      const root = document.documentElement
+
+      if (theme === 'system') {
+        // Follow system preference
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+        root.classList.toggle('light', !prefersDark)
+      } else if (theme === 'light') {
+        root.classList.add('light')
+      } else {
+        root.classList.remove('light')
+      }
+    }
+
+    applyTheme()
+
+    // Listen for system theme changes when in system mode
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
+    const handleChange = () => {
+      if (currentProfile?.settings?.theme === 'system') {
+        applyTheme()
+      }
+    }
+
+    mediaQuery.addEventListener('change', handleChange)
+    return () => mediaQuery.removeEventListener('change', handleChange)
+  }, [currentProfile?.settings?.theme])
 
   useEffect(() => {
     const init = async () => {

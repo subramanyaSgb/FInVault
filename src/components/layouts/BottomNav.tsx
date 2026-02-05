@@ -14,6 +14,14 @@ import {
   BarChart3,
   X,
   LucideIcon,
+  Wallet,
+  Target,
+  Shield,
+  FileText,
+  Settings,
+  PiggyBank,
+  HandCoins,
+  Landmark,
 } from 'lucide-react'
 import { useState, useMemo } from 'react'
 import { useAuthStore } from '@/stores/authStore'
@@ -25,21 +33,37 @@ export interface NavItem {
   href: string
 }
 
-// Primary nav items (customizable for bottom bar)
+// All available nav items (user can customize bottom bar)
 export const allNavItems: NavItem[] = [
   { id: 'dashboard', icon: Home, label: 'Home', href: '/dashboard' },
   { id: 'transactions', icon: Receipt, label: 'Activity', href: '/transactions' },
   { id: 'investments', icon: TrendingUp, label: 'Invest', href: '/investments' },
   { id: 'credit-cards', icon: CreditCard, label: 'Cards', href: '/credit-cards' },
+  { id: 'accounts', icon: Wallet, label: 'Accounts', href: '/accounts' },
+  { id: 'budgets', icon: PiggyBank, label: 'Budgets', href: '/budgets' },
+  { id: 'goals', icon: Target, label: 'Goals', href: '/goals' },
+  { id: 'loans', icon: Landmark, label: 'Loans', href: '/loans' },
+  { id: 'lend-borrow', icon: HandCoins, label: 'Lend', href: '/lend-borrow' },
+  { id: 'insurance', icon: Shield, label: 'Insurance', href: '/insurance' },
+  { id: 'documents', icon: FileText, label: 'Docs', href: '/documents' },
+  { id: 'settings', icon: Settings, label: 'Settings', href: '/settings' },
 ]
 
-// Items for More menu (excluding those already in dashboard Explore section)
+// Items for More menu
 const moreMenuOnlyItems: NavItem[] = [
+  { id: 'accounts', icon: Wallet, label: 'Accounts', href: '/accounts' },
+  { id: 'budgets', icon: PiggyBank, label: 'Budgets', href: '/budgets' },
+  { id: 'goals', icon: Target, label: 'Goals', href: '/goals' },
+  { id: 'loans', icon: Landmark, label: 'Loans', href: '/loans' },
+  { id: 'lend-borrow', icon: HandCoins, label: 'Lend/Borrow', href: '/lend-borrow' },
+  { id: 'insurance', icon: Shield, label: 'Insurance', href: '/insurance' },
+  { id: 'documents', icon: FileText, label: 'Documents', href: '/documents' },
   { id: 'subscriptions', icon: Receipt, label: 'Subscriptions', href: '/subscriptions' },
   { id: 'ai-chat', icon: MessageSquare, label: 'AI Chat', href: '/ai-chat' },
   { id: 'reports', icon: BarChart3, label: 'Reports', href: '/reports' },
   { id: 'fire', icon: Calculator, label: 'FIRE Calc', href: '/fire' },
   { id: 'debt-payoff', icon: Calculator, label: 'Debt Payoff', href: '/debt-payoff' },
+  { id: 'settings', icon: Settings, label: 'Settings', href: '/settings' },
 ]
 
 // Default primary nav items (shown in bottom bar)

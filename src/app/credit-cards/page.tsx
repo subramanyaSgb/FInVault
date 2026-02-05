@@ -7,14 +7,13 @@ import {
   CreditCard,
   Calendar,
   AlertCircle,
-  CheckCircle2,
   ArrowLeft,
   Trash2,
   Edit2,
   X,
-  Building2,
   Percent,
   Shield,
+  Wifi,
 } from 'lucide-react'
 import { useAccountStore } from '@/stores/accountStore'
 import { useAuthStore } from '@/stores/authStore'
@@ -117,6 +116,311 @@ const CARD_COLORS = [
   { name: 'Gray', value: '#6B7280' },
 ]
 
+// Premium card gradient presets based on card color
+const getCardGradient = (color: string) => {
+  const gradients: Record<string, string> = {
+    '#3B82F6': 'linear-gradient(135deg, #1e3a5f 0%, #3B82F6 50%, #1e3a5f 100%)',
+    '#8B5CF6': 'linear-gradient(135deg, #3b1f5e 0%, #8B5CF6 50%, #3b1f5e 100%)',
+    '#22C55E': 'linear-gradient(135deg, #0f3d1a 0%, #22C55E 50%, #0f3d1a 100%)',
+    '#EF4444': 'linear-gradient(135deg, #5c1414 0%, #EF4444 50%, #5c1414 100%)',
+    '#C9A962': 'linear-gradient(135deg, #2a2310 0%, #C9A962 40%, #8B7A3F 60%, #2a2310 100%)',
+    '#EC4899': 'linear-gradient(135deg, #4a1635 0%, #EC4899 50%, #4a1635 100%)',
+    '#F97316': 'linear-gradient(135deg, #4a2508 0%, #F97316 50%, #4a2508 100%)',
+    '#6B7280': 'linear-gradient(135deg, #1f2937 0%, #6B7280 50%, #1f2937 100%)',
+  }
+  return gradients[color] || `linear-gradient(135deg, ${color}40 0%, ${color} 50%, ${color}40 100%)`
+}
+
+// Network logo SVG components
+const NetworkLogo = ({ network }: { network: string }) => {
+  switch (network) {
+    case 'Visa':
+      return (
+        <svg viewBox="0 0 100 32" className="h-6 w-auto">
+          <text x="0" y="26" fill="white" fontSize="28" fontWeight="bold" fontStyle="italic" fontFamily="Arial">
+            VISA
+          </text>
+        </svg>
+      )
+    case 'Mastercard':
+      return (
+        <div className="flex items-center -space-x-2">
+          <div className="w-6 h-6 rounded-full bg-red-500/90"></div>
+          <div className="w-6 h-6 rounded-full bg-yellow-500/90"></div>
+        </div>
+      )
+    case 'RuPay':
+      return (
+        <svg viewBox="0 0 60 20" className="h-4 w-auto">
+          <text x="0" y="16" fill="white" fontSize="14" fontWeight="bold" fontFamily="Arial">
+            RuPay
+          </text>
+        </svg>
+      )
+    case 'American Express':
+      return (
+        <svg viewBox="0 0 60 20" className="h-4 w-auto">
+          <text x="0" y="16" fill="white" fontSize="12" fontWeight="bold" fontFamily="Arial">
+            AMEX
+          </text>
+        </svg>
+      )
+    case 'Diners Club':
+      return (
+        <svg viewBox="0 0 70 20" className="h-4 w-auto">
+          <text x="0" y="16" fill="white" fontSize="10" fontWeight="bold" fontFamily="Arial">
+            DINERS
+          </text>
+        </svg>
+      )
+    default:
+      return (
+        <CreditCard className="w-6 h-6 text-white/80" />
+      )
+  }
+}
+
+// Premium Credit Card Visual Component
+const PremiumCreditCard = ({
+  card,
+  onEdit,
+  onDelete,
+  formatCurrency,
+  index
+}: {
+  card: CreditCardType & { network?: string; cardType?: string }
+  onEdit: (card: CreditCardType) => void
+  onDelete: (cardId: string) => void
+  formatCurrency: (amount: number) => string
+  index: number
+}) => {
+  const [isFlipped, setIsFlipped] = useState(false)
+  const cardUtilization = (card.currentOutstanding / card.creditLimit) * 100
+
+  const getDaysUntilDue = (dueDate: number) => {
+    const today = new Date()
+    const currentMonthDue = new Date(today.getFullYear(), today.getMonth(), dueDate)
+    if (currentMonthDue < today) {
+      currentMonthDue.setMonth(currentMonthDue.getMonth() + 1)
+    }
+    const diffTime = currentMonthDue.getTime() - today.getTime()
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+  }
+
+  const daysUntilDue = getDaysUntilDue(card.dueDate)
+  const network = (card as { network?: string }).network || 'Visa'
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 30, rotateX: -15 }}
+      animate={{ opacity: 1, y: 0, rotateX: 0 }}
+      transition={{ delay: index * 0.1, duration: 0.5 }}
+      className="group perspective-1000"
+    >
+      {/* Credit Card Visual */}
+      <motion.div
+        className="relative w-full aspect-[1.586/1] max-w-[360px] mx-auto cursor-pointer"
+        whileHover={{
+          scale: 1.02,
+          rotateY: isFlipped ? 180 : 5,
+          rotateX: 5,
+        }}
+        transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+        onClick={() => setIsFlipped(!isFlipped)}
+        style={{ transformStyle: 'preserve-3d' }}
+      >
+        {/* Card Front */}
+        <div
+          className="absolute inset-0 rounded-2xl overflow-hidden backface-hidden"
+          style={{
+            background: getCardGradient(card.color),
+            backfaceVisibility: 'hidden',
+            transform: isFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)',
+            boxShadow: `0 25px 50px -12px ${card.color}40, 0 0 30px ${card.color}20`,
+          }}
+        >
+          {/* Card Texture Overlay */}
+          <div className="absolute inset-0 opacity-30"
+            style={{
+              backgroundImage: `
+                radial-gradient(circle at 20% 80%, rgba(255,255,255,0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(255,255,255,0.15) 0%, transparent 50%)
+              `,
+            }}
+          />
+
+          {/* Holographic Strip Effect */}
+          <div className="absolute top-4 right-4 left-4 h-1 rounded-full opacity-40 group-hover:opacity-60 transition-opacity"
+            style={{
+              background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.4), rgba(255,220,150,0.4), rgba(150,220,255,0.4), transparent)',
+            }}
+          />
+
+          {/* Card Content */}
+          <div className="relative h-full p-5 flex flex-col justify-between">
+            {/* Top Row - Bank Name & Network */}
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-white/60 text-[10px] uppercase tracking-wider font-medium">
+                  {card.bankName}
+                </p>
+                <p className="text-white text-sm font-semibold mt-0.5">
+                  {card.cardName}
+                </p>
+              </div>
+              <NetworkLogo network={network} />
+            </div>
+
+            {/* Middle - EMV Chip & NFC */}
+            <div className="flex items-center gap-3 my-2">
+              {/* EMV Chip */}
+              <div className="w-11 h-8 rounded-md bg-gradient-to-br from-yellow-300/90 via-yellow-400/90 to-yellow-600/90 relative overflow-hidden shadow-lg">
+                <div className="absolute inset-0.5 rounded-sm border border-yellow-600/30">
+                  <div className="absolute top-1/2 left-0 right-0 h-px bg-yellow-700/40"></div>
+                  <div className="absolute top-0 bottom-0 left-1/2 w-px bg-yellow-700/40"></div>
+                  <div className="absolute top-1/4 left-0 right-0 h-px bg-yellow-700/20"></div>
+                  <div className="absolute top-3/4 left-0 right-0 h-px bg-yellow-700/20"></div>
+                </div>
+              </div>
+
+              {/* NFC Symbol */}
+              <Wifi className="w-5 h-5 text-white/50 rotate-90" />
+            </div>
+
+            {/* Card Number */}
+            <div className="my-2">
+              <p className="text-white/90 text-lg tracking-[0.25em] font-mono font-medium">
+                •••• •••• •••• {card.lastFourDigits}
+              </p>
+            </div>
+
+            {/* Bottom Row - Valid & Type Badge */}
+            <div className="flex items-end justify-between">
+              <div>
+                <p className="text-white/50 text-[8px] uppercase tracking-wider">Valid Thru</p>
+                <p className="text-white/80 text-sm font-mono">
+                  {String(card.billingDate).padStart(2, '0')}/27
+                </p>
+              </div>
+
+              {(card as { cardType?: string }).cardType && (card as { cardType?: string }).cardType !== 'basic' && (
+                <div className="px-2 py-0.5 rounded bg-white/10 backdrop-blur-sm">
+                  <p className="text-white/80 text-[9px] uppercase tracking-wider font-semibold">
+                    {(card as { cardType?: string }).cardType}
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Card Back (shown when flipped) */}
+        <div
+          className="absolute inset-0 rounded-2xl overflow-hidden"
+          style={{
+            background: getCardGradient(card.color),
+            backfaceVisibility: 'hidden',
+            transform: isFlipped ? 'rotateY(0deg)' : 'rotateY(-180deg)',
+            boxShadow: `0 25px 50px -12px ${card.color}40`,
+          }}
+        >
+          {/* Magnetic Strip */}
+          <div className="h-12 bg-black/80 mt-6"></div>
+
+          {/* CVV Strip */}
+          <div className="mt-4 mx-6 flex items-center gap-2">
+            <div className="flex-1 h-8 bg-white/90 rounded flex items-center justify-end px-3">
+              <span className="text-bg-primary font-mono font-bold tracking-wider">•••</span>
+            </div>
+          </div>
+
+          {/* Security Text */}
+          <div className="mt-4 px-6">
+            <p className="text-white/40 text-[8px] leading-tight">
+              This card is property of the issuing bank. If found, please return to any branch.
+            </p>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Card Info Panel Below */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: index * 0.1 + 0.3 }}
+        className="mt-4 p-4 rounded-xl bg-bg-secondary/50 border border-border-subtle"
+      >
+        {/* Balance Row */}
+        <div className="grid grid-cols-2 gap-4 mb-3">
+          <div>
+            <p className="text-[10px] text-text-tertiary uppercase tracking-wider">Outstanding</p>
+            <p className="text-lg font-semibold text-error">{formatCurrency(card.currentOutstanding)}</p>
+          </div>
+          <div className="text-right">
+            <p className="text-[10px] text-text-tertiary uppercase tracking-wider">Available</p>
+            <p className="text-lg font-semibold text-success">{formatCurrency(card.availableLimit)}</p>
+          </div>
+        </div>
+
+        {/* Utilization Mini Bar */}
+        <div className="mb-3">
+          <div className="flex justify-between items-center mb-1">
+            <span className="text-[10px] text-text-tertiary">Utilization</span>
+            <span className={`text-xs font-semibold ${
+              cardUtilization < 30 ? 'text-success' : cardUtilization < 70 ? 'text-warning' : 'text-error'
+            }`}>
+              {cardUtilization.toFixed(0)}%
+            </span>
+          </div>
+          <div className="h-1.5 bg-bg-primary/50 rounded-full overflow-hidden">
+            <motion.div
+              initial={{ width: 0 }}
+              animate={{ width: `${Math.min(cardUtilization, 100)}%` }}
+              transition={{ duration: 0.6, delay: index * 0.1 + 0.4 }}
+              className={`h-full rounded-full ${
+                cardUtilization < 30 ? 'bg-success' : cardUtilization < 70 ? 'bg-warning' : 'bg-error'
+              }`}
+            />
+          </div>
+        </div>
+
+        {/* Due Date & Actions */}
+        <div className="flex items-center justify-between">
+          <div className={`flex items-center gap-1.5 px-2 py-1 rounded-lg ${
+            daysUntilDue <= 3 ? 'bg-error/10' : daysUntilDue <= 7 ? 'bg-warning/10' : 'bg-success/10'
+          }`}>
+            {daysUntilDue <= 3 ? (
+              <AlertCircle className={`w-3 h-3 ${daysUntilDue <= 3 ? 'text-error' : 'text-warning'}`} />
+            ) : (
+              <Calendar className="w-3 h-3 text-success" />
+            )}
+            <span className={`text-xs font-medium ${
+              daysUntilDue <= 3 ? 'text-error' : daysUntilDue <= 7 ? 'text-warning' : 'text-success'
+            }`}>
+              {daysUntilDue === 0 ? 'Due today' : daysUntilDue === 1 ? 'Due tomorrow' : `${daysUntilDue}d`}
+            </span>
+          </div>
+
+          <div className="flex gap-1">
+            <button
+              onClick={(e) => { e.stopPropagation(); onEdit(card); }}
+              className="p-2 rounded-lg text-text-tertiary hover:text-accent hover:bg-accent/10 transition-colors"
+            >
+              <Edit2 className="w-4 h-4" />
+            </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); onDelete(card.id); }}
+              className="p-2 rounded-lg text-text-tertiary hover:text-error hover:bg-error/10 transition-colors"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      </motion.div>
+    </motion.div>
+  )
+}
+
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
@@ -194,17 +498,6 @@ export default function CreditCardsPage() {
     if (percentage < 30) return 'text-success'
     if (percentage < 70) return 'text-warning'
     return 'text-error'
-  }
-
-  const getDaysUntilDue = (dueDate: number) => {
-    const today = new Date()
-    const currentMonthDue = new Date(today.getFullYear(), today.getMonth(), dueDate)
-    if (currentMonthDue < today) {
-      currentMonthDue.setMonth(currentMonthDue.getMonth() + 1)
-    }
-    const diffTime = currentMonthDue.getTime() - today.getTime()
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-    return diffDays
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -424,8 +717,15 @@ export default function CreditCardsPage() {
                 style={{ background: 'radial-gradient(circle, rgba(201, 165, 92, 0.08) 0%, transparent 70%)' }}
               />
               <div className="relative">
-                <div className="w-16 h-16 rounded-2xl bg-accent/10 border border-accent/20 flex items-center justify-center mx-auto mb-4">
-                  <CreditCard className="w-8 h-8 text-accent/60" />
+                {/* Empty State Premium Card Preview */}
+                <div className="relative w-48 aspect-[1.586/1] mx-auto mb-6 rounded-xl overflow-hidden opacity-40"
+                  style={{
+                    background: 'linear-gradient(135deg, #2a2310 0%, #C9A962 40%, #8B7A3F 60%, #2a2310 100%)',
+                  }}
+                >
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <CreditCard className="w-12 h-12 text-white/40" />
+                  </div>
                 </div>
                 <h3 className="text-lg font-semibold text-text-primary mb-2">No credit cards added yet</h3>
                 <p className="text-text-secondary text-sm mb-6">Add your first card to track utilization</p>
@@ -440,145 +740,17 @@ export default function CreditCardsPage() {
               </div>
             </motion.div>
           ) : (
-            <div className="space-y-3">
-              {creditCards.map((card, index) => {
-                const cardUtilization = (card.currentOutstanding / card.creditLimit) * 100
-                const daysUntilDue = getDaysUntilDue(card.dueDate)
-
-                return (
-                  <motion.div
-                    key={card.id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.05 }}
-                    className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-bg-secondary to-bg-tertiary border border-border-subtle p-5 transition-all duration-300 hover:border-accent/30 hover:shadow-[0_0_15px_rgba(201,165,92,0.08)]"
-                  >
-                    {/* Card Color Stripe */}
-                    <div
-                      className="absolute left-0 top-0 bottom-0 w-1.5 rounded-l-2xl"
-                      style={{ backgroundColor: card.color }}
-                    />
-
-                    {/* Hover glow */}
-                    <div
-                      className="absolute -top-10 -right-10 w-20 h-20 rounded-full blur-2xl transition-all"
-                      style={{ backgroundColor: `${card.color}00` }}
-                    />
-                    <div
-                      className="absolute -top-10 -right-10 w-20 h-20 rounded-full blur-2xl transition-all group-hover:opacity-30"
-                      style={{ backgroundColor: card.color, opacity: 0 }}
-                    />
-
-                    <div className="relative ml-2">
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="flex items-center gap-3">
-                          <div
-                            className="w-12 h-8 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform"
-                            style={{ backgroundColor: card.color }}
-                          >
-                            <Building2 className="w-6 h-6 text-white" />
-                          </div>
-                          <div>
-                            <h3 className="font-semibold text-text-primary">{card.cardName}</h3>
-                            <p className="text-sm text-text-secondary">
-                              {card.bankName} •••• {card.lastFourDigits}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="flex gap-1">
-                          <button
-                            onClick={() => handleEdit(card)}
-                            className="p-2 rounded-lg text-text-tertiary hover:text-accent hover:bg-accent/10 transition-colors"
-                          >
-                            <Edit2 className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() => handleDelete(card.id)}
-                            className="p-2 rounded-lg text-text-tertiary hover:text-error hover:bg-error/10 transition-colors"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Balance Info */}
-                      <div className="grid grid-cols-2 gap-4 mb-4">
-                        <div>
-                          <p className="text-xs text-text-tertiary mb-1">Outstanding</p>
-                          <p className="text-xl font-semibold text-error">
-                            {formatCurrency(card.currentOutstanding)}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="text-xs text-text-tertiary mb-1">Available</p>
-                          <p className="text-xl font-semibold text-success">
-                            {formatCurrency(card.availableLimit)}
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* Utilization Bar */}
-                      <div className="mb-4">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-xs text-text-secondary">Utilization</span>
-                          <span className={`text-xs font-semibold ${getUtilizationTextColor(cardUtilization)}`}>
-                            {cardUtilization.toFixed(1)}%
-                          </span>
-                        </div>
-                        <div className="w-full h-2.5 bg-bg-primary/50 rounded-full overflow-hidden">
-                          <motion.div
-                            initial={{ width: 0 }}
-                            animate={{ width: `${Math.min(cardUtilization, 100)}%` }}
-                            transition={{ duration: 0.6, ease: 'easeOut', delay: index * 0.05 }}
-                            className={`h-full rounded-full ${getUtilizationColor(cardUtilization)}`}
-                            style={{
-                              boxShadow: cardUtilization < 30
-                                ? '0 0 8px rgba(34, 197, 94, 0.4)'
-                                : cardUtilization < 70
-                                ? '0 0 8px rgba(245, 158, 11, 0.4)'
-                                : '0 0 8px rgba(239, 68, 68, 0.4)',
-                            }}
-                          />
-                        </div>
-                      </div>
-
-                      {/* Due Date Alert */}
-                      <div
-                        className={`flex items-center gap-2 p-3 rounded-xl border ${
-                          daysUntilDue <= 3
-                            ? 'bg-error/10 border-error/20'
-                            : daysUntilDue <= 7
-                            ? 'bg-warning/10 border-warning/20'
-                            : 'bg-success/10 border-success/20'
-                        }`}
-                      >
-                        {daysUntilDue <= 3 ? (
-                          <AlertCircle className="w-4 h-4 text-error" />
-                        ) : daysUntilDue <= 7 ? (
-                          <Calendar className="w-4 h-4 text-warning" />
-                        ) : (
-                          <CheckCircle2 className="w-4 h-4 text-success" />
-                        )}
-                        <span
-                          className={`text-sm font-medium ${
-                            daysUntilDue <= 3
-                              ? 'text-error'
-                              : daysUntilDue <= 7
-                              ? 'text-warning'
-                              : 'text-success'
-                          }`}
-                        >
-                          {daysUntilDue === 0
-                            ? 'Due today!'
-                            : daysUntilDue === 1
-                            ? 'Due tomorrow'
-                            : `Due in ${daysUntilDue} days`}
-                        </span>
-                      </div>
-                    </div>
-                  </motion.div>
-                )
-              })}
+            <div className="space-y-8">
+              {creditCards.map((card, index) => (
+                <PremiumCreditCard
+                  key={card.id}
+                  card={card}
+                  onEdit={handleEdit}
+                  onDelete={handleDelete}
+                  formatCurrency={formatCurrency}
+                  index={index}
+                />
+              ))}
             </div>
           )}
         </motion.div>

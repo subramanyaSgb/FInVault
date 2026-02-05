@@ -83,9 +83,9 @@ export const useAuthStore = create<AuthState>()(
           // Derive master key from PIN
           const masterKey = await deriveMasterKey(pin)
 
-          // Create PIN hash (we'll store a derived hash, not the actual PIN)
-          const pinHash = await deriveMasterKey(pin)
-          const pinHashString = arrayBufferToBase64(pinHash.salt)
+          // Store the same salt used for master key derivation
+          // This ensures PIN verification works correctly when session expires
+          const pinHashString = arrayBufferToBase64(masterKey.salt)
 
           // Create default settings
           const settings: UserSettings = {

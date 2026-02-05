@@ -8,7 +8,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import {
   ChevronLeft,
-  Calendar,
   Camera,
   Split,
   Plus,
@@ -19,9 +18,16 @@ import {
   MapPin,
   Navigation,
   User,
-  UserPlus
+  UserPlus,
+  Wallet,
+  Building2,
+  CreditCard,
+  Smartphone,
+  Banknote,
+  PiggyBank,
+  ChevronRight,
+  Search,
 } from 'lucide-react';
-import { format } from 'date-fns';
 import { useTransactionStore } from '@/stores/transactionStore';
 import { useAuthStore } from '@/stores/authStore';
 import { db } from '@/lib/db';
@@ -35,6 +41,7 @@ import {
 import type { TransactionType, Account, GeoLocation, Contact } from '@/types';
 import { Numpad } from '@/components/features/transactions/Numpad';
 import { CategorySelector } from '@/components/features/transactions/CategorySelector';
+import { DatePicker } from '@/components/features/transactions/DatePicker';
 import { useContactStore } from '@/stores/contactStore';
 
 // Validation schema
@@ -95,6 +102,9 @@ export default function AddTransactionPage() {
   const [showPersonSelector, setShowPersonSelector] = useState(false);
   const [personSearch, setPersonSearch] = useState('');
   const [selectedPerson, setSelectedPerson] = useState<Contact | null>(null);
+  const [showAccountSelector, setShowAccountSelector] = useState(false);
+  const [showToAccountSelector, setShowToAccountSelector] = useState(false);
+  const [accountSearch, setAccountSearch] = useState('');
   
   const {
     control,
@@ -345,6 +355,46 @@ export default function AddTransactionPage() {
     ? searchContacts(personSearch)
     : contacts;
 
+  // Account helpers
+  const getAccountIcon = (type: string) => {
+    switch (type) {
+      case 'bank': return Building2;
+      case 'cash': return Banknote;
+      case 'credit': return CreditCard;
+      case 'digital': return Smartphone;
+      case 'savings': return PiggyBank;
+      default: return Wallet;
+    }
+  };
+
+  const getAccountColor = (type: string) => {
+    switch (type) {
+      case 'bank': return '#3B82F6';
+      case 'cash': return '#22C55E';
+      case 'credit': return '#EF4444';
+      case 'digital': return '#8B5CF6';
+      case 'savings': return '#F59E0B';
+      default: return '#C9A55C';
+    }
+  };
+
+  const formatAccountBalance = (balance: number) => {
+    const symbol = currentProfile?.settings.currency === 'INR' ? '₹' : '$';
+    if (balance >= 10000000) {
+      return `${symbol}${(balance / 10000000).toFixed(2)} Cr`;
+    } else if (balance >= 100000) {
+      return `${symbol}${(balance / 100000).toFixed(2)} L`;
+    }
+    return `${symbol}${balance.toLocaleString('en-IN')}`;
+  };
+
+  const filteredAccounts = accountSearch.trim()
+    ? accounts.filter(a => a.name.toLowerCase().includes(accountSearch.toLowerCase()))
+    : accounts;
+
+  const selectedAccount = accounts.find(a => a.id === watch('accountId'));
+  const selectedToAccount = accounts.find(a => a.id === watch('toAccountId'));
+
   const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       setAttachments(prev => [...prev, ...Array.from(e.target.files!)]);
@@ -579,10 +629,11 @@ export default function AddTransactionPage() {
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: -8, scale: 0.98 }}
                       transition={{ duration: 0.15 }}
-                      className="absolute left-0 right-0 top-full mt-2 z-20 bg-surface-2 border border-border-subtle rounded-xl shadow-lg overflow-hidden"
+                      className="absolute left-0 right-0 top-full mt-2 z-30 rounded-xl shadow-xl overflow-hidden border border-border-default"
+                      style={{ backgroundColor: '#111111' }}
                     >
-                      <div className="px-3 py-2 border-b border-border-subtle">
-                        <p className="text-xs text-text-muted font-medium uppercase tracking-wider">
+                      <div className="px-3 py-2 border-b border-border-subtle" style={{ backgroundColor: '#171717' }}>
+                        <p className="text-xs text-text-tertiary font-medium uppercase tracking-wider">
                           {watchedDescription ? 'Suggestions' : 'Recent'}
                         </p>
                       </div>
@@ -592,20 +643,21 @@ export default function AddTransactionPage() {
                             key={`${suggestion.description}-${index}`}
                             type="button"
                             onClick={() => handleSuggestionSelect(suggestion)}
-                            className="w-full px-4 py-3 text-left hover:bg-surface-1 transition-colors flex items-center justify-between gap-3 group"
+                            className="w-full px-4 py-3 text-left hover:bg-bg-tertiary transition-colors flex items-center justify-between gap-3 group border-b border-border-subtle last:border-0"
+                            style={{ backgroundColor: '#111111' }}
                           >
                             <div className="flex-1 min-w-0">
                               <p className="text-sm text-text-primary truncate font-medium">
                                 {suggestion.description}
                               </p>
                               {suggestion.category && (
-                                <p className="text-xs text-text-muted truncate mt-0.5">
+                                <p className="text-xs text-text-tertiary truncate mt-0.5">
                                   {suggestion.category}
                                   {suggestion.subcategory && ` → ${suggestion.subcategory}`}
                                 </p>
                               )}
                             </div>
-                            <span className="text-xs text-text-tertiary opacity-0 group-hover:opacity-100 transition-opacity">
+                            <span className="text-xs text-accent font-medium opacity-0 group-hover:opacity-100 transition-opacity">
                               {(suggestion.useCount ?? suggestion.frequency) > 1 ? `${suggestion.useCount ?? suggestion.frequency}×` : 'Use'}
                             </span>
                           </button>
@@ -663,23 +715,33 @@ export default function AddTransactionPage() {
                   <label className="block text-xs text-text-tertiary mb-1.5 uppercase tracking-wider font-medium">
                     {watchedType === 'transfer' ? 'From' : 'Account'}
                   </label>
-                  <Controller
-                    name="accountId"
-                    control={control}
-                    render={({ field }) => (
-                      <select
-                        {...field}
-                        className="w-full px-3 py-2.5 bg-surface-1 border border-border-subtle rounded-xl text-sm text-text-primary focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20 transition-colors"
-                      >
-                        <option value="">Select</option>
-                        {accounts.map(account => (
-                          <option key={account.id} value={account.id}>
-                            {account.name}
-                          </option>
-                        ))}
-                      </select>
+                  <button
+                    type="button"
+                    onClick={() => setShowAccountSelector(true)}
+                    className="w-full px-3 py-2.5 bg-surface-1 border border-border-subtle rounded-xl text-sm text-left transition-all hover:border-accent/30 flex items-center gap-2"
+                  >
+                    {selectedAccount ? (
+                      <>
+                        <div
+                          className="w-6 h-6 rounded-lg flex items-center justify-center"
+                          style={{ backgroundColor: `${getAccountColor(selectedAccount.type)}20` }}
+                        >
+                          {(() => {
+                            const Icon = getAccountIcon(selectedAccount.type);
+                            return <Icon className="w-3.5 h-3.5" style={{ color: getAccountColor(selectedAccount.type) }} />;
+                          })()}
+                        </div>
+                        <span className="text-text-primary truncate flex-1">{selectedAccount.name}</span>
+                        <ChevronRight className="w-4 h-4 text-text-muted" />
+                      </>
+                    ) : (
+                      <>
+                        <Wallet className="w-4 h-4 text-text-muted" />
+                        <span className="text-text-muted flex-1">Select Account</span>
+                        <ChevronRight className="w-4 h-4 text-text-muted" />
+                      </>
                     )}
-                  />
+                  </button>
                   {errors.accountId && (
                     <p className="mt-1 text-xs text-error">{errors.accountId.message}</p>
                   )}
@@ -690,25 +752,33 @@ export default function AddTransactionPage() {
               {watchedType === 'transfer' && (
                 <div>
                   <label className="block text-xs text-text-tertiary mb-1.5 uppercase tracking-wider font-medium">To Account</label>
-                  <Controller
-                    name="toAccountId"
-                    control={control}
-                    render={({ field }) => (
-                      <select
-                        {...field}
-                        className="w-full px-3 py-2.5 bg-surface-1 border border-border-subtle rounded-xl text-sm text-text-primary focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20 transition-colors"
-                      >
-                        <option value="">Select destination</option>
-                        {accounts
-                          .filter(a => a.id !== watch('accountId'))
-                          .map(account => (
-                            <option key={account.id} value={account.id}>
-                              {account.name}
-                            </option>
-                          ))}
-                      </select>
+                  <button
+                    type="button"
+                    onClick={() => setShowToAccountSelector(true)}
+                    className="w-full px-3 py-2.5 bg-surface-1 border border-border-subtle rounded-xl text-sm text-left transition-all hover:border-accent/30 flex items-center gap-2"
+                  >
+                    {selectedToAccount ? (
+                      <>
+                        <div
+                          className="w-6 h-6 rounded-lg flex items-center justify-center"
+                          style={{ backgroundColor: `${getAccountColor(selectedToAccount.type)}20` }}
+                        >
+                          {(() => {
+                            const Icon = getAccountIcon(selectedToAccount.type);
+                            return <Icon className="w-3.5 h-3.5" style={{ color: getAccountColor(selectedToAccount.type) }} />;
+                          })()}
+                        </div>
+                        <span className="text-text-primary truncate flex-1">{selectedToAccount.name}</span>
+                        <ChevronRight className="w-4 h-4 text-text-muted" />
+                      </>
+                    ) : (
+                      <>
+                        <Wallet className="w-4 h-4 text-text-muted" />
+                        <span className="text-text-muted flex-1">Select Destination</span>
+                        <ChevronRight className="w-4 h-4 text-text-muted" />
+                      </>
                     )}
-                  />
+                  </button>
                 </div>
               )}
 
@@ -719,15 +789,11 @@ export default function AddTransactionPage() {
                   name="date"
                   control={control}
                   render={({ field }) => (
-                    <div className="relative">
-                      <input
-                        type="date"
-                        value={format(field.value, 'yyyy-MM-dd')}
-                        onChange={(e) => field.onChange(new Date(e.target.value))}
-                        className="w-full px-3 py-2.5 bg-surface-1 border border-border-subtle rounded-xl text-sm text-text-primary focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20 transition-colors"
-                      />
-                      <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-tertiary pointer-events-none" />
-                    </div>
+                    <DatePicker
+                      value={field.value}
+                      onChange={field.onChange}
+                      maxDate={new Date()}
+                    />
                   )}
                 />
               </div>
@@ -893,70 +959,310 @@ export default function AddTransactionPage() {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    className="fixed inset-0 z-50 bg-bg-base/90 backdrop-blur-md flex items-end"
+                    className="fixed inset-0 z-50 bg-bg-base/95 backdrop-blur-xl"
                     onClick={() => { setShowPersonSelector(false); setPersonSearch(''); }}
                   >
                     <motion.div
-                      initial={{ y: '100%' }}
-                      animate={{ y: 0 }}
-                      exit={{ y: '100%' }}
+                      initial={{ y: 50, opacity: 0 }}
+                      animate={{ y: 0, opacity: 1 }}
+                      exit={{ y: 50, opacity: 0 }}
                       transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-                      className="w-full max-w-lg mx-auto bg-bg-secondary border-t border-glass-border rounded-t-2xl overflow-hidden"
+                      className="h-full flex flex-col"
                       onClick={(e) => e.stopPropagation()}
                     >
-                      <div className="p-4 border-b border-border-subtle">
-                        <div className="w-10 h-1 bg-border-default rounded-full mx-auto mb-3" />
-                        <input
-                          type="text"
-                          value={personSearch}
-                          onChange={(e) => setPersonSearch(e.target.value)}
-                          placeholder="Search or add new contact..."
-                          autoFocus
-                          className="w-full px-3 py-2.5 bg-surface-1 border border-border-subtle rounded-xl text-sm text-text-primary placeholder-text-muted focus:outline-none focus:border-accent"
-                        />
+                      {/* Modal Header */}
+                      <div className="p-4 border-b border-glass-border bg-bg-secondary/50 backdrop-blur-xl">
+                        <div className="flex items-center justify-between mb-4">
+                          <div>
+                            <p className="text-[10px] text-accent font-medium tracking-wide uppercase">Select</p>
+                            <h2 className="text-lg font-semibold text-text-primary">Contact Person</h2>
+                          </div>
+                          <button
+                            onClick={() => { setShowPersonSelector(false); setPersonSearch(''); }}
+                            className="p-2 rounded-xl bg-surface-1 hover:bg-surface-2 transition-colors"
+                          >
+                            <X className="w-5 h-5 text-text-secondary" />
+                          </button>
+                        </div>
+
+                        {/* Search */}
+                        <div className="relative">
+                          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
+                          <input
+                            type="text"
+                            value={personSearch}
+                            onChange={(e) => setPersonSearch(e.target.value)}
+                            placeholder="Search or add new contact..."
+                            autoFocus
+                            className="w-full pl-10 pr-4 py-2.5 bg-surface-1 border border-border-subtle rounded-xl text-sm text-text-primary placeholder-text-muted focus:outline-none focus:border-accent"
+                          />
+                        </div>
                       </div>
 
-                      <div className="max-h-60 overflow-y-auto">
-                        {filteredContacts.length > 0 ? (
-                          filteredContacts.slice(0, 5).map(contact => (
-                            <button
-                              key={contact.id}
-                              type="button"
-                              onClick={() => handleSelectPerson(contact)}
-                              className="w-full flex items-center gap-3 px-4 py-3 hover:bg-surface-1 transition-colors"
-                            >
-                              <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center">
-                                {contact.avatar ? (
-                                  <img src={contact.avatar} alt={contact.name} className="w-8 h-8 rounded-full object-cover" />
-                                ) : (
-                                  <User className="w-4 h-4 text-accent" />
-                                )}
-                              </div>
-                              <p className="text-sm text-text-primary flex-1 text-left">{contact.name}</p>
-                            </button>
-                          ))
-                        ) : null}
-
+                      {/* Contact List */}
+                      <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                        {/* Add New Contact Option */}
                         {personSearch.trim() && (
-                          <button
+                          <motion.button
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
                             type="button"
                             onClick={handleCreatePerson}
-                            className="w-full flex items-center gap-3 px-4 py-3 hover:bg-surface-1 transition-colors border-t border-border-subtle"
+                            className="w-full group relative overflow-hidden rounded-2xl border p-4 text-left transition-all duration-300 bg-gradient-to-br from-success/20 via-success/10 to-transparent border-success/30 hover:border-success/50 hover:shadow-[0_0_20px_rgba(34,197,94,0.15)]"
                           >
-                            <div className="w-8 h-8 rounded-full bg-success/10 flex items-center justify-center">
-                              <UserPlus className="w-4 h-4 text-success" />
+                            <div className="absolute -top-10 -right-10 w-24 h-24 rounded-full blur-2xl bg-success/20 opacity-0 group-hover:opacity-50 transition-all" />
+                            <div className="relative flex items-center gap-4">
+                              <div className="w-12 h-12 rounded-xl bg-success/20 border border-success/30 flex items-center justify-center group-hover:scale-110 transition-transform">
+                                <UserPlus className="w-6 h-6 text-success" />
+                              </div>
+                              <div className="flex-1">
+                                <p className="font-semibold text-text-primary">Add New Contact</p>
+                                <p className="text-xs text-text-tertiary mt-0.5">
+                                  Create &quot;{personSearch.trim()}&quot;
+                                </p>
+                              </div>
+                              <Plus className="w-5 h-5 text-success" />
                             </div>
-                            <p className="text-sm text-text-primary flex-1 text-left">
-                              Add &quot;{personSearch.trim()}&quot;
-                            </p>
-                          </button>
+                          </motion.button>
                         )}
 
-                        {!filteredContacts.length && !personSearch.trim() && (
-                          <div className="px-4 py-8 text-center">
+                        {/* Existing Contacts */}
+                        {filteredContacts.length > 0 ? (
+                          filteredContacts.map((contact, index) => {
+                            const isSelected = selectedPerson?.id === contact.id;
+                            // Generate a consistent color for each contact
+                            const colors = ['#3B82F6', '#8B5CF6', '#22C55E', '#F59E0B', '#EC4899', '#14B8A6'];
+                            const contactColor = colors[contact.name.charCodeAt(0) % colors.length];
+
+                            return (
+                              <motion.button
+                                key={contact.id}
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: index * 0.03 }}
+                                type="button"
+                                onClick={() => handleSelectPerson(contact)}
+                                className={`w-full group relative overflow-hidden rounded-2xl border p-4 text-left transition-all duration-300 ${
+                                  isSelected
+                                    ? 'bg-gradient-to-br from-accent/20 via-accent/10 to-transparent border-accent/50 shadow-[0_0_20px_rgba(201,165,92,0.15)]'
+                                    : 'bg-gradient-to-br from-bg-secondary to-bg-tertiary border-border-subtle hover:border-accent/30 hover:shadow-[0_0_15px_rgba(201,165,92,0.08)]'
+                                }`}
+                              >
+                                {/* Hover glow */}
+                                <div
+                                  className="absolute -top-10 -right-10 w-24 h-24 rounded-full blur-2xl transition-all opacity-0 group-hover:opacity-30"
+                                  style={{ backgroundColor: contactColor }}
+                                />
+
+                                <div className="relative flex items-center gap-4">
+                                  {/* Avatar */}
+                                  <div
+                                    className="w-12 h-12 rounded-xl flex items-center justify-center border transition-transform group-hover:scale-110 overflow-hidden"
+                                    style={{
+                                      backgroundColor: contact.avatar ? 'transparent' : `${contactColor}20`,
+                                      borderColor: `${contactColor}40`,
+                                    }}
+                                  >
+                                    {contact.avatar ? (
+                                      <img src={contact.avatar} alt={contact.name} className="w-full h-full object-cover" />
+                                    ) : (
+                                      <span className="text-lg font-semibold" style={{ color: contactColor }}>
+                                        {contact.name.charAt(0).toUpperCase()}
+                                      </span>
+                                    )}
+                                  </div>
+
+                                  {/* Contact Info */}
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2">
+                                      <h3 className="font-semibold text-text-primary truncate">{contact.name}</h3>
+                                      {isSelected && (
+                                        <motion.div
+                                          initial={{ scale: 0 }}
+                                          animate={{ scale: 1 }}
+                                          className="w-5 h-5 rounded-full bg-accent flex items-center justify-center"
+                                        >
+                                          <Check className="w-3 h-3 text-bg-base" />
+                                        </motion.div>
+                                      )}
+                                    </div>
+                                    {(contact.email || contact.phone) && (
+                                      <p className="text-xs text-text-tertiary truncate mt-0.5">
+                                        {contact.email || contact.phone}
+                                      </p>
+                                    )}
+                                  </div>
+
+                                  <ChevronRight className="w-5 h-5 text-text-muted group-hover:text-accent transition-colors" />
+                                </div>
+                              </motion.button>
+                            );
+                          })
+                        ) : !personSearch.trim() ? (
+                          <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            className="text-center py-12"
+                          >
+                            <div className="w-16 h-16 rounded-2xl bg-surface-1 border border-border-subtle flex items-center justify-center mx-auto mb-4">
+                              <User className="w-8 h-8 text-text-muted" />
+                            </div>
                             <p className="text-sm text-text-muted">No contacts yet</p>
                             <p className="text-xs text-text-tertiary mt-1">Type a name to add one</p>
+                          </motion.div>
+                        ) : null}
+                      </div>
+                    </motion.div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Account Selector Modal */}
+              <AnimatePresence>
+                {(showAccountSelector || showToAccountSelector) && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="fixed inset-0 z-50 bg-bg-base/95 backdrop-blur-xl"
+                    onClick={() => { setShowAccountSelector(false); setShowToAccountSelector(false); setAccountSearch(''); }}
+                  >
+                    <motion.div
+                      initial={{ y: 50, opacity: 0 }}
+                      animate={{ y: 0, opacity: 1 }}
+                      exit={{ y: 50, opacity: 0 }}
+                      transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                      className="h-full flex flex-col"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {/* Modal Header */}
+                      <div className="p-4 border-b border-glass-border bg-bg-secondary/50 backdrop-blur-xl">
+                        <div className="flex items-center justify-between mb-4">
+                          <div>
+                            <p className="text-[10px] text-accent font-medium tracking-wide uppercase">Select</p>
+                            <h2 className="text-lg font-semibold text-text-primary">
+                              {showToAccountSelector ? 'Destination Account' : 'Payment Account'}
+                            </h2>
                           </div>
+                          <button
+                            onClick={() => { setShowAccountSelector(false); setShowToAccountSelector(false); setAccountSearch(''); }}
+                            className="p-2 rounded-xl bg-surface-1 hover:bg-surface-2 transition-colors"
+                          >
+                            <X className="w-5 h-5 text-text-secondary" />
+                          </button>
+                        </div>
+
+                        {/* Search */}
+                        <div className="relative">
+                          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
+                          <input
+                            type="text"
+                            value={accountSearch}
+                            onChange={(e) => setAccountSearch(e.target.value)}
+                            placeholder="Search accounts..."
+                            autoFocus
+                            className="w-full pl-10 pr-4 py-2.5 bg-surface-1 border border-border-subtle rounded-xl text-sm text-text-primary placeholder-text-muted focus:outline-none focus:border-accent"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Account List */}
+                      <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                        {filteredAccounts
+                          .filter(a => showToAccountSelector ? a.id !== watch('accountId') : true)
+                          .map((account, index) => {
+                            const Icon = getAccountIcon(account.type);
+                            const color = getAccountColor(account.type);
+                            const isSelected = showToAccountSelector
+                              ? watch('toAccountId') === account.id
+                              : watch('accountId') === account.id;
+
+                            return (
+                              <motion.button
+                                key={account.id}
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: index * 0.03 }}
+                                type="button"
+                                onClick={() => {
+                                  if (showToAccountSelector) {
+                                    setValue('toAccountId', account.id);
+                                    setShowToAccountSelector(false);
+                                  } else {
+                                    setValue('accountId', account.id);
+                                    setShowAccountSelector(false);
+                                  }
+                                  setAccountSearch('');
+                                }}
+                                className={`w-full group relative overflow-hidden rounded-2xl border p-4 text-left transition-all duration-300 ${
+                                  isSelected
+                                    ? 'bg-gradient-to-br from-accent/20 via-accent/10 to-transparent border-accent/50 shadow-[0_0_20px_rgba(201,165,92,0.15)]'
+                                    : 'bg-gradient-to-br from-bg-secondary to-bg-tertiary border-border-subtle hover:border-accent/30 hover:shadow-[0_0_15px_rgba(201,165,92,0.08)]'
+                                }`}
+                              >
+                                {/* Hover glow */}
+                                <div
+                                  className="absolute -top-10 -right-10 w-24 h-24 rounded-full blur-2xl transition-all opacity-0 group-hover:opacity-30"
+                                  style={{ backgroundColor: color }}
+                                />
+
+                                <div className="relative flex items-center gap-4">
+                                  {/* Account Icon */}
+                                  <div
+                                    className="w-12 h-12 rounded-xl flex items-center justify-center border transition-transform group-hover:scale-110"
+                                    style={{
+                                      backgroundColor: `${color}15`,
+                                      borderColor: `${color}30`,
+                                    }}
+                                  >
+                                    <Icon className="w-6 h-6" style={{ color }} />
+                                  </div>
+
+                                  {/* Account Info */}
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2">
+                                      <h3 className="font-semibold text-text-primary truncate">{account.name}</h3>
+                                      {isSelected && (
+                                        <motion.div
+                                          initial={{ scale: 0 }}
+                                          animate={{ scale: 1 }}
+                                          className="w-5 h-5 rounded-full bg-accent flex items-center justify-center"
+                                        >
+                                          <Check className="w-3 h-3 text-bg-base" />
+                                        </motion.div>
+                                      )}
+                                    </div>
+                                    <p className="text-xs text-text-tertiary capitalize mt-0.5">
+                                      {account.type} {account.bankName && `• ${account.bankName}`}
+                                    </p>
+                                  </div>
+
+                                  {/* Balance */}
+                                  <div className="text-right">
+                                    <p className={`text-lg font-semibold font-display ${
+                                      account.balance >= 0 ? 'text-success' : 'text-error'
+                                    }`}>
+                                      {formatAccountBalance(account.balance)}
+                                    </p>
+                                    <p className="text-[10px] text-text-muted uppercase tracking-wider">Balance</p>
+                                  </div>
+                                </div>
+                              </motion.button>
+                            );
+                          })}
+
+                        {filteredAccounts.length === 0 && (
+                          <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            className="text-center py-12"
+                          >
+                            <div className="w-16 h-16 rounded-2xl bg-surface-1 border border-border-subtle flex items-center justify-center mx-auto mb-4">
+                              <Wallet className="w-8 h-8 text-text-muted" />
+                            </div>
+                            <p className="text-sm text-text-muted">No accounts found</p>
+                            <p className="text-xs text-text-tertiary mt-1">Try a different search term</p>
+                          </motion.div>
                         )}
                       </div>
                     </motion.div>
