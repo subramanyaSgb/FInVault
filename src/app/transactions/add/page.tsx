@@ -77,6 +77,19 @@ type TransactionFormData = z.infer<typeof transactionSchema>;
 const STEPS = ['amount', 'details'] as const;
 type Step = typeof STEPS[number];
 
+interface AddedTransaction {
+  type: TransactionType;
+  amount: number;
+  description: string;
+  category: string;
+  subcategory?: string;
+  accountName: string;
+  toAccountName?: string;
+  personName?: string;
+  date: Date;
+  tags: string[];
+}
+
 export default function AddTransactionPage() {
   const router = useRouter();
   const { currentProfile } = useAuthStore();
@@ -105,6 +118,8 @@ export default function AddTransactionPage() {
   const [showAccountSelector, setShowAccountSelector] = useState(false);
   const [showToAccountSelector, setShowToAccountSelector] = useState(false);
   const [accountSearch, setAccountSearch] = useState('');
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [addedTransaction, setAddedTransaction] = useState<AddedTransaction | null>(null);
   
   const {
     control,
@@ -405,6 +420,32 @@ export default function AddTransactionPage() {
     setAttachments(prev => prev.filter((_, i) => i !== index));
   }, []);
 
+  const handleAddAnother = useCallback(() => {
+    // Reset form and state
+    setShowSuccess(false);
+    setAddedTransaction(null);
+    setAmount('₹');
+    setCurrentStep('amount');
+    setSelectedPerson(null);
+    setAttachments([]);
+    setAiSuggestion(null);
+    setLocation(null);
+    setValue('type', 'expense');
+    setValue('amount', 0);
+    setValue('description', '');
+    setValue('category', '');
+    setValue('subcategory', undefined);
+    setValue('accountId', '');
+    setValue('toAccountId', undefined);
+    setValue('personId', undefined);
+    setValue('date', new Date());
+    setValue('tags', []);
+    setValue('notes', undefined);
+    setValue('location', undefined);
+    setValue('isSplit', false);
+    setValue('splits', []);
+  }, [setValue]);
+
   const onSubmit = async (data: TransactionFormData) => {
     if (!currentProfile) return;
 
@@ -446,7 +487,32 @@ export default function AddTransactionPage() {
       // Record for auto-suggestions
       recordTransactionForSuggestions(data.description, data.category, data.subcategory);
 
-      router.push('/transactions');
+      // Show success screen with transaction details
+      const account = accounts.find(a => a.id === data.accountId);
+      const toAccount = accounts.find(a => a.id === data.toAccountId);
+
+      const transactionDetails: AddedTransaction = {
+        type: data.type,
+        amount: data.amount,
+        description: data.description,
+        category: data.category,
+        accountName: account?.name || 'Unknown',
+        date: data.date,
+        tags: data.tags,
+      };
+
+      if (data.subcategory) {
+        transactionDetails.subcategory = data.subcategory;
+      }
+      if (toAccount?.name) {
+        transactionDetails.toAccountName = toAccount.name;
+      }
+      if (selectedPerson?.name) {
+        transactionDetails.personName = selectedPerson.name;
+      }
+
+      setAddedTransaction(transactionDetails);
+      setShowSuccess(true);
     } catch (err) {
       console.error('Failed to add transaction:', err);
     }
@@ -1409,6 +1475,216 @@ export default function AddTransactionPage() {
                 onClose={() => setShowCategorySelector(false)}
               />
             </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Success Screen */}
+      <AnimatePresence>
+        {showSuccess && addedTransaction && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-bg-base flex flex-col"
+          >
+            {/* Celebration Background */}
+            <div className="absolute inset-0 overflow-hidden pointer-events-none">
+              <div
+                className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px]"
+                style={{
+                  background: addedTransaction.type === 'income'
+                    ? 'radial-gradient(ellipse at center top, rgba(34, 197, 94, 0.15) 0%, transparent 70%)'
+                    : addedTransaction.type === 'expense'
+                      ? 'radial-gradient(ellipse at center top, rgba(239, 68, 68, 0.1) 0%, transparent 70%)'
+                      : 'radial-gradient(ellipse at center top, rgba(201, 165, 92, 0.15) 0%, transparent 70%)'
+                }}
+              />
+              {/* Animated particles */}
+              {[...Array(20)].map((_, i) => (
+                <motion.div
+                  key={i}
+                  initial={{
+                    opacity: 0,
+                    y: '100vh',
+                    x: `${Math.random() * 100}vw`,
+                    rotate: 0,
+                  }}
+                  animate={{
+                    opacity: [0, 1, 1, 0],
+                    y: '-20vh',
+                    rotate: 360,
+                  }}
+                  transition={{
+                    duration: 3 + Math.random() * 2,
+                    delay: Math.random() * 0.5,
+                    ease: 'easeOut',
+                  }}
+                  className="absolute w-2 h-2 rounded-full"
+                  style={{
+                    backgroundColor: addedTransaction.type === 'income'
+                      ? '#22C55E'
+                      : addedTransaction.type === 'expense'
+                        ? '#EF4444'
+                        : '#C9A55C',
+                  }}
+                />
+              ))}
+            </div>
+
+            <div className="flex-1 flex flex-col items-center justify-center px-6 relative z-10">
+              {/* Success Icon */}
+              <motion.div
+                initial={{ scale: 0, rotate: -180 }}
+                animate={{ scale: 1, rotate: 0 }}
+                transition={{ type: 'spring', damping: 12, stiffness: 200, delay: 0.1 }}
+                className={`w-24 h-24 rounded-full flex items-center justify-center mb-6 ${
+                  addedTransaction.type === 'income'
+                    ? 'bg-gradient-to-br from-success to-success/80 shadow-[0_0_40px_rgba(34,197,94,0.4)]'
+                    : addedTransaction.type === 'expense'
+                      ? 'bg-gradient-to-br from-error to-error/80 shadow-[0_0_40px_rgba(239,68,68,0.3)]'
+                      : 'bg-gradient-to-br from-accent to-accent-light shadow-[0_0_40px_rgba(201,165,92,0.4)]'
+                }`}
+              >
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ delay: 0.3, type: 'spring', stiffness: 300 }}
+                >
+                  <Check className="w-12 h-12 text-white" />
+                </motion.div>
+              </motion.div>
+
+              {/* Success Message */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="text-center mb-8"
+              >
+                <h2 className="text-2xl font-display font-bold text-text-primary mb-2">
+                  Transaction Added!
+                </h2>
+                <p className="text-sm text-text-muted">
+                  Your {addedTransaction.type} has been recorded successfully
+                </p>
+              </motion.div>
+
+              {/* Transaction Details Card */}
+              <motion.div
+                initial={{ opacity: 0, y: 30, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ delay: 0.3 }}
+                className="w-full max-w-sm"
+              >
+                <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-bg-secondary to-bg-tertiary border border-glass-border p-5">
+                  {/* Glow decoration */}
+                  <div
+                    className="absolute -top-16 -right-16 w-32 h-32 pointer-events-none"
+                    style={{
+                      background: addedTransaction.type === 'income'
+                        ? 'radial-gradient(circle, rgba(34, 197, 94, 0.1) 0%, transparent 70%)'
+                        : addedTransaction.type === 'expense'
+                          ? 'radial-gradient(circle, rgba(239, 68, 68, 0.08) 0%, transparent 70%)'
+                          : 'radial-gradient(circle, rgba(201, 165, 92, 0.1) 0%, transparent 70%)'
+                    }}
+                  />
+
+                  {/* Amount */}
+                  <div className="relative text-center mb-5 pb-5 border-b border-glass-border">
+                    <p className="text-[10px] text-text-muted uppercase tracking-wider mb-1">
+                      {addedTransaction.type === 'income' ? 'Received' : addedTransaction.type === 'expense' ? 'Spent' : 'Transferred'}
+                    </p>
+                    <p className={`text-4xl font-display font-bold ${
+                      addedTransaction.type === 'income'
+                        ? 'text-success'
+                        : addedTransaction.type === 'expense'
+                          ? 'text-error'
+                          : 'gold-gradient'
+                    }`}>
+                      {addedTransaction.type === 'income' ? '+' : '-'}
+                      {currentProfile?.settings.currency === 'INR' ? '₹' : '$'}
+                      {addedTransaction.amount.toLocaleString('en-IN')}
+                    </p>
+                  </div>
+
+                  {/* Details */}
+                  <div className="relative space-y-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <span className="text-xs text-text-muted">Description</span>
+                      <span className="text-sm text-text-primary text-right font-medium">{addedTransaction.description}</span>
+                    </div>
+                    <div className="flex items-start justify-between gap-3">
+                      <span className="text-xs text-text-muted">Category</span>
+                      <span className="text-sm text-text-primary text-right">
+                        {addedTransaction.category}
+                        {addedTransaction.subcategory && <span className="text-text-tertiary"> → {addedTransaction.subcategory}</span>}
+                      </span>
+                    </div>
+                    <div className="flex items-start justify-between gap-3">
+                      <span className="text-xs text-text-muted">
+                        {addedTransaction.type === 'transfer' ? 'From' : 'Account'}
+                      </span>
+                      <span className="text-sm text-text-primary text-right">{addedTransaction.accountName}</span>
+                    </div>
+                    {addedTransaction.toAccountName && (
+                      <div className="flex items-start justify-between gap-3">
+                        <span className="text-xs text-text-muted">To</span>
+                        <span className="text-sm text-text-primary text-right">{addedTransaction.toAccountName}</span>
+                      </div>
+                    )}
+                    {addedTransaction.personName && (
+                      <div className="flex items-start justify-between gap-3">
+                        <span className="text-xs text-text-muted">Person</span>
+                        <span className="text-sm text-text-primary text-right">{addedTransaction.personName}</span>
+                      </div>
+                    )}
+                    <div className="flex items-start justify-between gap-3">
+                      <span className="text-xs text-text-muted">Date</span>
+                      <span className="text-sm text-text-primary text-right">
+                        {addedTransaction.date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                      </span>
+                    </div>
+                    {addedTransaction.tags.length > 0 && (
+                      <div className="flex items-start justify-between gap-3">
+                        <span className="text-xs text-text-muted">Tags</span>
+                        <div className="flex flex-wrap gap-1 justify-end">
+                          {addedTransaction.tags.map(tag => (
+                            <span key={tag} className="text-[10px] text-accent px-1.5 py-0.5 bg-accent/10 rounded">
+                              #{tag}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+
+            {/* Action Buttons */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+              className="p-6 pb-safe space-y-3"
+            >
+              <motion.button
+                whileTap={{ scale: 0.98 }}
+                onClick={handleAddAnother}
+                className="w-full py-3.5 btn-luxury font-semibold flex items-center justify-center gap-2 text-sm"
+              >
+                <Plus className="w-4 h-4" />
+                Add Another Transaction
+              </motion.button>
+              <motion.button
+                whileTap={{ scale: 0.98 }}
+                onClick={() => router.push('/transactions')}
+                className="w-full py-3.5 bg-gradient-to-br from-bg-secondary to-bg-tertiary border border-glass-border rounded-xl font-semibold text-text-primary hover:border-accent/30 transition-all flex items-center justify-center gap-2 text-sm"
+              >
+                View All Transactions
+              </motion.button>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
