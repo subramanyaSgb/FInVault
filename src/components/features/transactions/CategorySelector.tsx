@@ -1,27 +1,71 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Utensils, 
-  ShoppingBag, 
-  Car, 
-  Zap, 
-  Film, 
-  Heart, 
-  GraduationCap, 
-  Home, 
-  Sparkles, 
-  Gift, 
-  TrendingUp, 
+import {
+  Utensils,
+  ShoppingBag,
+  Car,
+  Zap,
+  Film,
+  Heart,
+  GraduationCap,
+  Home,
+  Sparkles,
+  Gift,
+  TrendingUp,
   ArrowLeftRight,
   Wallet,
   Search,
   ChevronRight,
-  X
+  X,
+  BarChart3,
+  Briefcase,
+  Plane,
+  Phone,
+  Dumbbell,
+  Baby,
+  PawPrint,
+  Gamepad2,
+  Music,
+  Camera,
+  Book,
+  Coffee,
+  type LucideIcon,
 } from 'lucide-react';
+import { useCategoryStore } from '@/stores/categoryStore';
+import { useAuthStore } from '@/stores/authStore';
 
-interface Category {
+// Icon mapping for rendering stored categories
+const ICON_MAP: Record<string, LucideIcon> = {
+  utensils: Utensils,
+  'shopping-bag': ShoppingBag,
+  car: Car,
+  zap: Zap,
+  film: Film,
+  heart: Heart,
+  'graduation-cap': GraduationCap,
+  home: Home,
+  sparkles: Sparkles,
+  gift: Gift,
+  wallet: Wallet,
+  'trending-up': TrendingUp,
+  'arrow-left-right': ArrowLeftRight,
+  'bar-chart': BarChart3,
+  briefcase: Briefcase,
+  plane: Plane,
+  phone: Phone,
+  dumbbell: Dumbbell,
+  baby: Baby,
+  'paw-print': PawPrint,
+  gamepad: Gamepad2,
+  music: Music,
+  camera: Camera,
+  book: Book,
+  coffee: Coffee,
+};
+
+interface DisplayCategory {
   id: string;
   name: string;
   icon: React.ReactNode;
@@ -38,119 +82,35 @@ interface CategorySelectorProps {
   showBack?: boolean;
 }
 
-const EXPENSE_CATEGORIES: Category[] = [
-  {
-    id: 'food',
-    name: 'Food',
-    icon: <Utensils className="w-6 h-6" />,
-    color: '#EF4444',
-    subcategories: ['Food & Dining', 'Groceries', 'Beverages', 'Snacks'],
-  },
-  {
-    id: 'shopping',
-    name: 'Shopping',
-    icon: <ShoppingBag className="w-6 h-6" />,
-    color: '#F59E0B',
-    subcategories: ['Clothing', 'Electronics', 'Accessories', 'Online Shopping'],
-  },
-  {
-    id: 'transportation',
-    name: 'Transport',
-    icon: <Car className="w-6 h-6" />,
-    color: '#3B82F6',
-    subcategories: ['Fuel', 'Public Transport', 'Ride Sharing', 'Maintenance'],
-  },
-  {
-    id: 'utilities',
-    name: 'Utilities',
-    icon: <Zap className="w-6 h-6" />,
-    color: '#FBBF24',
-    subcategories: ['Electricity', 'Water', 'Gas', 'Mobile & Internet'],
-  },
-  {
-    id: 'entertainment',
-    name: 'Entertainment',
-    icon: <Film className="w-6 h-6" />,
-    color: '#8B5CF6',
-    subcategories: ['Movies', 'Streaming', 'Gaming', 'Events'],
-  },
-  {
-    id: 'health',
-    name: 'Health',
-    icon: <Heart className="w-6 h-6" />,
-    color: '#EC4899',
-    subcategories: ['Medical', 'Pharmacy', 'Fitness', 'Insurance'],
-  },
-  {
-    id: 'education',
-    name: 'Education',
-    icon: <GraduationCap className="w-6 h-6" />,
-    color: '#10B981',
-    subcategories: ['Tuition', 'Books', 'Courses', 'Supplies'],
-  },
-  {
-    id: 'home',
-    name: 'Home',
-    icon: <Home className="w-6 h-6" />,
-    color: '#6366F1',
-    subcategories: ['Rent', 'Maintenance', 'Furniture', 'Decor'],
-  },
-  {
-    id: 'personal',
-    name: 'Personal',
-    icon: <Sparkles className="w-6 h-6" />,
-    color: '#14B8A6',
-    subcategories: ['Salon & Spa', 'Grooming', 'Personal Care'],
-  },
-  {
-    id: 'gifts',
-    name: 'Gifts',
-    icon: <Gift className="w-6 h-6" />,
-    color: '#F472B6',
-    subcategories: ['Gifts', 'Charity', 'Donations'],
-  },
+// Fallback default categories (used if store is empty)
+const DEFAULT_EXPENSE_CATEGORIES: DisplayCategory[] = [
+  { id: 'food', name: 'Food', icon: <Utensils className="w-6 h-6" />, color: '#EF4444', subcategories: ['Food & Dining', 'Groceries', 'Beverages', 'Snacks'] },
+  { id: 'shopping', name: 'Shopping', icon: <ShoppingBag className="w-6 h-6" />, color: '#F59E0B', subcategories: ['Clothing', 'Electronics', 'Accessories', 'Online Shopping'] },
+  { id: 'transportation', name: 'Transport', icon: <Car className="w-6 h-6" />, color: '#3B82F6', subcategories: ['Fuel', 'Public Transport', 'Ride Sharing', 'Maintenance'] },
+  { id: 'utilities', name: 'Utilities', icon: <Zap className="w-6 h-6" />, color: '#FBBF24', subcategories: ['Electricity', 'Water', 'Gas', 'Mobile & Internet'] },
+  { id: 'entertainment', name: 'Entertainment', icon: <Film className="w-6 h-6" />, color: '#8B5CF6', subcategories: ['Movies', 'Streaming', 'Gaming', 'Events'] },
+  { id: 'health', name: 'Health', icon: <Heart className="w-6 h-6" />, color: '#EC4899', subcategories: ['Medical', 'Pharmacy', 'Fitness', 'Insurance'] },
+  { id: 'education', name: 'Education', icon: <GraduationCap className="w-6 h-6" />, color: '#10B981', subcategories: ['Tuition', 'Books', 'Courses', 'Supplies'] },
+  { id: 'home', name: 'Home', icon: <Home className="w-6 h-6" />, color: '#6366F1', subcategories: ['Rent', 'Maintenance', 'Furniture', 'Decor'] },
+  { id: 'personal', name: 'Personal', icon: <Sparkles className="w-6 h-6" />, color: '#14B8A6', subcategories: ['Salon & Spa', 'Grooming', 'Personal Care'] },
+  { id: 'gifts', name: 'Gifts', icon: <Gift className="w-6 h-6" />, color: '#F472B6', subcategories: ['Gifts', 'Charity', 'Donations'] },
 ];
 
-const INCOME_CATEGORIES: Category[] = [
-  {
-    id: 'salary',
-    name: 'Salary',
-    icon: <Wallet className="w-6 h-6" />,
-    color: '#22C55E',
-    subcategories: ['Monthly Salary', 'Bonus', 'Commission'],
-  },
-  {
-    id: 'freelance',
-    name: 'Freelance',
-    icon: <TrendingUp className="w-6 h-6" />,
-    color: '#3B82F6',
-    subcategories: ['Consulting', 'Projects', 'Services'],
-  },
-  {
-    id: 'investment',
-    name: 'Investment',
-    icon: <TrendingUp className="w-6 h-6" />,
-    color: '#8B5CF6',
-    subcategories: ['Dividend', 'Interest', 'Capital Gains'],
-  },
-  {
-    id: 'refund',
-    name: 'Refund',
-    icon: <ArrowLeftRight className="w-6 h-6" />,
-    color: '#F59E0B',
-    subcategories: ['Cashback', 'Reward', 'Reimbursement'],
-  },
+const DEFAULT_INCOME_CATEGORIES: DisplayCategory[] = [
+  { id: 'salary', name: 'Salary', icon: <Wallet className="w-6 h-6" />, color: '#22C55E', subcategories: ['Monthly Salary', 'Bonus', 'Commission'] },
+  { id: 'freelance', name: 'Freelance', icon: <TrendingUp className="w-6 h-6" />, color: '#3B82F6', subcategories: ['Consulting', 'Projects', 'Services'] },
+  { id: 'investment', name: 'Investment', icon: <TrendingUp className="w-6 h-6" />, color: '#8B5CF6', subcategories: ['Dividend', 'Interest', 'Capital Gains'] },
+  { id: 'refund', name: 'Refund', icon: <ArrowLeftRight className="w-6 h-6" />, color: '#F59E0B', subcategories: ['Cashback', 'Reward', 'Reimbursement'] },
 ];
 
-const TRANSFER_CATEGORIES: Category[] = [
-  {
-    id: 'transfer',
-    name: 'Transfer',
-    icon: <ArrowLeftRight className="w-6 h-6" />,
-    color: '#6B7280',
-    subcategories: ['Bank Transfer', 'UPI', 'IMPS', 'NEFT'],
-  },
+const DEFAULT_TRANSFER_CATEGORIES: DisplayCategory[] = [
+  { id: 'transfer', name: 'Transfer', icon: <ArrowLeftRight className="w-6 h-6" />, color: '#6B7280', subcategories: ['Bank Transfer', 'UPI', 'IMPS', 'NEFT'] },
 ];
+
+function renderIcon(iconName: string): React.ReactNode {
+  const IconComponent = ICON_MAP[iconName] || Sparkles;
+  return <IconComponent className="w-6 h-6" />;
+}
 
 export function CategorySelector({
   selectedCategory,
@@ -160,23 +120,46 @@ export function CategorySelector({
   onClose,
   showBack = true,
 }: CategorySelectorProps) {
+  const { currentProfile } = useAuthStore();
+  const { categories: storeCategories, loadCategories, getCategoriesByType } = useCategoryStore();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCat, setSelectedCat] = useState<string | null>(null);
 
-  const categories = useMemo(() => {
+  // Load categories from store
+  useEffect(() => {
+    if (currentProfile) {
+      loadCategories(currentProfile.id);
+    }
+  }, [currentProfile, loadCategories]);
+
+  // Convert store categories to display format or use defaults
+  const categories: DisplayCategory[] = useMemo(() => {
+    const storedCategories = getCategoriesByType(type);
+
+    if (storedCategories.length > 0) {
+      return storedCategories.map(cat => ({
+        id: cat.id,
+        name: cat.name,
+        icon: renderIcon(cat.icon),
+        color: cat.color,
+        subcategories: cat.subcategories,
+      }));
+    }
+
+    // Fall back to defaults if no stored categories
     switch (type) {
       case 'income':
-        return INCOME_CATEGORIES;
+        return DEFAULT_INCOME_CATEGORIES;
       case 'transfer':
-        return TRANSFER_CATEGORIES;
+        return DEFAULT_TRANSFER_CATEGORIES;
       default:
-        return EXPENSE_CATEGORIES;
+        return DEFAULT_EXPENSE_CATEGORIES;
     }
-  }, [type]);
+  }, [type, storeCategories, getCategoriesByType]);
 
   const filteredCategories = useMemo(() => {
     if (!searchQuery) return categories;
-    
+
     const query = searchQuery.toLowerCase();
     return categories.filter(
       cat =>
@@ -186,13 +169,16 @@ export function CategorySelector({
   }, [categories, searchQuery]);
 
   const currentCategory = useMemo(() => {
-    return categories.find(c => c.id === (selectedCat || selectedCategory));
+    return categories.find(c => c.id === selectedCat || c.name === selectedCategory);
   }, [categories, selectedCat, selectedCategory]);
 
   const handleCategorySelect = (categoryId: string) => {
     const category = categories.find(c => c.id === categoryId);
     if (category) {
-      if (category.subcategories.length === 1) {
+      if (category.subcategories.length === 0) {
+        // No subcategories, select directly
+        onSelect(category.name);
+      } else if (category.subcategories.length === 1) {
         onSelect(category.name, category.subcategories[0]);
       } else {
         setSelectedCat(categoryId);
@@ -228,11 +214,11 @@ export function CategorySelector({
             <ArrowLeftRight className="w-5 h-5 rotate-180" />
           </motion.button>
         )}
-        
+
         <h2 className="text-h3 text-text-primary flex-1">
           {selectedCat ? 'Select Subcategory' : 'Select Category'}
         </h2>
-        
+
         {onClose && !selectedCat && (
           <motion.button
             whileTap={{ scale: 0.95 }}

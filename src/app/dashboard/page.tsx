@@ -163,8 +163,8 @@ export default function DashboardPage() {
   return (
     <div className="page-container pb-24">
       {/* Header */}
-      <header className="sticky top-0 z-40 bg-bg-base/80 backdrop-blur-lg border-b border-border-subtle">
-        <div className="flex items-center justify-between px-4 py-4 pt-safe">
+      <header className="sticky top-0 z-40 bg-bg-base/80 backdrop-blur-lg border-b border-border-subtle pt-safe">
+        <div className="flex items-center justify-between px-4 py-4">
           <motion.div
             initial={{ opacity: 0, x: -10 }}
             animate={{ opacity: 1, x: 0 }}
@@ -312,10 +312,6 @@ export default function DashboardPage() {
           <Link href="/transactions/scan" className="btn-secondary whitespace-nowrap">
             <Camera className="w-4 h-4" />
             Scan Receipt
-          </Link>
-          <Link href="/transactions" className="btn-secondary whitespace-nowrap">
-            <Receipt className="w-4 h-4" />
-            View All
           </Link>
         </motion.div>
 

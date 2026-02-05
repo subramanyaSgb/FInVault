@@ -18,10 +18,12 @@ import type {
   AIChatMessage,
   Budget,
   NotificationPayload,
+  Category,
+  Contact,
 } from '@/types'
 
 // Database version
-const DB_VERSION = 1
+const DB_VERSION = 3
 const DB_NAME = 'FinVaultDB'
 
 export class FinVaultDatabase extends Dexie {
@@ -44,6 +46,8 @@ export class FinVaultDatabase extends Dexie {
   aiChatMessages!: Table<AIChatMessage>
   budgets!: Table<Budget>
   notifications!: Table<NotificationPayload>
+  categories!: Table<Category>
+  contacts!: Table<Contact>
 
   constructor() {
     super(DB_NAME)
@@ -114,6 +118,12 @@ export class FinVaultDatabase extends Dexie {
 
       // Notifications
       notifications: '++id, profileId, type, timestamp, read',
+
+      // Categories
+      categories: '++id, profileId, type, name, isDefault, isActive, order, createdAt, updatedAt',
+
+      // Contacts / People
+      contacts: '++id, profileId, name, email, phone, relationship, isActive, createdAt, updatedAt',
     })
 
     // Hooks for data validation and encryption

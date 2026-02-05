@@ -442,16 +442,18 @@ export default function AccountsPage() {
                         onClick={() => {
                           setFormData({ ...formData, type: type.type, color: type.color })
                         }}
-                        className={`flex flex-col items-center gap-1 p-3 rounded-lg border transition-colors ${
+                        className={`flex flex-col items-center gap-1 p-3 rounded-xl border-2 transition-all ${
                           formData.type === type.type
-                            ? 'border-accent-primary bg-accent-alpha'
-                            : 'border-white/10 hover:bg-bg-tertiary'
+                            ? 'border-accent-primary bg-accent-primary/15 shadow-[0_0_12px_rgba(201,169,98,0.25)] scale-[1.02]'
+                            : 'border-white/10 hover:bg-bg-tertiary hover:border-white/20'
                         }`}
                       >
-                        <span style={{ color: formData.type === type.type ? type.color : undefined }}>
+                        <span style={{ color: formData.type === type.type ? type.color : '#6B7280' }}>
                           {type.icon}
                         </span>
-                        <span className="text-xs text-text-secondary">{type.label}</span>
+                        <span className={`text-xs font-medium transition-colors ${
+                          formData.type === type.type ? 'text-accent-primary' : 'text-text-secondary'
+                        }`}>{type.label}</span>
                       </button>
                     ))}
                   </div>
@@ -466,10 +468,10 @@ export default function AccountsPage() {
                         key={icon}
                         type="button"
                         onClick={() => setFormData({ ...formData, icon })}
-                        className={`w-10 h-10 text-xl rounded-lg border transition-colors ${
+                        className={`w-10 h-10 text-xl rounded-xl border-2 transition-all ${
                           formData.icon === icon
-                            ? 'border-accent-primary bg-accent-alpha'
-                            : 'border-white/10 hover:bg-bg-tertiary'
+                            ? 'border-accent-primary bg-accent-primary/15 shadow-[0_0_12px_rgba(201,169,98,0.25)] scale-110'
+                            : 'border-white/10 hover:bg-bg-tertiary hover:border-white/20'
                         }`}
                       >
                         {icon}

@@ -1,9 +1,11 @@
 import type { TransactionType } from '@/types';
+import { categorizeWithGemini } from './gemini';
 
 interface CategorizationResult {
   category: string;
   subcategory: string | undefined;
   confidence: number;
+  suggestedTags?: string[] | undefined;
 }
 
 interface CategoryRule {
@@ -395,12 +397,38 @@ const categorizationEngine = new CategorizationEngine();
  * Categorize a transaction based on description, amount, and type
  * Uses rule-based matching with keyword detection
  */
+/**
+ * Categorize transaction using local rules (fast, synchronous)
+ */
 export function categorizeTransaction(
   description: string,
   amount: number,
   type: TransactionType
 ): CategorizationResult {
   return categorizationEngine.categorize(description, amount, type);
+}
+
+/**
+ * Categorize transaction using Gemini AI (async, more accurate)
+ * Falls back to local categorization on error
+ */
+export async function categorizeTransactionWithAI(
+  description: string,
+  amount: number,
+  type: TransactionType
+): Promise<CategorizationResult> {
+  try {
+    const result = await categorizeWithGemini(description, amount, type);
+    return {
+      category: result.category,
+      subcategory: result.subcategory,
+      confidence: result.confidence,
+      suggestedTags: result.suggestedTags
+    };
+  } catch (error) {
+    console.warn('Gemini categorization failed, using local fallback:', error);
+    return categorizationEngine.categorize(description, amount, type);
+  }
 }
 
 /**
@@ -472,20 +500,20 @@ export function suggestCategories(
 ): CategorizationResult[] {
   const normalizedDesc = description.toLowerCase().trim();
   const scores: Array<{ category: string; subcategory: string | undefined; score: number }> = [];
-  
+
   for (const rule of CATEGORY_RULES) {
     if (rule.type && !rule.type.includes(type)) {
       continue;
     }
-    
+
     let ruleScore = 0;
-    
+
     for (const keyword of rule.keywords) {
       if (normalizedDesc.includes(keyword.toLowerCase())) {
         ruleScore += rule.weight;
       }
     }
-    
+
     if (ruleScore > 0) {
       scores.push({
         category: rule.category,
@@ -494,18 +522,205 @@ export function suggestCategories(
       });
     }
   }
-  
+
   // Sort by score and remove duplicates
   const uniqueScores = scores
     .sort((a, b) => b.score - a.score)
-    .filter((item, index, self) => 
+    .filter((item, index, self) =>
       index === self.findIndex(t => t.category === item.category && t.subcategory === item.subcategory)
     )
     .slice(0, 3);
-  
+
   return uniqueScores.map(s => ({
     category: s.category,
     subcategory: s.subcategory,
     confidence: Math.min(s.score / 2, 1.0),
   }));
+}
+
+// ============================================
+// AUTO-SUGGESTION FOR DESCRIPTIONS
+// ============================================
+
+export interface TransactionSuggestion {
+  description: string;
+  category: string;
+  subcategory: string | undefined;
+  frequency: number;
+  lastUsed: Date;
+  useCount?: number; // Alias for frequency for UI display
+}
+
+class AutoSuggestionEngine {
+  private suggestions: Map<string, TransactionSuggestion> = new Map();
+  private readonly STORAGE_KEY = 'finvault_description_suggestions';
+  private readonly MAX_SUGGESTIONS = 100;
+
+  constructor() {
+    this.loadSuggestions();
+  }
+
+  private loadSuggestions() {
+    try {
+      const stored = localStorage.getItem(this.STORAGE_KEY);
+      if (stored) {
+        const data = JSON.parse(stored);
+        this.suggestions = new Map(
+          Object.entries(data).map(([key, value]) => [
+            key,
+            { ...(value as TransactionSuggestion), lastUsed: new Date((value as TransactionSuggestion).lastUsed) },
+          ])
+        );
+      }
+    } catch {
+      // Ignore storage errors
+    }
+  }
+
+  private saveSuggestions() {
+    try {
+      const data = Object.fromEntries(this.suggestions);
+      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(data));
+    } catch {
+      // Ignore storage errors
+    }
+  }
+
+  /**
+   * Record a transaction for future suggestions
+   */
+  recordTransaction(description: string, category: string, subcategory?: string) {
+    const normalizedDesc = description.trim();
+    if (!normalizedDesc || normalizedDesc.length < 2) return;
+
+    const key = normalizedDesc.toLowerCase();
+    const existing = this.suggestions.get(key);
+
+    if (existing) {
+      existing.frequency++;
+      existing.lastUsed = new Date();
+      existing.category = category;
+      existing.subcategory = subcategory;
+    } else {
+      this.suggestions.set(key, {
+        description: normalizedDesc,
+        category,
+        subcategory,
+        frequency: 1,
+        lastUsed: new Date(),
+      });
+    }
+
+    // Prune old suggestions if exceeding limit
+    if (this.suggestions.size > this.MAX_SUGGESTIONS) {
+      const sorted = Array.from(this.suggestions.entries())
+        .sort((a, b) => {
+          // Sort by frequency (desc) then by lastUsed (desc)
+          if (b[1].frequency !== a[1].frequency) {
+            return b[1].frequency - a[1].frequency;
+          }
+          return b[1].lastUsed.getTime() - a[1].lastUsed.getTime();
+        })
+        .slice(0, this.MAX_SUGGESTIONS);
+      this.suggestions = new Map(sorted);
+    }
+
+    this.saveSuggestions();
+  }
+
+  /**
+   * Get description suggestions based on partial input
+   */
+  getSuggestions(query: string, limit = 5): TransactionSuggestion[] {
+    if (!query || query.length < 1) return [];
+
+    const normalizedQuery = query.toLowerCase().trim();
+
+    return Array.from(this.suggestions.values())
+      .filter(s => s.description.toLowerCase().includes(normalizedQuery))
+      .sort((a, b) => {
+        // Prioritize starts-with matches
+        const aStarts = a.description.toLowerCase().startsWith(normalizedQuery) ? 1 : 0;
+        const bStarts = b.description.toLowerCase().startsWith(normalizedQuery) ? 1 : 0;
+        if (bStarts !== aStarts) return bStarts - aStarts;
+
+        // Then by frequency
+        if (b.frequency !== a.frequency) return b.frequency - a.frequency;
+
+        // Then by recency
+        return b.lastUsed.getTime() - a.lastUsed.getTime();
+      })
+      .slice(0, limit)
+      .map(s => ({ ...s, useCount: s.frequency }));
+  }
+
+  /**
+   * Get frequently used descriptions
+   */
+  getFrequentDescriptions(limit = 10): TransactionSuggestion[] {
+    return Array.from(this.suggestions.values())
+      .sort((a, b) => b.frequency - a.frequency)
+      .slice(0, limit)
+      .map(s => ({ ...s, useCount: s.frequency }));
+  }
+
+  /**
+   * Get recent descriptions
+   */
+  getRecentDescriptions(limit = 10): TransactionSuggestion[] {
+    return Array.from(this.suggestions.values())
+      .sort((a, b) => b.lastUsed.getTime() - a.lastUsed.getTime())
+      .slice(0, limit)
+      .map(s => ({ ...s, useCount: s.frequency }));
+  }
+
+  /**
+   * Clear all suggestions
+   */
+  clearSuggestions() {
+    this.suggestions.clear();
+    this.saveSuggestions();
+  }
+}
+
+// Singleton instance
+const autoSuggestionEngine = new AutoSuggestionEngine();
+
+/**
+ * Record a transaction for future auto-suggestions
+ */
+export function recordTransactionForSuggestions(
+  description: string,
+  category: string,
+  subcategory?: string
+): void {
+  autoSuggestionEngine.recordTransaction(description, category, subcategory);
+}
+
+/**
+ * Get auto-suggestions for a description input
+ */
+export function getDescriptionSuggestions(query: string, limit = 5): TransactionSuggestion[] {
+  return autoSuggestionEngine.getSuggestions(query, limit);
+}
+
+/**
+ * Get frequently used descriptions
+ */
+export function getFrequentDescriptions(limit = 10): TransactionSuggestion[] {
+  return autoSuggestionEngine.getFrequentDescriptions(limit);
+}
+
+/**
+ * Get recently used descriptions
+ */
+export function getRecentDescriptions(limit = 10): TransactionSuggestion[] {
+  return autoSuggestionEngine.getRecentDescriptions(limit);
+}
+
+/**
+ * Clear all auto-suggestion data
+ */
+export function clearAutoSuggestions(): void {
+  autoSuggestionEngine.clearSuggestions();
 }

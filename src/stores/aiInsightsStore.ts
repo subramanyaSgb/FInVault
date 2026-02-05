@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { db } from '@/lib/db'
 import type { Transaction, AIChatMessage } from '@/types'
+import { askFinancialQuestion } from '@/lib/ai/gemini'
 
 interface MonthlyData {
   month: string
@@ -435,6 +436,67 @@ export const useAIInsightsStore = create<AIInsightsState>()((set, get) => ({
 }))
 
 async function processQuery(profileId: string, query: string): Promise<string> {
+  // Get user's financial context for Gemini
+  const now = new Date()
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+
+  const transactions = await db.transactions
+    .where('profileId')
+    .equals(profileId)
+    .toArray()
+
+  const monthTransactions = transactions.filter(
+    tx => new Date(tx.date) >= startOfMonth
+  )
+
+  const monthlyIncome = monthTransactions
+    .filter(tx => tx.type === 'income')
+    .reduce((sum, tx) => sum + tx.amount, 0)
+
+  const monthlyExpenses = monthTransactions
+    .filter(tx => tx.type === 'expense')
+    .reduce((sum, tx) => sum + tx.amount, 0)
+
+  // Get account balances
+  const accounts = await db.accounts
+    .where('profileId')
+    .equals(profileId)
+    .and(a => a.isActive)
+    .toArray()
+
+  const totalBalance = accounts.reduce((sum, a) => sum + a.balance, 0)
+
+  // Get top spending categories
+  const categoryTotals: Record<string, number> = {}
+  monthTransactions
+    .filter(tx => tx.type === 'expense')
+    .forEach(tx => {
+      categoryTotals[tx.category] = (categoryTotals[tx.category] || 0) + tx.amount
+    })
+
+  const topCategories = Object.entries(categoryTotals)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5)
+    .map(([category, amount]) => ({ category, amount }))
+
+  // Use Gemini AI for intelligent responses
+  try {
+    const response = await askFinancialQuestion(query, {
+      totalBalance,
+      monthlyIncome,
+      monthlyExpenses,
+      topCategories,
+    })
+    return response
+  } catch (error) {
+    console.warn('Gemini query failed, using fallback:', error)
+    // Fallback to local processing
+    return processQueryLocally(profileId, query)
+  }
+}
+
+// Local fallback for when Gemini is unavailable
+async function processQueryLocally(profileId: string, query: string): Promise<string> {
   const lowerQuery = query.toLowerCase()
 
   // Simple pattern matching for common queries

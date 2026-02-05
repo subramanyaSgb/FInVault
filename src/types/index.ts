@@ -112,6 +112,7 @@ export interface Transaction {
   paymentMethod: string;
   accountId: string;
   toAccountId?: string | undefined;
+  personId?: string | undefined; // Associated contact/person
   tags: string[];
   attachments: Attachment[];
   isRecurring: boolean;
@@ -195,7 +196,30 @@ export interface GeoLocation {
   latitude: number;
   longitude: number;
   accuracy: number;
-  address?: string;
+  address?: string | undefined;
+}
+
+// ============================================
+// CONTACTS / PEOPLE
+// ============================================
+
+export interface Contact {
+  id: string;
+  profileId: string;
+  name: string;
+  nickname?: string | undefined;
+  email?: string | undefined;
+  phone?: string | undefined;
+  avatar?: string | undefined;
+  relationship?: 'family' | 'friend' | 'colleague' | 'business' | 'other' | undefined;
+  notes?: string | undefined;
+  totalOwed: number; // Amount others owe this user
+  totalOwing: number; // Amount user owes others
+  transactionCount: number;
+  lastTransactionDate?: Date | undefined;
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 // ============================================
@@ -269,6 +293,27 @@ export interface CardStatement {
   isPaid: boolean;
   paymentDate?: Date;
   paymentAmount?: number;
+}
+
+// ============================================
+// CATEGORIES
+// ============================================
+
+export type CategoryType = 'expense' | 'income' | 'transfer';
+
+export interface Category {
+  id: string;
+  profileId: string;
+  type: CategoryType;
+  name: string;
+  icon: string;
+  color: string;
+  subcategories: string[];
+  isDefault: boolean;
+  isActive: boolean;
+  order: number;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 // ============================================

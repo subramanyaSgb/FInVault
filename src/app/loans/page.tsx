@@ -600,16 +600,18 @@ export default function LoansPage() {
                         key={lt.type}
                         type="button"
                         onClick={() => setFormData({ ...formData, type: lt.type })}
-                        className={`flex flex-col items-center gap-1 p-3 rounded-lg border transition-colors ${
+                        className={`flex flex-col items-center gap-1 p-3 rounded-xl border-2 transition-all ${
                           formData.type === lt.type
-                            ? 'border-accent-primary bg-accent-alpha'
-                            : 'border-white/10 hover:bg-bg-tertiary'
+                            ? 'border-accent-primary bg-accent-primary/15 shadow-[0_0_12px_rgba(201,169,98,0.25)] scale-[1.02]'
+                            : 'border-white/10 hover:bg-bg-tertiary hover:border-white/20'
                         }`}
                       >
-                        <span className={formData.type === lt.type ? 'text-accent-primary' : 'text-text-secondary'}>
+                        <span className={formData.type === lt.type ? 'text-accent-primary' : 'text-text-tertiary'}>
                           {lt.icon}
                         </span>
-                        <span className="text-xs text-text-secondary">{lt.label}</span>
+                        <span className={`text-xs font-medium transition-colors ${
+                          formData.type === lt.type ? 'text-accent-primary' : 'text-text-secondary'
+                        }`}>{lt.label}</span>
                       </button>
                     ))}
                   </div>

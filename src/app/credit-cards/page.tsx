@@ -552,10 +552,10 @@ export default function CreditCardsPage() {
                         key={ct.type}
                         type="button"
                         onClick={() => setFormData({ ...formData, cardType: ct.type })}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
+                        className={`px-4 py-2 rounded-xl text-xs font-semibold border-2 transition-all ${
                           formData.cardType === ct.type
-                            ? 'border-accent-primary bg-accent-alpha text-accent-primary'
-                            : 'border-white/10 text-text-secondary hover:bg-bg-tertiary'
+                            ? 'border-accent-primary bg-accent-primary/15 text-accent-primary shadow-[0_0_12px_rgba(201,169,98,0.25)]'
+                            : 'border-white/10 text-text-secondary hover:bg-bg-tertiary hover:border-white/20'
                         }`}
                       >
                         {ct.label}
@@ -573,10 +573,10 @@ export default function CreditCardsPage() {
                         key={network}
                         type="button"
                         onClick={() => setFormData({ ...formData, network })}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
+                        className={`px-4 py-2 rounded-xl text-xs font-semibold border-2 transition-all ${
                           formData.network === network
-                            ? 'border-accent-primary bg-accent-alpha text-accent-primary'
-                            : 'border-white/10 text-text-secondary hover:bg-bg-tertiary'
+                            ? 'border-accent-primary bg-accent-primary/15 text-accent-primary shadow-[0_0_12px_rgba(201,169,98,0.25)]'
+                            : 'border-white/10 text-text-secondary hover:bg-bg-tertiary hover:border-white/20'
                         }`}
                       >
                         {network}
@@ -668,8 +668,10 @@ export default function CreditCardsPage() {
                         key={color.name}
                         type="button"
                         onClick={() => setFormData({ ...formData, color: color.value })}
-                        className={`w-10 h-10 rounded-full transition-transform ${
-                          formData.color === color.value ? 'scale-110 ring-2 ring-white' : ''
+                        className={`w-10 h-10 rounded-xl transition-all ${
+                          formData.color === color.value
+                            ? 'scale-110 ring-2 ring-accent-primary ring-offset-2 ring-offset-bg-secondary shadow-[0_0_12px_rgba(201,169,98,0.4)]'
+                            : 'hover:scale-105'
                         }`}
                         style={{ backgroundColor: color.value }}
                         title={color.name}

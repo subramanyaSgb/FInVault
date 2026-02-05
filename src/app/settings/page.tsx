@@ -26,6 +26,7 @@ import {
   AlertCircle,
   Navigation,
   Check,
+  Tags,
 } from 'lucide-react'
 import { useAuthStore } from '@/stores/authStore'
 import { useRouter } from 'next/navigation'
@@ -291,6 +292,12 @@ export default function SettingsPage() {
           label="Navigation"
           description="Customize bottom navigation"
           onClick={() => setSection('navigation')}
+        />
+        <MenuItem
+          icon={<Tags className="w-5 h-5" />}
+          label="Categories"
+          description="Manage transaction categories"
+          onClick={() => router.push('/settings/categories')}
         />
       </motion.div>
 
