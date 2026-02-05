@@ -1,6 +1,7 @@
-/** @type {import('tailwindcss').Config} */
-module.exports = {
-  darkMode: ['class'],
+import type { Config } from 'tailwindcss'
+
+const config: Config = {
+  darkMode: 'class',
   content: [
     './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
     './src/components/**/*.{js,ts,jsx,tsx,mdx}',
@@ -9,239 +10,156 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        // Backgrounds - Rich black spectrum
-        'bg-primary': '#030303',
-        'bg-secondary': '#080808',
-        'bg-tertiary': '#0f0f0f',
-        'bg-hover': '#161616',
-        'bg-pressed': '#1c1c1c',
-        'bg-elevated': '#121212',
+        // Core backgrounds
+        'bg-base': '#000000',
+        'bg-primary': '#0A0A0A',
+        'bg-secondary': '#111111',
+        'bg-tertiary': '#171717',
+        'bg-elevated': '#1C1C1C',
+        'bg-hover': '#222222',
 
-        // Glass effects
-        'glass-bg': 'rgba(15, 15, 15, 0.7)',
-        'glass-border': 'rgba(255, 255, 255, 0.06)',
-        'glass-highlight': 'rgba(255, 255, 255, 0.03)',
+        // Surfaces
+        'surface-1': 'rgba(255, 255, 255, 0.03)',
+        'surface-2': 'rgba(255, 255, 255, 0.05)',
+        'surface-3': 'rgba(255, 255, 255, 0.08)',
 
-        // Accent - Refined Gold
-        'accent-primary': '#D4AF37',
-        'accent-secondary': '#E5C158',
-        'accent-muted': '#9A7B2C',
-        'accent-alpha': 'rgba(212, 175, 55, 0.12)',
-        'accent-glow': 'rgba(212, 175, 55, 0.25)',
+        // Borders
+        'border-subtle': 'rgba(255, 255, 255, 0.06)',
+        'border-default': 'rgba(255, 255, 255, 0.10)',
+        'border-strong': 'rgba(255, 255, 255, 0.15)',
 
-        // Text - Enhanced hierarchy
-        'text-primary': '#FAFAFA',
-        'text-secondary': '#9CA3AF',
-        'text-tertiary': '#4B5563',
-        'text-disabled': '#374151',
-        'text-accent': '#D4AF37',
-
-        // Semantic - Refined
-        success: '#10B981',
-        'success-light': '#34D399',
-        'success-bg': 'rgba(16, 185, 129, 0.12)',
-        warning: '#F59E0B',
-        'warning-light': '#FBBF24',
-        'warning-bg': 'rgba(245, 158, 11, 0.12)',
-        error: '#EF4444',
-        'error-light': '#F87171',
-        'error-bg': 'rgba(239, 68, 68, 0.12)',
-        info: '#3B82F6',
-        'info-light': '#60A5FA',
-        'info-bg': 'rgba(59, 130, 246, 0.12)',
-
-        // Accessibility - High Contrast
-        'hc-bg-primary': '#000000',
-        'hc-bg-secondary': '#1A1A1A',
-        'hc-text': '#FFFFFF',
-        'hc-accent': '#FFFF00',
-
-        // Color blind palettes
-        'cb-success-d': '#0066CC',
-        'cb-warning-d': '#FF9500',
-        'cb-error-d': '#FF0066',
-        'cb-success-p': '#00A3CC',
-        'cb-warning-p': '#FFD700',
-        'cb-error-p': '#8B008B',
-        'cb-success-t': '#00CC66',
-        'cb-warning-t': '#FF6B6B',
-        'cb-error-t': '#9932CC',
-      },
-      fontFamily: {
-        display: ['Cormorant Garamond', 'Georgia', 'serif'],
-        primary: ['Outfit', 'Inter', 'Noto Sans', 'sans-serif'],
-        mono: ['JetBrains Mono', 'Roboto Mono', 'monospace'],
-        hindi: ['Noto Sans Devanagari', 'sans-serif'],
-        arabic: ['Noto Sans Arabic', 'sans-serif'],
-        japanese: ['Noto Sans JP', 'sans-serif'],
-      },
-      fontSize: {
-        display: ['4rem', { lineHeight: '1.1', fontWeight: '700' }],
-        'display-sm': ['3rem', { lineHeight: '1.1', fontWeight: '700' }],
-        h1: ['2.5rem', { lineHeight: '1.2', fontWeight: '600' }],
-        h2: ['1.75rem', { lineHeight: '1.3', fontWeight: '600' }],
-        h3: ['1.25rem', { lineHeight: '1.4', fontWeight: '500' }],
-        h4: ['1.125rem', { lineHeight: '1.4', fontWeight: '500' }],
-        body: ['1rem', { lineHeight: '1.5' }],
-        'body-sm': ['0.875rem', { lineHeight: '1.5' }],
-        caption: ['0.75rem', { lineHeight: '1.4' }],
-        xs: ['0.625rem', { lineHeight: '1.4' }],
-        // Accessibility sizes
-        'body-small': ['0.875rem', { lineHeight: '1.5' }],
-        'body-medium': ['1rem', { lineHeight: '1.5' }],
-        'body-large': ['1.125rem', { lineHeight: '1.5' }],
-        'body-xlarge': ['1.25rem', { lineHeight: '1.5' }],
-      },
-      spacing: {
-        '1': '0.25rem',
-        '2': '0.5rem',
-        '3': '0.75rem',
-        '4': '1rem',
-        '5': '1.5rem',
-        '6': '2rem',
-        '7': '3rem',
-        '8': '4rem',
-        '9': '6rem',
-        '10': '8rem',
-      },
-      borderRadius: {
-        card: '16px',
-        button: '8px',
-        input: '8px',
-      },
-      animation: {
-        'fade-in-up': 'fadeInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards',
-        'fade-in': 'fadeIn 0.3s ease forwards',
-        'scale-in': 'scaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards',
-        'slide-in-right': 'slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards',
-        shimmer: 'shimmer 2s infinite',
-        pulse: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-        shake: 'shake 0.5s cubic-bezier(.36,.07,.19,.97) both',
-        'count-up': 'countUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards',
-      },
-      keyframes: {
-        fadeInUp: {
-          '0%': { opacity: '0', transform: 'translateY(20px)' },
-          '100%': { opacity: '1', transform: 'translateY(0)' },
+        // Gold accent
+        gold: {
+          50: '#FDF8E8',
+          100: '#F5E6B8',
+          200: '#E8D08A',
+          300: '#DABA5C',
+          400: '#CCA42E',
+          500: '#B8942A',
+          600: '#9A7B23',
+          700: '#7C631C',
+          800: '#5E4A15',
+          900: '#40320E',
         },
-        fadeIn: {
+
+        // Accent
+        accent: {
+          DEFAULT: '#C9A55C',
+          light: '#D4B574',
+          dark: '#A88B4A',
+          muted: 'rgba(201, 165, 92, 0.15)',
+          subtle: 'rgba(201, 165, 92, 0.08)',
+        },
+
+        // Text
+        'text-primary': '#FFFFFF',
+        'text-secondary': '#A1A1A1',
+        'text-tertiary': '#666666',
+        'text-muted': '#444444',
+        'text-accent': '#C9A55C',
+
+        // Semantic
+        success: {
+          DEFAULT: '#22C55E',
+          muted: 'rgba(34, 197, 94, 0.12)',
+        },
+        error: {
+          DEFAULT: '#EF4444',
+          muted: 'rgba(239, 68, 68, 0.12)',
+        },
+        warning: {
+          DEFAULT: '#F59E0B',
+          muted: 'rgba(245, 158, 11, 0.12)',
+        },
+        info: {
+          DEFAULT: '#3B82F6',
+          muted: 'rgba(59, 130, 246, 0.12)',
+        },
+      },
+
+      fontFamily: {
+        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+        display: ['DM Sans', 'Inter', 'sans-serif'],
+        mono: ['JetBrains Mono', 'monospace'],
+      },
+
+      fontSize: {
+        '2xs': ['0.625rem', { lineHeight: '1rem' }],
+        xs: ['0.6875rem', { lineHeight: '1rem' }],
+        sm: ['0.8125rem', { lineHeight: '1.25rem' }],
+        base: ['0.9375rem', { lineHeight: '1.5rem' }],
+        lg: ['1.0625rem', { lineHeight: '1.5rem' }],
+        xl: ['1.25rem', { lineHeight: '1.75rem' }],
+        '2xl': ['1.5rem', { lineHeight: '2rem' }],
+        '3xl': ['1.875rem', { lineHeight: '2.25rem' }],
+        '4xl': ['2.25rem', { lineHeight: '2.5rem' }],
+        '5xl': ['3rem', { lineHeight: '1.1' }],
+      },
+
+      spacing: {
+        '18': '4.5rem',
+        '22': '5.5rem',
+        'safe-top': 'env(safe-area-inset-top, 0px)',
+        'safe-bottom': 'env(safe-area-inset-bottom, 0px)',
+      },
+
+      borderRadius: {
+        sm: '6px',
+        DEFAULT: '8px',
+        md: '10px',
+        lg: '14px',
+        xl: '20px',
+        '2xl': '24px',
+      },
+
+      boxShadow: {
+        'sm': '0 1px 2px rgba(0, 0, 0, 0.4)',
+        'md': '0 4px 8px rgba(0, 0, 0, 0.4)',
+        'lg': '0 8px 24px rgba(0, 0, 0, 0.5)',
+        'xl': '0 16px 48px rgba(0, 0, 0, 0.6)',
+        'glow': '0 0 24px rgba(201, 165, 92, 0.15)',
+        'glow-strong': '0 0 32px rgba(201, 165, 92, 0.25)',
+      },
+
+      animation: {
+        'fade-in': 'fade-in 0.3s ease-out forwards',
+        'fade-up': 'fade-up 0.4s ease-out forwards',
+        'scale-in': 'scale-in 0.3s ease-out forwards',
+        'slide-up': 'slide-up 0.3s ease-out forwards',
+        'pulse-subtle': 'pulse-subtle 2s ease-in-out infinite',
+      },
+
+      keyframes: {
+        'fade-in': {
           '0%': { opacity: '0' },
           '100%': { opacity: '1' },
         },
-        scaleIn: {
+        'fade-up': {
+          '0%': { opacity: '0', transform: 'translateY(12px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+        'scale-in': {
           '0%': { opacity: '0', transform: 'scale(0.95)' },
           '100%': { opacity: '1', transform: 'scale(1)' },
         },
-        slideInRight: {
-          '0%': { transform: 'translateX(100%)' },
-          '100%': { transform: 'translateX(0)' },
+        'slide-up': {
+          '0%': { transform: 'translateY(100%)' },
+          '100%': { transform: 'translateY(0)' },
         },
-        shimmer: {
-          '0%': { backgroundPosition: '-200% 0' },
-          '100%': { backgroundPosition: '200% 0' },
-        },
-        pulse: {
+        'pulse-subtle': {
           '0%, 100%': { opacity: '1' },
-          '50%': { opacity: '0.5' },
-        },
-        shake: {
-          '10%, 90%': { transform: 'translate3d(-1px, 0, 0)' },
-          '20%, 80%': { transform: 'translate3d(2px, 0, 0)' },
-          '30%, 50%, 70%': { transform: 'translate3d(-4px, 0, 0)' },
-          '40%, 60%': { transform: 'translate3d(4px, 0, 0)' },
-        },
-        countUp: {
-          '0%': { opacity: '0', transform: 'translateY(10px)' },
-          '100%': { opacity: '1', transform: 'translateY(0)' },
+          '50%': { opacity: '0.6' },
         },
       },
+
       transitionTimingFunction: {
-        'ease-out': 'cubic-bezier(0.16, 1, 0.3, 1)',
-        'ease-in-out': 'cubic-bezier(0.65, 0, 0.35, 1)',
-        spring: 'cubic-bezier(0.34, 1.56, 0.64, 1)',
-        bounce: 'cubic-bezier(0.68, -0.55, 0.265, 1.55)',
-      },
-      backdropBlur: {
-        xs: '2px',
-      },
-      boxShadow: {
-        card: '0 4px 24px rgba(0, 0, 0, 0.4)',
-        'card-hover': '0 20px 40px rgba(0, 0, 0, 0.5)',
-        glow: '0 0 30px rgba(212, 175, 55, 0.25)',
-        'glow-strong': '0 0 50px rgba(212, 175, 55, 0.35)',
-        'inner-glow': 'inset 0 1px 0 rgba(255, 255, 255, 0.03)',
-        luxury: '0 8px 32px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05)',
+        'out': 'cubic-bezier(0.33, 1, 0.68, 1)',
+        'in-out': 'cubic-bezier(0.65, 0, 0.35, 1)',
+        'spring': 'cubic-bezier(0.34, 1.56, 0.64, 1)',
       },
     },
   },
-  plugins: [
-    function ({
-      addUtilities,
-      addComponents,
-      theme,
-    }: {
-      addUtilities: Function
-      addComponents: Function
-      theme: Function
-    }) {
-      // Add custom utilities
-      addUtilities({
-        '.ease-out': {
-          'transition-timing-function': 'cubic-bezier(0.16, 1, 0.3, 1)',
-        },
-        '.ease-spring': {
-          'transition-timing-function': 'cubic-bezier(0.34, 1.56, 0.64, 1)',
-        },
-        '.text-balance': {
-          'text-wrap': 'balance',
-        },
-        '.scrollbar-hide': {
-          '-ms-overflow-style': 'none',
-          'scrollbar-width': 'none',
-          '&::-webkit-scrollbar': {
-            display: 'none',
-          },
-        },
-      })
-
-      // Add custom components
-      addComponents({
-        '.card': {
-          backgroundColor: theme('colors.bg-secondary'),
-          borderRadius: theme('borderRadius.card'),
-          padding: theme('spacing.5'),
-          border: '1px solid rgba(255, 255, 255, 0.05)',
-          transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
-        },
-        '.card-hover:hover': {
-          backgroundColor: theme('colors.bg-tertiary'),
-          transform: 'translateY(-2px)',
-          boxShadow: theme('boxShadow.card-hover'),
-        },
-        '.btn-primary': {
-          backgroundColor: theme('colors.accent-primary'),
-          color: theme('colors.bg-primary'),
-          padding: `${theme('spacing.3')} ${theme('spacing.5')}`,
-          borderRadius: theme('borderRadius.button'),
-          fontWeight: theme('fontWeight.semibold'),
-          transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
-          border: 'none',
-          cursor: 'pointer',
-        },
-        '.input': {
-          backgroundColor: theme('colors.bg-tertiary'),
-          border: '1px solid rgba(255, 255, 255, 0.1)',
-          borderRadius: theme('borderRadius.input'),
-          padding: `${theme('spacing.3')} ${theme('spacing.4')}`,
-          color: theme('colors.text-primary'),
-          transition: 'all 0.2s ease',
-        },
-        '.input:focus': {
-          borderColor: theme('colors.accent-primary'),
-          boxShadow: '0 0 0 3px rgba(201, 169, 98, 0.1)',
-          outline: 'none',
-        },
-      })
-    },
-  ],
+  plugins: [],
 }
+
+export default config

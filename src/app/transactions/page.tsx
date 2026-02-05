@@ -21,6 +21,7 @@ import type { Transaction, Account } from '@/types'
 import { TransactionItem } from '@/components/features/transactions/TransactionItem'
 import { TransactionFilters } from '@/components/features/transactions/TransactionFilters'
 import { ProtectedRoute } from '@/components/features/auth/ProtectedRoute'
+import { BottomNav } from '@/components/layouts/BottomNav'
 
 const PAGE_SIZE = 50
 
@@ -29,28 +30,6 @@ interface GroupedTransactions {
   transactions: Transaction[]
   totalIncome: number
   totalExpense: number
-}
-
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.05,
-    },
-  },
-}
-
-const itemVariants = {
-  hidden: { opacity: 0, y: 10 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: {
-      duration: 0.3,
-      ease: [0.16, 1, 0.3, 1],
-    },
-  },
 }
 
 export default function TransactionsPage() {
@@ -67,7 +46,6 @@ export default function TransactionsPage() {
     loadTransactions,
     applyFilters,
     setSort,
-
     refreshTransactions,
     deleteTransaction,
     bulkDelete,
@@ -182,7 +160,6 @@ export default function TransactionsPage() {
 
   const handleRefresh = useCallback(async () => {
     if (!currentProfile) return
-
     setIsRefreshing(true)
     setPage(1)
     await refreshTransactions(currentProfile.id)
@@ -225,7 +202,6 @@ export default function TransactionsPage() {
 
   const handleBulkDelete = useCallback(async () => {
     if (selectedTransactions.size === 0) return
-
     if (confirm(`Delete ${selectedTransactions.size} transactions?`)) {
       await bulkDelete(Array.from(selectedTransactions))
       setSelectedTransactions(new Set())
@@ -247,25 +223,23 @@ export default function TransactionsPage() {
 
   return (
     <ProtectedRoute>
-      <div className="min-h-screen bg-bg-primary relative z-10">
-        {/* Premium Header */}
-        <div className="sticky top-0 z-40 bg-bg-primary/60 backdrop-blur-xl border-b border-glass-border">
-          <div className="flex items-center justify-between p-4">
+      <div className="page-container pb-24">
+        {/* Header */}
+        <header className="sticky top-0 z-40 bg-bg-base/80 backdrop-blur-lg border-b border-border-subtle">
+          <div className="flex items-center justify-between px-4 py-3 pt-safe">
             <div>
-              <h1 className="text-xl font-semibold text-text-primary">Transactions</h1>
-              <p className="text-xs text-text-tertiary mt-0.5">
-                {stats.totalCount} total transactions
-              </p>
+              <h1 className="text-lg font-semibold text-text-primary">Transactions</h1>
+              <p className="text-xs text-text-muted mt-0.5">{stats.totalCount} total</p>
             </div>
 
             <div className="flex items-center gap-2">
               {isSelectionMode ? (
                 <>
-                  <span className="text-sm text-text-secondary">{selectedTransactions.size} selected</span>
+                  <span className="text-xs text-text-secondary">{selectedTransactions.size} selected</span>
                   <button
                     onClick={handleBulkDelete}
                     disabled={selectedTransactions.size === 0}
-                    className="p-2.5 text-error hover:bg-error-bg rounded-xl transition-colors disabled:opacity-50"
+                    className="p-2 text-error hover:bg-error-muted rounded-lg transition-colors disabled:opacity-50"
                   >
                     <Trash2 className="w-5 h-5" />
                   </button>
@@ -274,7 +248,7 @@ export default function TransactionsPage() {
                       setSelectedTransactions(new Set())
                       setIsSelectionMode(false)
                     }}
-                    className="p-2.5 text-text-secondary hover:text-text-primary rounded-xl hover:bg-bg-tertiary transition-colors"
+                    className="p-2 text-text-secondary hover:text-text-primary rounded-lg hover:bg-surface-2 transition-colors"
                   >
                     <X className="w-5 h-5" />
                   </button>
@@ -284,13 +258,13 @@ export default function TransactionsPage() {
                   <button
                     onClick={handleRefresh}
                     disabled={isRefreshing}
-                    className="p-2.5 text-text-secondary hover:text-text-primary rounded-xl hover:bg-bg-tertiary transition-colors"
+                    className="p-2 text-text-secondary hover:text-text-primary rounded-lg hover:bg-surface-2 transition-colors"
                   >
                     <RefreshCw className={`w-5 h-5 ${isRefreshing ? 'animate-spin' : ''}`} />
                   </button>
                   <button
                     onClick={() => router.push('/transactions/add')}
-                    className="flex items-center gap-2 btn-luxury"
+                    className="btn-primary py-2 px-3"
                   >
                     <Plus className="w-4 h-4" />
                     <span className="hidden sm:inline">Add</span>
@@ -300,60 +274,48 @@ export default function TransactionsPage() {
             </div>
           </div>
 
-          {/* Stats Summary - Glass Cards */}
-          <div className="flex gap-3 px-4 pb-4">
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="flex-1 glass-card p-3"
-            >
+          {/* Stats Cards */}
+          <div className="flex gap-2 px-4 pb-3">
+            <div className="flex-1 card p-3">
               <div className="flex items-center gap-2 mb-1">
-                <div className="w-6 h-6 rounded-lg bg-success/20 flex items-center justify-center">
-                  <TrendingUp className="w-3.5 h-3.5 text-success" />
+                <div className="w-6 h-6 rounded-md bg-success-muted flex items-center justify-center">
+                  <TrendingUp className="w-3 h-3 text-success" />
                 </div>
-                <p className="text-[10px] text-text-tertiary uppercase tracking-wider">Income</p>
+                <p className="text-[10px] text-text-muted uppercase">Income</p>
               </div>
-              <p className="text-lg font-semibold text-success">{formatAmount(stats.totalIncome)}</p>
-            </motion.div>
+              <p className="text-sm font-semibold text-success">{formatAmount(stats.totalIncome)}</p>
+            </div>
 
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.05 }}
-              className="flex-1 glass-card p-3"
-            >
+            <div className="flex-1 card p-3">
               <div className="flex items-center gap-2 mb-1">
-                <div className="w-6 h-6 rounded-lg bg-error/20 flex items-center justify-center">
-                  <TrendingDown className="w-3.5 h-3.5 text-error" />
+                <div className="w-6 h-6 rounded-md bg-error-muted flex items-center justify-center">
+                  <TrendingDown className="w-3 h-3 text-error" />
                 </div>
-                <p className="text-[10px] text-text-tertiary uppercase tracking-wider">Expense</p>
+                <p className="text-[10px] text-text-muted uppercase">Expenses</p>
               </div>
-              <p className="text-lg font-semibold text-error">{formatAmount(stats.totalExpense)}</p>
-            </motion.div>
+              <p className="text-sm font-semibold text-error">{formatAmount(stats.totalExpense)}</p>
+            </div>
 
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-              className="flex-1 glass-card p-3"
-            >
+            <div className="flex-1 card p-3">
               <div className="flex items-center gap-2 mb-1">
-                <div className="w-6 h-6 rounded-lg bg-accent-alpha flex items-center justify-center">
-                  <Wallet className="w-3.5 h-3.5 text-accent-primary" />
+                <div className="w-6 h-6 rounded-md bg-accent-muted flex items-center justify-center">
+                  <Wallet className="w-3 h-3 text-accent" />
                 </div>
-                <p className="text-[10px] text-text-tertiary uppercase tracking-wider">Balance</p>
+                <p className="text-[10px] text-text-muted uppercase">Net</p>
               </div>
               <p
-                className={`text-lg font-semibold ${stats.totalIncome - stats.totalExpense >= 0 ? 'text-success' : 'text-error'}`}
+                className={`text-sm font-semibold ${
+                  stats.totalIncome - stats.totalExpense >= 0 ? 'text-success' : 'text-error'
+                }`}
               >
                 {formatAmount(stats.totalIncome - stats.totalExpense)}
               </p>
-            </motion.div>
+            </div>
           </div>
-        </div>
+        </header>
 
         {/* Filters */}
-        <div className="px-4 py-4">
+        <div className="px-4 py-3">
           <TransactionFilters
             filters={filters}
             sort={sort}
@@ -367,15 +329,15 @@ export default function TransactionsPage() {
         </div>
 
         {/* Transaction List */}
-        <div className="px-4 pb-24">
+        <div className="px-4">
           {isLoading && transactions.length === 0 ? (
             <div className="flex items-center justify-center py-12">
-              <div className="w-10 h-10 rounded-xl border-2 border-accent-alpha border-t-accent-primary animate-spin" />
+              <div className="w-8 h-8 border-2 border-accent/30 border-t-accent rounded-full animate-spin" />
             </div>
           ) : error ? (
-            <div className="text-center py-12 glass-card">
+            <div className="text-center py-12 card">
               <p className="text-error mb-4">{error}</p>
-              <button onClick={handleRefresh} className="btn-luxury">
+              <button onClick={handleRefresh} className="btn-primary">
                 Retry
               </button>
             </div>
@@ -383,58 +345,52 @@ export default function TransactionsPage() {
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="text-center py-16 glass-card"
+              className="text-center py-16 card"
             >
-              <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-accent-alpha to-transparent flex items-center justify-center">
-                <Wallet className="w-10 h-10 text-accent-muted" />
+              <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-accent-subtle flex items-center justify-center">
+                <Wallet className="w-8 h-8 text-accent/60" />
               </div>
-              <p className="text-lg font-medium text-text-secondary mb-2">No transactions found</p>
-              <p className="text-sm text-text-tertiary mb-6">
+              <p className="text-sm font-medium text-text-secondary mb-1">No transactions found</p>
+              <p className="text-xs text-text-muted mb-4">
                 {filters.searchQuery || Object.keys(filters).length > 0
                   ? 'Try adjusting your filters'
-                  : 'Add your first transaction to get started'}
+                  : 'Add your first transaction'}
               </p>
-              <button onClick={() => router.push('/transactions/add')} className="btn-luxury">
+              <button onClick={() => router.push('/transactions/add')} className="btn-primary">
                 Add Transaction
               </button>
             </motion.div>
           ) : (
-            <motion.div
-              className="space-y-6"
-              variants={containerVariants}
-              initial="hidden"
-              animate="visible"
-            >
+            <div className="space-y-4">
               {groups.map((group, groupIndex) => (
-                <motion.div key={format(group.date, 'yyyy-MM-dd')} variants={itemVariants}>
+                <motion.div
+                  key={format(group.date, 'yyyy-MM-dd')}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: groupIndex * 0.03 }}
+                >
                   {/* Date Header */}
-                  <div className="flex items-center justify-between mb-3 sticky top-[200px] bg-bg-primary/80 backdrop-blur-sm py-2 z-10">
+                  <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
-                      <div className="w-7 h-7 rounded-lg bg-bg-tertiary flex items-center justify-center">
-                        <Calendar className="w-3.5 h-3.5 text-text-tertiary" />
-                      </div>
-                      <span className="text-sm font-medium text-text-primary">
+                      <Calendar className="w-4 h-4 text-text-muted" />
+                      <span className="text-xs font-medium text-text-secondary">
                         {isSameDay(group.date, new Date())
                           ? 'Today'
-                          : format(group.date, 'EEEE, MMMM d, yyyy')}
+                          : format(group.date, 'EEE, MMM d')}
                       </span>
                     </div>
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2 text-xs">
                       {group.totalIncome > 0 && (
-                        <span className="text-xs text-success font-medium">
-                          +{formatAmount(group.totalIncome)}
-                        </span>
+                        <span className="text-success">+{formatAmount(group.totalIncome)}</span>
                       )}
                       {group.totalExpense > 0 && (
-                        <span className="text-xs text-error font-medium">
-                          -{formatAmount(group.totalExpense)}
-                        </span>
+                        <span className="text-error">-{formatAmount(group.totalExpense)}</span>
                       )}
                     </div>
                   </div>
 
                   {/* Transactions */}
-                  <div className="space-y-2">
+                  <div className="space-y-1.5">
                     {group.transactions.map((transaction, index) => (
                       <div
                         key={transaction.id}
@@ -453,19 +409,19 @@ export default function TransactionsPage() {
                           showSwipeActions={!isSelectionMode}
                         />
 
-                        {/* Delete Confirmation Overlay */}
+                        {/* Delete Confirmation */}
                         <AnimatePresence>
                           {showDeleteConfirm === transaction.id && (
                             <motion.div
-                              initial={{ opacity: 0, y: -10, scale: 0.95 }}
-                              animate={{ opacity: 1, y: 0, scale: 1 }}
-                              exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                              className="mt-2 p-3 bg-error-bg rounded-xl flex items-center justify-between border border-error/20"
+                              initial={{ opacity: 0, height: 0 }}
+                              animate={{ opacity: 1, height: 'auto' }}
+                              exit={{ opacity: 0, height: 0 }}
+                              className="mt-1 p-3 bg-error-muted rounded-lg flex items-center justify-between border border-error/20"
                             >
-                              <span className="text-sm text-error">Tap again to confirm delete</span>
+                              <span className="text-xs text-error">Tap delete again to confirm</span>
                               <button
                                 onClick={() => setShowDeleteConfirm(null)}
-                                className="text-xs text-text-secondary hover:text-text-primary transition-colors"
+                                className="text-xs text-text-secondary hover:text-text-primary"
                               >
                                 Cancel
                               </button>
@@ -478,33 +434,35 @@ export default function TransactionsPage() {
                 </motion.div>
               ))}
 
-              {/* Loading More Indicator */}
+              {/* Loading More */}
               {isLoading && hasMore && (
                 <div className="flex items-center justify-center py-4">
-                  <div className="w-8 h-8 rounded-lg border-2 border-accent-alpha border-t-accent-primary animate-spin" />
+                  <div className="w-6 h-6 border-2 border-accent/30 border-t-accent rounded-full animate-spin" />
                 </div>
               )}
 
               {/* End of List */}
               {!hasMore && transactions.length > 0 && (
-                <p className="text-center text-xs text-text-tertiary py-4">No more transactions</p>
+                <p className="text-center text-xs text-text-muted py-4">No more transactions</p>
               )}
-            </motion.div>
+            </div>
           )}
         </div>
 
-        {/* Floating Action Button (Mobile) */}
+        {/* FAB */}
         {!isSelectionMode && (
           <motion.button
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
             whileTap={{ scale: 0.9 }}
             onClick={() => router.push('/transactions/add')}
-            className="fixed bottom-6 right-6 w-14 h-14 bg-gradient-to-br from-accent-primary via-accent-secondary to-accent-muted text-bg-primary rounded-2xl shadow-glow flex items-center justify-center sm:hidden hover:shadow-glow-strong transition-shadow"
+            className="fixed bottom-20 right-4 w-14 h-14 bg-accent hover:bg-accent-light text-bg-base rounded-2xl shadow-glow flex items-center justify-center sm:hidden transition-colors"
           >
             <Plus className="w-6 h-6" />
           </motion.button>
         )}
+
+        <BottomNav />
       </div>
     </ProtectedRoute>
   )

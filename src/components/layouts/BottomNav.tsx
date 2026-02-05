@@ -2,7 +2,7 @@
 
 import { usePathname } from 'next/navigation'
 import Link from 'next/link'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import {
   Home,
   CreditCard,
@@ -19,6 +19,7 @@ import {
   HandCoins,
   Wallet,
   BarChart3,
+  X,
   LucideIcon,
 } from 'lucide-react'
 import { useState, useMemo } from 'react'
@@ -34,8 +35,8 @@ export interface NavItem {
 // All available nav items with unique IDs
 export const allNavItems: NavItem[] = [
   { id: 'dashboard', icon: Home, label: 'Home', href: '/dashboard' },
-  { id: 'transactions', icon: Receipt, label: 'Transactions', href: '/transactions' },
-  { id: 'investments', icon: TrendingUp, label: 'Investments', href: '/investments' },
+  { id: 'transactions', icon: Receipt, label: 'Activity', href: '/transactions' },
+  { id: 'investments', icon: TrendingUp, label: 'Invest', href: '/investments' },
   { id: 'credit-cards', icon: CreditCard, label: 'Cards', href: '/credit-cards' },
   { id: 'accounts', icon: Wallet, label: 'Accounts', href: '/accounts' },
   { id: 'budgets', icon: Calculator, label: 'Budgets', href: '/budgets' },
@@ -43,12 +44,12 @@ export const allNavItems: NavItem[] = [
   { id: 'loans', icon: PiggyBank, label: 'Loans', href: '/loans' },
   { id: 'insurance', icon: Shield, label: 'Insurance', href: '/insurance' },
   { id: 'documents', icon: FileText, label: 'Documents', href: '/documents' },
-  { id: 'subscriptions', icon: Receipt, label: 'Subscriptions', href: '/subscriptions' },
-  { id: 'lend-borrow', icon: HandCoins, label: 'Lend/Borrow', href: '/lend-borrow' },
+  { id: 'subscriptions', icon: Receipt, label: 'Subs', href: '/subscriptions' },
+  { id: 'lend-borrow', icon: HandCoins, label: 'Lend', href: '/lend-borrow' },
   { id: 'ai-chat', icon: MessageSquare, label: 'AI Chat', href: '/ai-chat' },
   { id: 'reports', icon: BarChart3, label: 'Reports', href: '/reports' },
-  { id: 'fire', icon: Calculator, label: 'FIRE Calc', href: '/fire' },
-  { id: 'debt-payoff', icon: Calculator, label: 'Debt Payoff', href: '/debt-payoff' },
+  { id: 'fire', icon: Calculator, label: 'FIRE', href: '/fire' },
+  { id: 'debt-payoff', icon: Calculator, label: 'Debt', href: '/debt-payoff' },
   { id: 'settings', icon: Settings, label: 'Settings', href: '/settings' },
 ]
 
@@ -71,13 +72,13 @@ const BottomNav = () => {
     const more: NavItem[] = []
 
     // First add selected items in order
-    selectedNavIds.forEach(id => {
-      const item = allNavItems.find(nav => nav.id === id)
+    selectedNavIds.forEach((id) => {
+      const item = allNavItems.find((nav) => nav.id === id)
       if (item) primary.push(item)
     })
 
     // Add remaining items to more menu
-    allNavItems.forEach(item => {
+    allNavItems.forEach((item) => {
       if (!selectedNavIds.includes(item.id)) {
         more.push(item)
       }
@@ -91,79 +92,97 @@ const BottomNav = () => {
     return pathname.startsWith(href)
   }
 
-  const isMoreActive = moreNavItems.some(item => isActive(item.href))
+  const isMoreActive = moreNavItems.some((item) => isActive(item.href))
 
   return (
     <>
       {/* More Menu Overlay */}
-      {showMore && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 bg-black/50 z-40"
-          onClick={() => setShowMore(false)}
-        />
-      )}
+      <AnimatePresence>
+        {showMore && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40"
+              onClick={() => setShowMore(false)}
+            />
 
-      {/* More Menu */}
-      {showMore && (
-        <motion.div
-          initial={{ opacity: 0, y: 100 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: 100 }}
-          className="fixed bottom-20 left-4 right-4 bg-bg-secondary border border-white/10 rounded-card p-4 z-50 max-h-[60vh] overflow-y-auto"
-        >
-          <div className="grid grid-cols-4 gap-4">
-            {moreNavItems.map(item => {
-              const Icon = item.icon
-              const active = isActive(item.href)
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
+            {/* Menu */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 20 }}
+              transition={{ duration: 0.25, ease: [0.33, 1, 0.68, 1] }}
+              className="fixed bottom-20 left-4 right-4 bg-bg-secondary border border-border-subtle rounded-2xl p-4 z-50 max-h-[50vh] overflow-y-auto no-scrollbar"
+            >
+              {/* Header */}
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-sm font-medium text-text-primary">More Features</h3>
+                <button
                   onClick={() => setShowMore(false)}
-                  className={`flex flex-col items-center gap-1 p-3 rounded-lg transition-colors ${
-                    active
-                      ? 'bg-accent-alpha text-accent-primary'
-                      : 'text-text-secondary hover:bg-white/5'
-                  }`}
+                  className="p-1.5 rounded-lg hover:bg-surface-2 transition-colors"
                 >
-                  <Icon className="w-5 h-5" />
-                  <span className="text-xs text-center">{item.label}</span>
-                </Link>
-              )
-            })}
-          </div>
-        </motion.div>
-      )}
+                  <X className="w-4 h-4 text-text-tertiary" />
+                </button>
+              </div>
+
+              {/* Grid */}
+              <div className="grid grid-cols-4 gap-2">
+                {moreNavItems.map((item) => {
+                  const Icon = item.icon
+                  const active = isActive(item.href)
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      onClick={() => setShowMore(false)}
+                      className={`flex flex-col items-center gap-1.5 p-3 rounded-xl transition-colors ${
+                        active
+                          ? 'bg-accent-muted text-accent'
+                          : 'text-text-secondary hover:bg-surface-2 hover:text-text-primary'
+                      }`}
+                    >
+                      <Icon className="w-5 h-5" />
+                      <span className="text-[10px] text-center leading-tight">{item.label}</span>
+                    </Link>
+                  )
+                })}
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
 
       {/* Bottom Navigation Bar */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-bg-secondary/95 backdrop-blur-lg border-t border-white/5 z-50 safe-area-inset-bottom">
-        <div className="flex items-center justify-around px-2 py-2">
-          {primaryNavItems.map(item => {
+      <nav className="fixed bottom-0 left-0 right-0 bg-bg-primary/95 backdrop-blur-lg border-t border-border-subtle z-50">
+        <div className="flex items-center justify-around px-2 py-2 max-w-md mx-auto">
+          {primaryNavItems.map((item) => {
             const Icon = item.icon
             const active = isActive(item.href)
             return (
               <Link
                 key={item.href}
                 href={item.href}
-                className="flex flex-col items-center gap-0.5 px-4 py-2 relative"
+                className="flex flex-col items-center gap-1 px-4 py-2 relative min-w-[64px]"
               >
                 {active && (
                   <motion.div
-                    layoutId="activeTab"
-                    className="absolute -top-0.5 w-6 h-1 bg-accent-primary rounded-full"
+                    layoutId="nav-indicator"
+                    className="absolute -top-0.5 w-8 h-1 bg-accent rounded-full"
+                    transition={{ type: 'spring', stiffness: 500, damping: 35 }}
                   />
                 )}
                 <Icon
                   className={`w-5 h-5 transition-colors ${
-                    active ? 'text-accent-primary' : 'text-text-tertiary'
+                    active ? 'text-accent' : 'text-text-tertiary'
                   }`}
                 />
                 <span
-                  className={`text-xs transition-colors ${
-                    active ? 'text-accent-primary font-medium' : 'text-text-tertiary'
+                  className={`text-[10px] transition-colors ${
+                    active ? 'text-accent font-medium' : 'text-text-tertiary'
                   }`}
                 >
                   {item.label}
@@ -175,28 +194,32 @@ const BottomNav = () => {
           {/* More Button */}
           <button
             onClick={() => setShowMore(!showMore)}
-            className="flex flex-col items-center gap-0.5 px-4 py-2 relative"
+            className="flex flex-col items-center gap-1 px-4 py-2 relative min-w-[64px]"
           >
             {isMoreActive && !showMore && (
               <motion.div
-                layoutId="activeTab"
-                className="absolute -top-0.5 w-6 h-1 bg-accent-primary rounded-full"
+                layoutId="nav-indicator"
+                className="absolute -top-0.5 w-8 h-1 bg-accent rounded-full"
+                transition={{ type: 'spring', stiffness: 500, damping: 35 }}
               />
             )}
             <MoreHorizontal
               className={`w-5 h-5 transition-colors ${
-                showMore || isMoreActive ? 'text-accent-primary' : 'text-text-tertiary'
+                showMore || isMoreActive ? 'text-accent' : 'text-text-tertiary'
               }`}
             />
             <span
-              className={`text-xs transition-colors ${
-                showMore || isMoreActive ? 'text-accent-primary font-medium' : 'text-text-tertiary'
+              className={`text-[10px] transition-colors ${
+                showMore || isMoreActive ? 'text-accent font-medium' : 'text-text-tertiary'
               }`}
             >
               More
             </span>
           </button>
         </div>
+
+        {/* Safe area padding */}
+        <div className="h-safe-bottom" />
       </nav>
     </>
   )

@@ -22,7 +22,8 @@ export function AuthFlow({ onAuthenticated }: AuthFlowProps) {
     const init = async () => {
       await initializeAuth()
       await loadProfiles()
-      setTimeout(() => setScreen('select'), 500)
+      // Short delay for smooth transition
+      setTimeout(() => setScreen('select'), 600)
     }
     init()
   }, [loadProfiles])
@@ -41,72 +42,108 @@ export function AuthFlow({ onAuthenticated }: AuthFlowProps) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.2 }}
-          className="fixed inset-0 bg-[#050505] flex items-center justify-center"
-          style={{ height: '100dvh' }}
+          transition={{ duration: 0.3 }}
+          className="screen-fixed flex items-center justify-center"
         >
-          {/* Glow */}
+          {/* Background gradient */}
           <div
-            className="absolute w-48 h-48"
-            style={{ background: 'radial-gradient(circle, rgba(180,155,80,0.06) 0%, transparent 70%)' }}
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              background: 'radial-gradient(ellipse 100% 100% at 50% 30%, rgba(201, 165, 92, 0.03) 0%, transparent 60%)'
+            }}
           />
 
           <div className="text-center relative z-10">
-            {/* Logo */}
+            {/* Logo with animation */}
             <motion.div
-              className="mb-5"
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              transition={{ duration: 0.4 }}
+              transition={{ duration: 0.5, ease: [0.33, 1, 0.68, 1] }}
             >
-              <div className="w-12 h-12 mx-auto rounded-xl bg-[#0F0F0F] border border-[#1A1A1A] flex items-center justify-center">
-                <svg width="22" height="22" viewBox="0 0 48 48" fill="none">
+              <div className="w-16 h-16 mx-auto rounded-2xl bg-bg-secondary border border-border-subtle flex items-center justify-center relative">
+                <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                  {/* Animated vault door */}
                   <motion.circle
-                    cx="24"
-                    cy="24"
-                    r="18"
-                    stroke="#B49B50"
+                    cx="16"
+                    cy="16"
+                    r="12"
+                    stroke="#C9A55C"
                     strokeWidth="1.5"
                     fill="none"
                     initial={{ pathLength: 0 }}
                     animate={{ pathLength: 1 }}
-                    transition={{ duration: 0.6 }}
+                    transition={{ duration: 0.8, ease: [0.33, 1, 0.68, 1] }}
                   />
                   <motion.circle
-                    cx="24"
-                    cy="24"
-                    r="3"
-                    fill="#B49B50"
+                    cx="16"
+                    cy="16"
+                    r="7"
+                    stroke="#C9A55C"
+                    strokeWidth="1"
+                    fill="none"
+                    opacity="0.5"
+                    initial={{ pathLength: 0 }}
+                    animate={{ pathLength: 1 }}
+                    transition={{ duration: 0.6, delay: 0.2, ease: [0.33, 1, 0.68, 1] }}
+                  />
+                  <motion.circle
+                    cx="16"
+                    cy="16"
+                    r="2"
+                    fill="#C9A55C"
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
-                    transition={{ delay: 0.3 }}
+                    transition={{ delay: 0.4, duration: 0.3, ease: [0.34, 1.56, 0.64, 1] }}
+                  />
+                  <motion.path
+                    d="M16 4v5M16 23v5M4 16h5M23 16h5"
+                    stroke="#C9A55C"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.5, duration: 0.3 }}
                   />
                 </svg>
+
+                {/* Glow pulse */}
+                <motion.div
+                  className="absolute inset-0 rounded-2xl"
+                  style={{ boxShadow: '0 0 24px rgba(201, 165, 92, 0.15)' }}
+                  animate={{ opacity: [0.5, 1, 0.5] }}
+                  transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+                />
               </div>
             </motion.div>
 
+            {/* App name */}
             <motion.h1
-              className="text-lg font-semibold text-white"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.15 }}
+              className="text-xl font-display font-semibold text-text-primary mt-4"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2, duration: 0.4 }}
             >
               FinVault
             </motion.h1>
 
-            {/* Dots */}
+            {/* Loading indicator */}
             <motion.div
-              className="flex justify-center gap-1 mt-3"
+              className="flex items-center justify-center gap-1 mt-4"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ delay: 0.25 }}
+              transition={{ delay: 0.4 }}
             >
               {[0, 1, 2].map((i) => (
                 <motion.div
                   key={i}
-                  className="w-1 h-1 rounded-full bg-[#B49B50]"
+                  className="w-1.5 h-1.5 rounded-full bg-accent"
                   animate={{ opacity: [0.3, 1, 0.3] }}
-                  transition={{ duration: 0.7, repeat: Infinity, delay: i * 0.12 }}
+                  transition={{
+                    duration: 1,
+                    repeat: Infinity,
+                    delay: i * 0.15,
+                    ease: 'easeInOut'
+                  }}
                 />
               ))}
             </motion.div>
@@ -120,10 +157,13 @@ export function AuthFlow({ onAuthenticated }: AuthFlowProps) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.2 }}
+          transition={{ duration: 0.25 }}
         >
           <ProfileSelection
-            onSelect={(id) => { setSelectedProfileId(id); setScreen('pin') }}
+            onSelect={(id) => {
+              setSelectedProfileId(id)
+              setScreen('pin')
+            }}
             onCreateNew={() => setScreen('create')}
           />
         </motion.div>
@@ -135,7 +175,7 @@ export function AuthFlow({ onAuthenticated }: AuthFlowProps) {
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: -20 }}
-          transition={{ duration: 0.2 }}
+          transition={{ duration: 0.25 }}
         >
           <ProfileCreation
             onComplete={onAuthenticated}
@@ -150,12 +190,15 @@ export function AuthFlow({ onAuthenticated }: AuthFlowProps) {
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: -20 }}
-          transition={{ duration: 0.2 }}
+          transition={{ duration: 0.25 }}
         >
           <PINEntry
             profileId={selectedProfileId}
             onSuccess={onAuthenticated}
-            onBack={() => { setSelectedProfileId(null); setScreen('select') }}
+            onBack={() => {
+              setSelectedProfileId(null)
+              setScreen('select')
+            }}
           />
         </motion.div>
       )}

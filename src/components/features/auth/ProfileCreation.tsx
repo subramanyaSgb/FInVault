@@ -46,51 +46,45 @@ export function ProfileCreation({ onComplete, onBack }: ProfileCreationProps) {
   }
 
   return (
-    <div
-      className="fixed inset-0 bg-[#050505] flex flex-col overflow-hidden"
-      style={{ height: '100dvh' }}
-    >
-      {/* Ambient glow */}
+    <div className="screen-fixed flex flex-col">
+      {/* Background */}
       <div
-        className="absolute top-0 left-1/2 -translate-x-1/2 w-[250px] h-[250px] pointer-events-none"
+        className="absolute inset-0 pointer-events-none"
         style={{
-          background: 'radial-gradient(circle, rgba(180,155,80,0.06) 0%, transparent 70%)',
+          background: 'radial-gradient(ellipse 100% 80% at 50% 0%, rgba(201, 165, 92, 0.03) 0%, transparent 50%)'
         }}
       />
 
       {/* Header */}
-      <div className="p-4 relative z-10 flex items-center gap-3 flex-shrink-0">
+      <div className="flex items-center gap-3 px-4 pt-safe min-h-[56px] relative z-10">
         <button
           onClick={onBack}
-          className="p-2 rounded-xl bg-[#0C0C0C] hover:bg-[#141414] border border-[#181818] transition-colors"
+          className="p-2 -ml-2 rounded-lg hover:bg-surface-2 transition-colors"
         >
-          <ArrowLeft className="w-4 h-4 text-[#505050]" />
+          <ArrowLeft className="w-5 h-5 text-text-secondary" />
         </button>
-        <span className="text-[10px] text-[#505050] tracking-[0.12em] uppercase">Create Profile</span>
+        <span className="text-xs text-text-muted uppercase tracking-wider">
+          Create Profile
+        </span>
       </div>
 
-      {/* Progress */}
-      <div className="px-6 mb-4 flex-shrink-0">
-        <div className="flex gap-1.5">
+      {/* Progress bar */}
+      <div className="px-6 mb-6 relative z-10">
+        <div className="flex gap-2">
           {[1, 2].map((s) => (
             <div
               key={s}
-              className={`h-0.5 flex-1 rounded-full transition-all duration-300 ${
-                s <= step ? 'bg-[#B49B50]' : 'bg-[#181818]'
+              className={`h-1 flex-1 rounded-full transition-all duration-300 ${
+                s <= step ? 'bg-accent' : 'bg-bg-tertiary'
               }`}
             />
           ))}
         </div>
-        <p className="text-[9px] text-[#505050] mt-1.5">Step {step} of 2</p>
+        <p className="text-xs text-text-muted mt-2">Step {step} of 2</p>
       </div>
 
       {/* Content */}
-      <motion.div
-        className="flex-1 px-6 flex flex-col relative z-10"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.3 }}
-      >
+      <div className="flex-1 px-6 flex flex-col relative z-10 overflow-hidden">
         <AnimatePresence mode="wait">
           {step === 1 && (
             <motion.div
@@ -98,19 +92,19 @@ export function ProfileCreation({ onComplete, onBack }: ProfileCreationProps) {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
-              transition={{ duration: 0.2 }}
+              transition={{ duration: 0.25 }}
               className="flex-1 flex flex-col"
             >
               {/* Icon */}
-              <div className="w-10 h-10 rounded-xl bg-[#0C0C0C] border border-[#181818] flex items-center justify-center mb-3">
-                <User className="w-4 h-4 text-[#B49B50]" />
+              <div className="w-12 h-12 rounded-xl bg-bg-secondary border border-border-subtle flex items-center justify-center mb-4">
+                <User className="w-5 h-5 text-accent" />
               </div>
 
-              <h2 className="text-lg font-semibold text-white mb-0.5">
-                Your Name
+              <h2 className="text-xl font-semibold text-text-primary mb-1">
+                What's your name?
               </h2>
-              <p className="text-[11px] text-[#505050] mb-4">
-                This will appear on your profile
+              <p className="text-sm text-text-tertiary mb-6">
+                This will be displayed on your profile
               </p>
 
               <input
@@ -118,16 +112,18 @@ export function ProfileCreation({ onComplete, onBack }: ProfileCreationProps) {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Enter your name"
-                className="w-full px-4 py-3 bg-[#0C0C0C] border border-[#181818] rounded-xl text-white text-[14px] placeholder:text-[#404040] focus:border-[#B49B50]/40 focus:outline-none transition-colors"
+                className="input"
                 autoFocus
               />
 
+              {/* Spacer */}
               <div className="flex-1" />
 
+              {/* Continue button */}
               <button
                 onClick={() => name.trim() && setStep(2)}
                 disabled={!name.trim()}
-                className="w-full py-3 rounded-xl font-medium text-[13px] bg-[#B49B50] text-[#050505] disabled:opacity-30 disabled:cursor-not-allowed hover:bg-[#C4AA5A] active:bg-[#A08A45] transition-colors mb-3"
+                className="btn-primary w-full py-3.5 mb-safe min-h-[48px]"
               >
                 Continue
               </button>
@@ -140,57 +136,57 @@ export function ProfileCreation({ onComplete, onBack }: ProfileCreationProps) {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
-              transition={{ duration: 0.2 }}
+              transition={{ duration: 0.25 }}
               className="flex-1 flex flex-col"
             >
               {/* Icon */}
-              <div className="w-10 h-10 rounded-xl bg-[#0C0C0C] border border-[#181818] flex items-center justify-center mb-3">
-                <Lock className="w-4 h-4 text-[#B49B50]" />
+              <div className="w-12 h-12 rounded-xl bg-bg-secondary border border-border-subtle flex items-center justify-center mb-4">
+                <Lock className="w-5 h-5 text-accent" />
               </div>
 
-              <h2 className="text-lg font-semibold text-white mb-0.5">
-                Secure Your Vault
+              <h2 className="text-xl font-semibold text-text-primary mb-1">
+                Secure your vault
               </h2>
-              <p className="text-[11px] text-[#505050] mb-4">
-                Create a 4-6 digit PIN
+              <p className="text-sm text-text-tertiary mb-6">
+                Create a 4-6 digit PIN to protect your data
               </p>
 
               {/* Error */}
               <AnimatePresence>
                 {error && (
                   <motion.div
-                    initial={{ opacity: 0, y: -4 }}
+                    initial={{ opacity: 0, y: -8 }}
                     animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -4 }}
-                    className="flex items-center gap-2 px-3 py-2 bg-red-500/10 rounded-lg mb-3 border border-red-500/10"
+                    exit={{ opacity: 0, y: -8 }}
+                    className="flex items-center gap-2 px-4 py-3 mb-4 rounded-lg bg-error-muted border border-error/20"
                   >
-                    <AlertCircle className="w-3.5 h-3.5 text-red-400 flex-shrink-0" />
-                    <p className="text-[10px] text-red-400">{error}</p>
+                    <AlertCircle className="w-4 h-4 text-error flex-shrink-0" />
+                    <p className="text-sm text-error">{error}</p>
                   </motion.div>
                 )}
               </AnimatePresence>
 
               {/* PIN Inputs */}
-              <div className="space-y-2.5 mb-4">
+              <div className="space-y-3 mb-6">
                 <div className="relative">
                   <input
                     type={showPin ? 'text' : 'password'}
                     value={pin}
                     onChange={(e) => setPin(e.target.value.replace(/\D/g, '').slice(0, 6))}
                     placeholder="Enter PIN"
-                    className="w-full px-4 py-2.5 bg-[#0C0C0C] border border-[#181818] rounded-xl text-white text-base text-center tracking-[0.25em] placeholder:text-[#404040] placeholder:tracking-normal placeholder:text-[12px] focus:border-[#B49B50]/40 focus:outline-none transition-colors"
+                    className="input text-center text-lg tracking-[0.3em] font-medium"
                     maxLength={6}
                     inputMode="numeric"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPin(!showPin)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-lg hover:bg-[#181818] transition-colors"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-md hover:bg-surface-2 transition-colors"
                   >
                     {showPin ? (
-                      <EyeOff className="w-3.5 h-3.5 text-[#505050]" />
+                      <EyeOff className="w-4 h-4 text-text-tertiary" />
                     ) : (
-                      <Eye className="w-3.5 h-3.5 text-[#505050]" />
+                      <Eye className="w-4 h-4 text-text-tertiary" />
                     )}
                   </button>
                 </div>
@@ -201,7 +197,7 @@ export function ProfileCreation({ onComplete, onBack }: ProfileCreationProps) {
                     value={confirmPin}
                     onChange={(e) => setConfirmPin(e.target.value.replace(/\D/g, '').slice(0, 6))}
                     placeholder="Confirm PIN"
-                    className="w-full px-4 py-2.5 bg-[#0C0C0C] border border-[#181818] rounded-xl text-white text-base text-center tracking-[0.25em] placeholder:text-[#404040] placeholder:tracking-normal placeholder:text-[12px] focus:border-[#B49B50]/40 focus:outline-none transition-colors"
+                    className="input text-center text-lg tracking-[0.3em] font-medium"
                     maxLength={6}
                     inputMode="numeric"
                   />
@@ -209,31 +205,32 @@ export function ProfileCreation({ onComplete, onBack }: ProfileCreationProps) {
                     <motion.div
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-emerald-500/15 flex items-center justify-center"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-success-muted flex items-center justify-center"
                     >
-                      <Check className="w-3 h-3 text-emerald-400" />
+                      <Check className="w-3.5 h-3.5 text-success" />
                     </motion.div>
                   )}
                 </div>
               </div>
 
+              {/* Spacer */}
               <div className="flex-1" />
 
               {/* Buttons */}
-              <div className="flex gap-2.5 mb-3">
+              <div className="flex gap-3 mb-safe">
                 <button
                   onClick={() => setStep(1)}
-                  className="flex-1 py-2.5 rounded-xl border border-[#181818] text-white font-medium text-[13px] hover:bg-[#0C0C0C] transition-colors"
+                  className="btn-secondary flex-1 py-3.5"
                 >
                   Back
                 </button>
                 <button
                   onClick={handleCreate}
                   disabled={pin.length < 4 || pin !== confirmPin || isLoading}
-                  className="flex-1 py-2.5 rounded-xl font-medium text-[13px] bg-[#B49B50] text-[#050505] disabled:opacity-30 disabled:cursor-not-allowed hover:bg-[#C4AA5A] transition-colors flex items-center justify-center gap-2"
+                  className="btn-primary flex-1 py-3.5"
                 >
                   {isLoading ? (
-                    <div className="w-3.5 h-3.5 border-2 border-[#050505]/30 border-t-[#050505] rounded-full animate-spin" />
+                    <div className="w-5 h-5 border-2 border-bg-base/30 border-t-bg-base rounded-full animate-spin" />
                   ) : (
                     'Create Profile'
                   )}
@@ -242,7 +239,7 @@ export function ProfileCreation({ onComplete, onBack }: ProfileCreationProps) {
             </motion.div>
           )}
         </AnimatePresence>
-      </motion.div>
+      </div>
     </div>
   )
 }
