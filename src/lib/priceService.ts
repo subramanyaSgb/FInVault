@@ -1,6 +1,7 @@
 /**
  * Price Service - Fetch live prices for stocks, mutual funds, and crypto
  * Uses free APIs that don't require API keys
+ * Note: Yahoo Finance requires CORS proxy for browser access
  */
 
 export interface PriceData {
@@ -19,21 +20,24 @@ export interface PriceResult {
   error?: string
 }
 
-// Yahoo Finance API for stocks
+// CORS proxy for APIs that don't support browser requests
+// AllOrigins is free and reliable
+const CORS_PROXY = 'https://api.allorigins.win/raw?url='
+
+// Yahoo Finance API for stocks (via CORS proxy)
 // Supports Indian stocks with .NS (NSE) or .BO (BSE) suffix
 export async function fetchStockPrice(symbol: string): Promise<PriceResult> {
   try {
     // Add .NS suffix for Indian stocks if not already present
     const formattedSymbol = symbol.includes('.') ? symbol : `${symbol}.NS`
 
-    const response = await fetch(
-      `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(formattedSymbol)}?interval=1d&range=1d`,
-      {
-        headers: {
-          'User-Agent': 'Mozilla/5.0',
-        },
-      }
-    )
+    const yahooUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(formattedSymbol)}?interval=1d&range=1d`
+
+    const response = await fetch(CORS_PROXY + encodeURIComponent(yahooUrl), {
+      headers: {
+        Accept: 'application/json',
+      },
+    })
 
     if (!response.ok) {
       return { success: false, error: `HTTP ${response.status}` }
