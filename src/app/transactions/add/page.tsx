@@ -411,32 +411,43 @@ export default function AddTransactionPage() {
   }
 
   return (
-    <div className="min-h-screen bg-bg-base">
+    <div className="min-h-screen bg-bg-base flex flex-col">
+      {/* Background Gradient */}
+      <div
+        className="fixed inset-0 pointer-events-none"
+        style={{
+          background: 'radial-gradient(ellipse 100% 60% at 50% 0%, rgba(201, 165, 92, 0.04) 0%, transparent 60%)'
+        }}
+      />
+
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-bg-primary/60 backdrop-blur-xl border-b border-glass-border pt-safe">
-        <div className="flex items-center justify-between px-5 py-4">
+      <header className="sticky top-0 z-50 bg-bg-base/60 backdrop-blur-xl border-b border-glass-border pt-safe">
+        <div className="flex items-center justify-between px-4 py-3">
           <motion.button
             whileTap={{ scale: 0.95 }}
             onClick={() => currentStep === 'amount' ? router.back() : setCurrentStep('amount')}
-            className="flex items-center gap-2 text-text-secondary hover:text-text-primary transition-colors"
+            className="flex items-center gap-1.5 text-text-secondary hover:text-text-primary transition-colors"
           >
             <ChevronLeft className="w-5 h-5" />
             <span className="text-sm font-medium">{currentStep === 'amount' ? 'Cancel' : 'Back'}</span>
           </motion.button>
 
-          <h1 className="text-lg font-display font-semibold text-text-primary tracking-tight">
-            {currentStep === 'amount' ? 'Enter Amount' : 'Details'}
-          </h1>
+          <div className="text-center">
+            <p className="text-[10px] text-accent font-medium tracking-wide uppercase">New Transaction</p>
+            <h1 className="text-sm font-semibold text-text-primary">
+              {currentStep === 'amount' ? 'Enter Amount' : 'Add Details'}
+            </h1>
+          </div>
 
-          <div className="w-20" />
+          <div className="w-16" />
         </div>
 
         {/* Progress */}
-        <div className="flex gap-2 px-5 pb-4">
+        <div className="flex gap-2 px-4 pb-3">
           {STEPS.map((step, index) => (
             <div
               key={step}
-              className={`h-1.5 flex-1 rounded-full transition-all duration-500 ${
+              className={`h-1 flex-1 rounded-full transition-all duration-500 ${
                 STEPS.indexOf(currentStep) >= index
                   ? 'bg-gradient-to-r from-accent via-accent-light to-accent shadow-sm shadow-accent/30'
                   : 'bg-surface-2'
@@ -447,7 +458,7 @@ export default function AddTransactionPage() {
       </header>
 
       {/* Content */}
-      <main className="max-w-lg mx-auto px-5 py-6 pb-safe">
+      <main className={`flex-1 max-w-lg mx-auto w-full px-4 relative z-10 ${currentStep === 'amount' ? 'flex flex-col justify-center pb-safe' : 'py-4 pb-safe overflow-y-auto'}`}>
         <AnimatePresence mode="wait">
           {currentStep === 'amount' ? (
             <motion.div
@@ -455,15 +466,16 @@ export default function AddTransactionPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
+              className="py-4"
             >
-              {/* Transaction Type Toggle */}
-              <div className="flex gap-2 mb-6 p-1.5 bg-surface-1/50 backdrop-blur-sm rounded-2xl border border-glass-border">
+              {/* Transaction Type Toggle - Compact */}
+              <div className="flex gap-1.5 mb-4 p-1 bg-surface-1/50 backdrop-blur-sm rounded-xl border border-glass-border">
                 {(['expense', 'income', 'transfer'] as TransactionType[]).map(type => (
                   <motion.button
                     key={type}
                     whileTap={{ scale: 0.97 }}
                     onClick={() => setValue('type', type)}
-                    className={`flex-1 py-3.5 px-4 rounded-xl font-medium text-sm transition-all duration-300 ${
+                    className={`flex-1 py-2.5 px-3 rounded-lg font-medium text-sm transition-all duration-300 ${
                       watchedType === type
                         ? type === 'expense'
                           ? 'bg-gradient-to-br from-error to-error/80 text-white shadow-lg shadow-error/25'
@@ -478,7 +490,7 @@ export default function AddTransactionPage() {
                 ))}
               </div>
 
-              {/* Numpad */}
+              {/* Numpad - Compact Mode */}
               <Numpad
                 value={amount}
                 onChange={setAmount}
@@ -486,6 +498,7 @@ export default function AddTransactionPage() {
                 currency={currentProfile.settings.currency === 'INR' ? '₹' : '$'}
                 showBack={false}
                 showConfirm={true}
+                compact={true}
               />
             </motion.div>
           ) : (
@@ -494,44 +507,48 @@ export default function AddTransactionPage() {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
-              className="space-y-5"
+              className="space-y-4"
             >
-              {/* Amount Display */}
+              {/* Amount Display - Compact */}
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="glass-card p-6 text-center relative overflow-hidden"
+                className="rounded-2xl bg-gradient-to-br from-bg-secondary to-bg-tertiary border border-border-subtle p-4 text-center relative overflow-hidden"
               >
                 <div
                   className="absolute inset-0 pointer-events-none"
                   style={{
                     background: watchedType === 'income'
-                      ? 'radial-gradient(ellipse at 50% -20%, rgba(34, 197, 94, 0.15) 0%, transparent 70%)'
+                      ? 'radial-gradient(ellipse at 50% -20%, rgba(34, 197, 94, 0.12) 0%, transparent 70%)'
                       : watchedType === 'expense'
-                        ? 'radial-gradient(ellipse at 50% -20%, rgba(239, 68, 68, 0.15) 0%, transparent 70%)'
-                        : 'radial-gradient(ellipse at 50% -20%, rgba(201, 165, 92, 0.15) 0%, transparent 70%)'
+                        ? 'radial-gradient(ellipse at 50% -20%, rgba(239, 68, 68, 0.12) 0%, transparent 70%)'
+                        : 'radial-gradient(ellipse at 50% -20%, rgba(201, 165, 92, 0.12) 0%, transparent 70%)'
                   }}
                 />
-                <p className="text-[10px] text-text-muted uppercase tracking-[0.2em] mb-3 font-medium">
-                  {watchedType === 'income' ? 'Receiving' : watchedType === 'expense' ? 'Spending' : 'Transferring'}
-                </p>
-                <p className={`text-5xl font-display font-bold tracking-tight ${
-                  watchedType === 'income' ? 'text-success' : watchedType === 'expense' ? 'text-error' : 'gold-gradient'
-                }`}>
-                  {amount}
-                </p>
-                <motion.button
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => setCurrentStep('amount')}
-                  className="mt-3 text-xs text-text-muted hover:text-accent transition-colors underline underline-offset-2"
-                >
-                  Edit amount
-                </motion.button>
+                <div className="relative flex items-center justify-between">
+                  <div className="text-left">
+                    <p className="text-[10px] text-text-muted uppercase tracking-wider font-medium">
+                      {watchedType === 'income' ? 'Receiving' : watchedType === 'expense' ? 'Spending' : 'Transferring'}
+                    </p>
+                    <p className={`text-2xl font-display font-bold tracking-tight ${
+                      watchedType === 'income' ? 'text-success' : watchedType === 'expense' ? 'text-error' : 'gold-gradient'
+                    }`}>
+                      {amount}
+                    </p>
+                  </div>
+                  <motion.button
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => setCurrentStep('amount')}
+                    className="px-3 py-1.5 text-xs text-text-secondary hover:text-accent bg-surface-1 rounded-lg border border-border-subtle hover:border-accent/30 transition-all"
+                  >
+                    Edit
+                  </motion.button>
+                </div>
               </motion.div>
 
               {/* Description with Auto-suggestions */}
               <div className="relative">
-                <label className="block text-sm text-text-secondary mb-2">Description</label>
+                <label className="block text-xs text-text-tertiary mb-1.5 uppercase tracking-wider font-medium">Description</label>
                 <Controller
                   name="description"
                   control={control}
@@ -546,12 +563,12 @@ export default function AddTransactionPage() {
                         setTimeout(() => setDescriptionFocused(false), 200);
                       }}
                       autoComplete="off"
-                      className="w-full px-4 py-3.5 bg-surface-1 border border-border-subtle rounded-xl text-text-primary placeholder-text-muted focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20 transition-colors"
+                      className="w-full px-3 py-2.5 bg-surface-1 border border-border-subtle rounded-xl text-sm text-text-primary placeholder-text-muted focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20 transition-colors"
                     />
                   )}
                 />
                 {errors.description && (
-                  <p className="mt-1.5 text-xs text-error">{errors.description.message}</p>
+                  <p className="mt-1 text-xs text-error">{errors.description.message}</p>
                 )}
 
                 {/* Auto-suggestions Dropdown */}
@@ -599,29 +616,22 @@ export default function AddTransactionPage() {
                 </AnimatePresence>
               </div>
 
-              {/* AI Suggestion */}
+              {/* AI Suggestion - Compact */}
               {aiSuggestion && aiSuggestion.confidence > 0.5 && watchedCategory !== aiSuggestion.category && (
                 <motion.div
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="card p-4 border-l-2 border-l-accent"
+                  className="rounded-xl p-3 bg-accent-muted/30 border border-accent/20"
                 >
-                  <div className="flex items-start gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-accent-muted flex items-center justify-center flex-shrink-0">
-                      <Sparkles className="w-4 h-4 text-accent" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm text-text-primary">
-                        AI suggests: <span className="font-semibold text-accent">{aiSuggestion.category}</span>
-                        {aiSuggestion.subcategory && <span className="text-text-secondary"> → {aiSuggestion.subcategory}</span>}
-                      </p>
-                      <p className="text-xs text-text-muted mt-0.5">
-                        {Math.round(aiSuggestion.confidence * 100)}% confidence
-                      </p>
-                    </div>
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-accent flex-shrink-0" />
+                    <p className="text-xs text-text-primary flex-1">
+                      Suggest: <span className="font-semibold text-accent">{aiSuggestion.category}</span>
+                      {aiSuggestion.subcategory && <span className="text-text-secondary"> → {aiSuggestion.subcategory}</span>}
+                    </p>
                     <button
                       onClick={() => handleCategorySelect(aiSuggestion.category, aiSuggestion.subcategory)}
-                      className="px-3 py-1.5 bg-accent text-bg-base rounded-lg text-xs font-semibold hover:bg-accent-light transition-colors"
+                      className="px-2.5 py-1 bg-accent text-bg-base rounded-md text-[10px] font-semibold hover:bg-accent-light transition-colors"
                     >
                       Apply
                     </button>
@@ -629,70 +639,71 @@ export default function AddTransactionPage() {
                 </motion.div>
               )}
 
-              {/* Category */}
-              <div>
-                <label className="block text-sm text-text-secondary mb-2">Category</label>
-                <button
-                  onClick={() => setShowCategorySelector(true)}
-                  className={`w-full px-4 py-3.5 bg-surface-1 border border-border-subtle rounded-xl text-left transition-all hover:border-border-default ${
-                    watchedCategory ? 'text-text-primary' : 'text-text-muted'
-                  }`}
-                >
-                  {watchedCategory || 'Select category'}
-                  {watchedSubcategory && (
-                    <span className="text-text-secondary"> → {watchedSubcategory}</span>
+              {/* Category & Account Row */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs text-text-tertiary mb-1.5 uppercase tracking-wider font-medium">Category</label>
+                  <button
+                    onClick={() => setShowCategorySelector(true)}
+                    className={`w-full px-3 py-2.5 bg-surface-1 border border-border-subtle rounded-xl text-sm text-left transition-all hover:border-accent/30 ${
+                      watchedCategory ? 'text-text-primary' : 'text-text-muted'
+                    }`}
+                  >
+                    {watchedCategory || 'Select'}
+                    {watchedSubcategory && (
+                      <span className="text-text-tertiary text-xs"> → {watchedSubcategory}</span>
+                    )}
+                  </button>
+                  {errors.category && (
+                    <p className="mt-1 text-xs text-error">{errors.category.message}</p>
                   )}
-                </button>
-                {errors.category && (
-                  <p className="mt-1.5 text-xs text-error">{errors.category.message}</p>
-                )}
-              </div>
+                </div>
 
-              {/* Account */}
-              <div>
-                <label className="block text-sm text-text-secondary mb-2">
-                  {watchedType === 'transfer' ? 'From Account' : 'Account'}
-                </label>
-                <Controller
-                  name="accountId"
-                  control={control}
-                  render={({ field }) => (
-                    <select
-                      {...field}
-                      className="w-full px-4 py-3.5 bg-surface-1 border border-border-subtle rounded-xl text-text-primary focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20 transition-colors"
-                    >
-                      <option value="">Select account</option>
-                      {accounts.map(account => (
-                        <option key={account.id} value={account.id}>
-                          {account.name} ({account.type})
-                        </option>
-                      ))}
-                    </select>
+                <div>
+                  <label className="block text-xs text-text-tertiary mb-1.5 uppercase tracking-wider font-medium">
+                    {watchedType === 'transfer' ? 'From' : 'Account'}
+                  </label>
+                  <Controller
+                    name="accountId"
+                    control={control}
+                    render={({ field }) => (
+                      <select
+                        {...field}
+                        className="w-full px-3 py-2.5 bg-surface-1 border border-border-subtle rounded-xl text-sm text-text-primary focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20 transition-colors"
+                      >
+                        <option value="">Select</option>
+                        {accounts.map(account => (
+                          <option key={account.id} value={account.id}>
+                            {account.name}
+                          </option>
+                        ))}
+                      </select>
+                    )}
+                  />
+                  {errors.accountId && (
+                    <p className="mt-1 text-xs text-error">{errors.accountId.message}</p>
                   )}
-                />
-                {errors.accountId && (
-                  <p className="mt-1.5 text-xs text-error">{errors.accountId.message}</p>
-                )}
+                </div>
               </div>
 
               {/* To Account (for transfers) */}
               {watchedType === 'transfer' && (
                 <div>
-                  <label className="block text-sm text-text-secondary mb-2">To Account</label>
+                  <label className="block text-xs text-text-tertiary mb-1.5 uppercase tracking-wider font-medium">To Account</label>
                   <Controller
                     name="toAccountId"
                     control={control}
                     render={({ field }) => (
                       <select
                         {...field}
-                        className="w-full px-4 py-3.5 bg-surface-1 border border-border-subtle rounded-xl text-text-primary focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20 transition-colors"
+                        className="w-full px-3 py-2.5 bg-surface-1 border border-border-subtle rounded-xl text-sm text-text-primary focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20 transition-colors"
                       >
-                        <option value="">Select destination account</option>
+                        <option value="">Select destination</option>
                         {accounts
                           .filter(a => a.id !== watch('accountId'))
                           .map(account => (
                             <option key={account.id} value={account.id}>
-                              {account.name} ({account.type})
+                              {account.name}
                             </option>
                           ))}
                       </select>
@@ -703,7 +714,7 @@ export default function AddTransactionPage() {
 
               {/* Date */}
               <div>
-                <label className="block text-sm text-text-secondary mb-2">Date</label>
+                <label className="block text-xs text-text-tertiary mb-1.5 uppercase tracking-wider font-medium">Date</label>
                 <Controller
                   name="date"
                   control={control}
@@ -713,17 +724,17 @@ export default function AddTransactionPage() {
                         type="date"
                         value={format(field.value, 'yyyy-MM-dd')}
                         onChange={(e) => field.onChange(new Date(e.target.value))}
-                        className="w-full px-4 py-3.5 bg-surface-1 border border-border-subtle rounded-xl text-text-primary focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20 transition-colors"
+                        className="w-full px-3 py-2.5 bg-surface-1 border border-border-subtle rounded-xl text-sm text-text-primary focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20 transition-colors"
                       />
-                      <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-text-tertiary pointer-events-none" />
+                      <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-tertiary pointer-events-none" />
                     </div>
                   )}
                 />
               </div>
 
-              {/* Tags with Suggestions */}
+              {/* Tags with Suggestions - Compact */}
               <div className="relative">
-                <label className="block text-sm text-text-secondary mb-2">Tags</label>
+                <label className="block text-xs text-text-tertiary mb-1.5 uppercase tracking-wider font-medium">Tags</label>
                 <div className="flex gap-2 mb-2">
                   <div className="relative flex-1">
                     <input
@@ -733,8 +744,8 @@ export default function AddTransactionPage() {
                       onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddTag())}
                       onFocus={() => tagInput && setShowTagSuggestions(tagSuggestions.length > 0)}
                       onBlur={() => setTimeout(() => setShowTagSuggestions(false), 200)}
-                      placeholder="Add a tag"
-                      className="w-full px-4 py-3 bg-surface-1 border border-border-subtle rounded-xl text-text-primary placeholder-text-muted focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20 transition-colors"
+                      placeholder="Add tag"
+                      className="w-full px-3 py-2 bg-surface-1 border border-border-subtle rounded-lg text-sm text-text-primary placeholder-text-muted focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20 transition-colors"
                     />
 
                     {/* Tag Suggestions Dropdown */}
@@ -744,14 +755,14 @@ export default function AddTransactionPage() {
                           initial={{ opacity: 0, y: -8 }}
                           animate={{ opacity: 1, y: 0 }}
                           exit={{ opacity: 0, y: -8 }}
-                          className="absolute left-0 right-0 top-full mt-1 z-20 bg-surface-2 border border-border-subtle rounded-xl shadow-lg overflow-hidden"
+                          className="absolute left-0 right-0 top-full mt-1 z-20 bg-surface-2 border border-border-subtle rounded-lg shadow-lg overflow-hidden"
                         >
                           {tagSuggestions.map(tag => (
                             <button
                               key={tag}
                               type="button"
                               onClick={() => handleAddTag(tag)}
-                              className="w-full px-4 py-2.5 text-left text-sm text-text-primary hover:bg-surface-1 transition-colors"
+                              className="w-full px-3 py-2 text-left text-xs text-text-primary hover:bg-surface-1 transition-colors"
                             >
                               #{tag}
                             </button>
@@ -763,24 +774,24 @@ export default function AddTransactionPage() {
                   <button
                     onClick={() => handleAddTag()}
                     disabled={!tagInput.trim()}
-                    className="px-4 py-3 bg-accent text-bg-base rounded-xl disabled:opacity-50 transition-colors hover:bg-accent-light"
+                    className="px-3 py-2 bg-accent text-bg-base rounded-lg disabled:opacity-50 transition-colors hover:bg-accent-light"
                   >
-                    <Plus className="w-5 h-5" />
+                    <Plus className="w-4 h-4" />
                   </button>
                 </div>
                 {watchedTags.length > 0 && (
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap gap-1.5">
                     {watchedTags.map(tag => (
                       <span
                         key={tag}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-accent-muted rounded-lg text-xs text-accent"
+                        className="inline-flex items-center gap-1 px-2 py-1 bg-accent-muted rounded-md text-[10px] text-accent"
                       >
                         #{tag}
                         <button
                           onClick={() => handleRemoveTag(tag)}
                           className="hover:text-error transition-colors"
                         >
-                          <X className="w-3 h-3" />
+                          <X className="w-2.5 h-2.5" />
                         </button>
                       </span>
                     ))}
@@ -788,135 +799,124 @@ export default function AddTransactionPage() {
                 )}
               </div>
 
-              {/* Location */}
-              <div>
-                <label className="block text-sm text-text-secondary mb-2">Location</label>
-                {location ? (
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className="flex items-center gap-3 p-4 bg-surface-1 rounded-xl border border-border-subtle"
-                  >
-                    <div className="w-10 h-10 rounded-lg bg-success/10 flex items-center justify-center flex-shrink-0">
-                      <MapPin className="w-5 h-5 text-success" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      {location.address ? (
-                        <p className="text-sm text-text-primary truncate">{location.address}</p>
-                      ) : (
-                        <p className="text-sm text-text-primary">
-                          {location.latitude.toFixed(4)}, {location.longitude.toFixed(4)}
-                        </p>
-                      )}
-                      <p className="text-xs text-text-muted mt-0.5">
-                        Accuracy: ±{Math.round(location.accuracy)}m
+              {/* Location & Person Row - Compact */}
+              <div className="grid grid-cols-2 gap-3">
+                {/* Location */}
+                <div>
+                  <label className="block text-xs text-text-tertiary mb-1.5 uppercase tracking-wider font-medium">Location</label>
+                  {location ? (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      className="flex items-center gap-2 p-2.5 bg-surface-1 rounded-xl border border-success/30"
+                    >
+                      <MapPin className="w-4 h-4 text-success flex-shrink-0" />
+                      <p className="text-xs text-text-primary truncate flex-1">
+                        {location.address ? location.address.split(',')[0] : `${location.latitude.toFixed(2)}, ${location.longitude.toFixed(2)}`}
                       </p>
-                    </div>
+                      <button
+                        type="button"
+                        onClick={handleRemoveLocation}
+                        className="text-text-muted hover:text-error transition-colors"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </motion.div>
+                  ) : (
                     <button
                       type="button"
-                      onClick={handleRemoveLocation}
-                      className="p-2 text-text-muted hover:text-error transition-colors"
+                      onClick={handleGetLocation}
+                      disabled={isLoadingLocation}
+                      className="w-full flex items-center justify-center gap-2 p-2.5 bg-surface-1 rounded-xl border border-dashed border-border-subtle hover:border-accent/30 transition-all disabled:opacity-50"
                     >
-                      <X className="w-4 h-4" />
-                    </button>
-                  </motion.div>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={handleGetLocation}
-                    disabled={isLoadingLocation}
-                    className="w-full flex items-center justify-center gap-3 p-4 bg-surface-1 rounded-xl border border-dashed border-border-subtle hover:border-accent transition-all disabled:opacity-50"
-                  >
-                    {isLoadingLocation ? (
-                      <>
-                        <Loader2 className="w-5 h-5 animate-spin text-accent" />
-                        <span className="text-sm text-text-secondary">Getting location...</span>
-                      </>
-                    ) : (
-                      <>
-                        <Navigation className="w-5 h-5 text-text-muted" />
-                        <span className="text-sm text-text-secondary">Add current location</span>
-                      </>
-                    )}
-                  </button>
-                )}
-                {locationError && (
-                  <p className="mt-1.5 text-xs text-error">{locationError}</p>
-                )}
-              </div>
-
-              {/* Person / Contact */}
-              <div className="relative">
-                <label className="block text-sm text-text-secondary mb-2">Person</label>
-                {selectedPerson ? (
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className="flex items-center gap-3 p-4 bg-surface-1 rounded-xl border border-border-subtle"
-                  >
-                    <div className="w-10 h-10 rounded-full bg-accent/10 flex items-center justify-center flex-shrink-0">
-                      {selectedPerson.avatar ? (
-                        <img
-                          src={selectedPerson.avatar}
-                          alt={selectedPerson.name}
-                          className="w-10 h-10 rounded-full object-cover"
-                        />
+                      {isLoadingLocation ? (
+                        <Loader2 className="w-4 h-4 animate-spin text-accent" />
                       ) : (
-                        <User className="w-5 h-5 text-accent" />
+                        <Navigation className="w-4 h-4 text-text-muted" />
                       )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm text-text-primary font-medium truncate">
+                      <span className="text-xs text-text-secondary">Add</span>
+                    </button>
+                  )}
+                  {locationError && (
+                    <p className="mt-1 text-[10px] text-error">{locationError}</p>
+                  )}
+                </div>
+
+                {/* Person - Compact */}
+                <div>
+                  <label className="block text-xs text-text-tertiary mb-1.5 uppercase tracking-wider font-medium">Person</label>
+                  {selectedPerson ? (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      className="flex items-center gap-2 p-2.5 bg-surface-1 rounded-xl border border-accent/30"
+                    >
+                      <div className="w-6 h-6 rounded-full bg-accent/10 flex items-center justify-center flex-shrink-0">
+                        {selectedPerson.avatar ? (
+                          <img
+                            src={selectedPerson.avatar}
+                            alt={selectedPerson.name}
+                            className="w-6 h-6 rounded-full object-cover"
+                          />
+                        ) : (
+                          <User className="w-3 h-3 text-accent" />
+                        )}
+                      </div>
+                      <p className="text-xs text-text-primary truncate flex-1">
                         {selectedPerson.name}
                       </p>
-                      {selectedPerson.relationship && (
-                        <p className="text-xs text-text-muted capitalize">
-                          {selectedPerson.relationship}
-                        </p>
-                      )}
-                    </div>
+                      <button
+                        type="button"
+                        onClick={handleRemovePerson}
+                        className="text-text-muted hover:text-error transition-colors"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </motion.div>
+                  ) : (
                     <button
                       type="button"
-                      onClick={handleRemovePerson}
-                      className="p-2 text-text-muted hover:text-error transition-colors"
+                      onClick={() => setShowPersonSelector(true)}
+                      className="w-full flex items-center justify-center gap-2 p-2.5 bg-surface-1 rounded-xl border border-dashed border-border-subtle hover:border-accent/30 transition-all"
                     >
-                      <X className="w-4 h-4" />
+                      <User className="w-4 h-4 text-text-muted" />
+                      <span className="text-xs text-text-secondary">Add</span>
                     </button>
-                  </motion.div>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => setShowPersonSelector(true)}
-                    className="w-full flex items-center justify-center gap-3 p-4 bg-surface-1 rounded-xl border border-dashed border-border-subtle hover:border-accent transition-all"
-                  >
-                    <User className="w-5 h-5 text-text-muted" />
-                    <span className="text-sm text-text-secondary">Add a person</span>
-                  </button>
-                )}
+                  )}
+                </div>
+              </div>
 
-                {/* Person Selector Dropdown */}
-                <AnimatePresence>
-                  {showPersonSelector && (
+              {/* Person Selector Modal */}
+              <AnimatePresence>
+                {showPersonSelector && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="fixed inset-0 z-50 bg-bg-base/90 backdrop-blur-md flex items-end"
+                    onClick={() => { setShowPersonSelector(false); setPersonSearch(''); }}
+                  >
                     <motion.div
-                      initial={{ opacity: 0, y: -8 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -8 }}
-                      className="absolute left-0 right-0 top-full mt-2 z-30 bg-surface-2 border border-border-subtle rounded-xl shadow-lg overflow-hidden"
+                      initial={{ y: '100%' }}
+                      animate={{ y: 0 }}
+                      exit={{ y: '100%' }}
+                      transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                      className="w-full max-w-lg mx-auto bg-bg-secondary border-t border-glass-border rounded-t-2xl overflow-hidden"
+                      onClick={(e) => e.stopPropagation()}
                     >
-                      {/* Search Input */}
-                      <div className="p-3 border-b border-border-subtle">
+                      <div className="p-4 border-b border-border-subtle">
+                        <div className="w-10 h-1 bg-border-default rounded-full mx-auto mb-3" />
                         <input
                           type="text"
                           value={personSearch}
                           onChange={(e) => setPersonSearch(e.target.value)}
-                          placeholder="Search or add new..."
+                          placeholder="Search or add new contact..."
                           autoFocus
-                          className="w-full px-3 py-2 bg-surface-1 border border-border-subtle rounded-lg text-sm text-text-primary placeholder-text-muted focus:outline-none focus:border-accent"
+                          className="w-full px-3 py-2.5 bg-surface-1 border border-border-subtle rounded-xl text-sm text-text-primary placeholder-text-muted focus:outline-none focus:border-accent"
                         />
                       </div>
 
-                      {/* Contacts List */}
-                      <div className="max-h-48 overflow-y-auto">
+                      <div className="max-h-60 overflow-y-auto">
                         {filteredContacts.length > 0 ? (
                           filteredContacts.slice(0, 5).map(contact => (
                             <button
@@ -927,26 +927,16 @@ export default function AddTransactionPage() {
                             >
                               <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center">
                                 {contact.avatar ? (
-                                  <img
-                                    src={contact.avatar}
-                                    alt={contact.name}
-                                    className="w-8 h-8 rounded-full object-cover"
-                                  />
+                                  <img src={contact.avatar} alt={contact.name} className="w-8 h-8 rounded-full object-cover" />
                                 ) : (
                                   <User className="w-4 h-4 text-accent" />
                                 )}
                               </div>
-                              <div className="flex-1 text-left">
-                                <p className="text-sm text-text-primary">{contact.name}</p>
-                                {contact.relationship && (
-                                  <p className="text-xs text-text-muted capitalize">{contact.relationship}</p>
-                                )}
-                              </div>
+                              <p className="text-sm text-text-primary flex-1 text-left">{contact.name}</p>
                             </button>
                           ))
                         ) : null}
 
-                        {/* Create New Contact Option */}
                         {personSearch.trim() && (
                           <button
                             type="button"
@@ -956,126 +946,99 @@ export default function AddTransactionPage() {
                             <div className="w-8 h-8 rounded-full bg-success/10 flex items-center justify-center">
                               <UserPlus className="w-4 h-4 text-success" />
                             </div>
-                            <div className="flex-1 text-left">
-                              <p className="text-sm text-text-primary">
-                                Add &quot;{personSearch.trim()}&quot;
-                              </p>
-                              <p className="text-xs text-text-muted">Create new contact</p>
-                            </div>
+                            <p className="text-sm text-text-primary flex-1 text-left">
+                              Add &quot;{personSearch.trim()}&quot;
+                            </p>
                           </button>
                         )}
 
                         {!filteredContacts.length && !personSearch.trim() && (
-                          <div className="px-4 py-6 text-center">
+                          <div className="px-4 py-8 text-center">
                             <p className="text-sm text-text-muted">No contacts yet</p>
                             <p className="text-xs text-text-tertiary mt-1">Type a name to add one</p>
                           </div>
                         )}
                       </div>
-
-                      {/* Close Button */}
-                      <div className="p-2 border-t border-border-subtle">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setShowPersonSelector(false);
-                            setPersonSearch('');
-                          }}
-                          className="w-full py-2 text-sm text-text-secondary hover:text-text-primary transition-colors"
-                        >
-                          Cancel
-                        </button>
-                      </div>
                     </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
-              {/* Split Expense */}
-              {watchedType === 'expense' && (
-                <div>
-                  <label className="flex items-center gap-3 p-4 card-interactive cursor-pointer">
+              {/* Attachments & Split Row - Compact */}
+              <div className="flex gap-3">
+                {/* Attach Receipt - Compact */}
+                <div className="flex-1">
+                  <label className="block text-xs text-text-tertiary mb-1.5 uppercase tracking-wider font-medium">Receipt</label>
+                  <div className="relative">
+                    <input
+                      type="file"
+                      accept="image/*,.pdf"
+                      multiple
+                      onChange={handleFileChange}
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    />
+                    <div className="flex items-center justify-center gap-2 p-2.5 bg-surface-1 rounded-xl border border-dashed border-border-subtle hover:border-accent/30 transition-all">
+                      <Camera className="w-4 h-4 text-text-muted" />
+                      <span className="text-xs text-text-secondary">{attachments.length > 0 ? `${attachments.length} file(s)` : 'Add'}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Split Expense - Compact */}
+                {watchedType === 'expense' && (
+                  <div className="flex-1">
+                    <label className="block text-xs text-text-tertiary mb-1.5 uppercase tracking-wider font-medium">Split</label>
                     <Controller
                       name="isSplit"
                       control={control}
                       render={({ field }) => (
-                        <div className="relative">
-                          <input
-                            type="checkbox"
-                            checked={field.value}
-                            onChange={(e) => field.onChange(e.target.checked)}
-                            className="sr-only"
-                          />
-                          <div className={`w-5 h-5 rounded border-2 transition-colors ${field.value ? 'bg-accent border-accent' : 'border-border-default'}`}>
-                            {field.value && <Check className="w-4 h-4 text-bg-base" />}
-                          </div>
-                        </div>
+                        <button
+                          type="button"
+                          onClick={() => field.onChange(!field.value)}
+                          className={`w-full flex items-center justify-center gap-2 p-2.5 rounded-xl border transition-all ${
+                            field.value
+                              ? 'bg-accent-muted border-accent/30 text-accent'
+                              : 'bg-surface-1 border-border-subtle text-text-secondary hover:border-accent/30'
+                          }`}
+                        >
+                          <Split className="w-4 h-4" />
+                          <span className="text-xs">{field.value ? 'Splitting' : 'Split'}</span>
+                        </button>
                       )}
                     />
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-text-primary">Split this expense</p>
-                      <p className="text-xs text-text-muted">Divide among multiple categories</p>
-                    </div>
-                    <Split className="w-5 h-5 text-text-tertiary" />
-                  </label>
-                </div>
-              )}
-
-              {/* Attach Receipt */}
-              <div>
-                <label className="block text-sm text-text-secondary mb-2">Attachments</label>
-                <div className="relative">
-                  <input
-                    type="file"
-                    accept="image/*,.pdf"
-                    multiple
-                    onChange={handleFileChange}
-                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                  />
-                  <div className="flex items-center justify-center gap-3 p-5 bg-surface-1 rounded-xl border-2 border-dashed border-border-subtle hover:border-accent transition-all">
-                    <div className="w-10 h-10 rounded-lg bg-accent-muted flex items-center justify-center">
-                      <Camera className="w-5 h-5 text-accent" />
-                    </div>
-                    <div>
-                      <p className="text-sm text-text-primary">Add receipt or photo</p>
-                      <p className="text-xs text-text-muted">Tap to upload</p>
-                    </div>
-                  </div>
-                </div>
-                {attachments.length > 0 && (
-                  <div className="flex flex-wrap gap-2 mt-3">
-                    {attachments.map((file, index) => (
-                      <div
-                        key={index}
-                        className="flex items-center gap-2 px-3 py-2 bg-accent-muted rounded-lg"
-                      >
-                        <span className="text-xs text-accent truncate max-w-[150px]">
-                          {file.name}
-                        </span>
-                        <button
-                          onClick={() => removeAttachment(index)}
-                          className="text-accent hover:text-error transition-colors"
-                        >
-                          <X className="w-3 h-3" />
-                        </button>
-                      </div>
-                    ))}
                   </div>
                 )}
               </div>
 
-              {/* Notes */}
+              {/* Attachments Preview */}
+              {attachments.length > 0 && (
+                <div className="flex flex-wrap gap-1.5">
+                  {attachments.map((file, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center gap-1.5 px-2 py-1 bg-accent-muted rounded-md"
+                    >
+                      <span className="text-[10px] text-accent truncate max-w-[100px]">{file.name}</span>
+                      <button onClick={() => removeAttachment(index)} className="text-accent hover:text-error transition-colors">
+                        <X className="w-2.5 h-2.5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Notes - Compact */}
               <div>
-                <label className="block text-sm text-text-secondary mb-2">Notes (Optional)</label>
+                <label className="block text-xs text-text-tertiary mb-1.5 uppercase tracking-wider font-medium">Notes</label>
                 <Controller
                   name="notes"
                   control={control}
                   render={({ field }) => (
                     <textarea
                       {...field}
-                      rows={3}
-                      placeholder="Add any additional details..."
-                      className="w-full px-4 py-3.5 bg-surface-1 border border-border-subtle rounded-xl text-text-primary placeholder-text-muted focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20 resize-none transition-colors"
+                      rows={2}
+                      placeholder="Add notes (optional)..."
+                      className="w-full px-3 py-2.5 bg-surface-1 border border-border-subtle rounded-xl text-sm text-text-primary placeholder-text-muted focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20 resize-none transition-colors"
                     />
                   )}
                 />
@@ -1086,22 +1049,22 @@ export default function AddTransactionPage() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
-                className="pt-4"
+                className="pt-2"
               >
                 <motion.button
                   whileTap={{ scale: 0.98 }}
                   onClick={handleSubmit(onSubmit)}
                   disabled={isLoading || !isValid}
-                  className="w-full py-4 btn-luxury font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2.5 text-base"
+                  className="w-full py-3.5 btn-luxury font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm"
                 >
                   {isLoading ? (
                     <>
-                      <Loader2 className="w-5 h-5 animate-spin" />
+                      <Loader2 className="w-4 h-4 animate-spin" />
                       Saving...
                     </>
                   ) : (
                     <>
-                      <Check className="w-5 h-5" />
+                      <Check className="w-4 h-4" />
                       Save Transaction
                     </>
                   )}
@@ -1112,7 +1075,7 @@ export default function AddTransactionPage() {
                 <motion.p
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  className="text-center text-sm text-error mt-3"
+                  className="text-center text-xs text-error"
                 >
                   {error}
                 </motion.p>

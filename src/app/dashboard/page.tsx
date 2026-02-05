@@ -17,11 +17,11 @@ import {
   BarChart3,
   Receipt,
   Shield,
-  FileText,
   Bell,
   ChevronRight,
   PiggyBank,
   LogOut,
+  CreditCard,
 } from 'lucide-react'
 import { useNotifications } from '@/hooks/useNotifications'
 import Link from 'next/link'
@@ -356,11 +356,11 @@ export default function DashboardPage() {
           <div className="grid grid-cols-4 gap-2">
             {[
               { href: '/accounts', icon: Wallet, label: 'Accounts', color: 'bg-info-muted', iconColor: 'text-info' },
+              { href: '/credit-cards', icon: CreditCard, label: 'Cards', color: 'bg-error-muted', iconColor: 'text-error' },
               { href: '/budgets', icon: BarChart3, label: 'Budgets', color: 'bg-purple-500/10', iconColor: 'text-purple-400' },
               { href: '/goals', icon: Target, label: 'Goals', color: 'bg-success-muted', iconColor: 'text-success' },
               { href: '/lend-borrow', icon: HandCoins, label: 'Lend', color: 'bg-warning-muted', iconColor: 'text-warning' },
               { href: '/insurance', icon: Shield, label: 'Insurance', color: 'bg-cyan-500/10', iconColor: 'text-cyan-400' },
-              { href: '/documents', icon: FileText, label: 'Docs', color: 'bg-orange-500/10', iconColor: 'text-orange-400' },
               { href: '/loans', icon: PiggyBank, label: 'Loans', color: 'bg-rose-500/10', iconColor: 'text-rose-400' },
               { href: '/settings', icon: Settings, label: 'Settings', color: 'bg-surface-2', iconColor: 'text-text-tertiary' },
             ].map((item, index) => (

@@ -16,7 +16,6 @@ import {
   X,
   Eye,
   EyeOff,
-  ChevronRight,
 } from 'lucide-react'
 import { useAuthStore } from '@/stores/authStore'
 import { useAccountStore } from '@/stores/accountStore'
@@ -29,6 +28,7 @@ const ACCOUNT_TYPES: { type: AccountType; label: string; icon: React.ReactNode; 
   { type: 'cash', label: 'Cash', icon: <Banknote className="w-5 h-5" />, color: '#10B981' },
   { type: 'credit_card', label: 'Credit Card', icon: <CreditCard className="w-5 h-5" />, color: '#EF4444' },
   { type: 'investment', label: 'Investment', icon: <TrendingUp className="w-5 h-5" />, color: '#8B5CF6' },
+  { type: 'rd', label: 'RD', icon: <PiggyBank className="w-5 h-5" />, color: '#06B6D4' },
 ]
 
 const ACCOUNT_ICONS = ['🏦', '💳', '💵', '💰', '🪙', '📱', '💎', '🏧']
@@ -93,6 +93,12 @@ const accountTypeSpecificFields: Record<AccountType, DynamicField[]> = {
     { label: 'Broker Name', field: 'brokerName', type: 'select', placeholder: 'Select broker', options: ['Zerodha', 'Groww', 'Upstox', 'Angel One', 'ICICI Direct', 'HDFC Securities', 'Other'] },
     { label: 'Demat Account No.', field: 'dematAccountNumber', type: 'text', placeholder: '1234567890123456' },
     { label: 'Trading Account No.', field: 'tradingAccountNumber', type: 'text', placeholder: 'ABC123' },
+  ],
+  rd: [
+    { label: 'Interest Rate (%)', field: 'interestRate', type: 'number', placeholder: '6.5' },
+    { label: 'Monthly Installment', field: 'minimumBalance', type: 'number', placeholder: '5000' },
+    { label: 'Branch Name', field: 'branchName', type: 'text', placeholder: 'Main Branch' },
+    { label: 'IFSC Code', field: 'ifscCode', type: 'text', placeholder: 'HDFC0001234' },
   ],
 }
 
@@ -161,6 +167,7 @@ export default function AccountsPage() {
       cash: [],
       credit_card: [],
       investment: [],
+      rd: [],
     }
     accounts.forEach(account => {
       if (grouped[account.type]) {
@@ -399,50 +406,67 @@ export default function AccountsPage() {
                         {/* Hover glow effect */}
                         <div className="absolute -top-10 -right-10 w-20 h-20 bg-accent/0 rounded-full blur-2xl group-hover:bg-accent/10 transition-all duration-300" />
 
-                        <div className="relative flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                            <div
-                              className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl border transition-transform duration-300 group-hover:scale-110"
-                              style={{
-                                backgroundColor: `${account.color}15`,
-                                borderColor: `${account.color}30`
-                              }}
-                            >
-                              {account.icon}
-                            </div>
-                            <div>
-                              <h4 className="font-semibold text-text-primary">{account.name}</h4>
-                              {account.bankName && (
-                                <p className="text-sm text-text-secondary">{account.bankName}</p>
-                              )}
-                              {account.accountNumber && (
-                                <p className="text-xs text-text-muted">
-                                  ••••{account.accountNumber.slice(-4)}
+                        <div className="relative flex items-center gap-3">
+                          {/* Account Icon */}
+                          <div
+                            className="w-11 h-11 rounded-xl flex items-center justify-center text-xl border flex-shrink-0 transition-transform duration-300 group-hover:scale-105"
+                            style={{
+                              backgroundColor: `${account.color}15`,
+                              borderColor: `${account.color}30`
+                            }}
+                          >
+                            {account.icon}
+                          </div>
+
+                          {/* Account Info */}
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-semibold text-text-primary text-sm truncate">{account.name}</h4>
+                            <p className="text-xs text-text-secondary truncate">
+                              {account.bankName || type.label}
+                              {account.accountNumber && ` • ••••${account.accountNumber.slice(-4)}`}
+                            </p>
+                          </div>
+
+                          {/* Balance & Actions */}
+                          <div className="flex items-center gap-2">
+                            <div className="text-right">
+                              <p className={`text-base font-bold ${
+                                account.type === 'credit_card' && account.balance > 0
+                                  ? 'text-error'
+                                  : account.balance < 0
+                                    ? 'text-error'
+                                    : 'text-text-primary'
+                              }`}>
+                                {showBalances
+                                  ? account.type === 'credit_card'
+                                    ? account.balance > 0
+                                      ? `-${formatCurrency(account.balance)}`
+                                      : formatCurrency(Math.abs(account.balance))
+                                    : formatCurrency(account.balance)
+                                  : '••••••'}
+                              </p>
+                              {account.type === 'credit_card' && showBalances && (
+                                <p className="text-[10px] text-text-muted">
+                                  {account.balance > 0 ? 'Outstanding' : 'Available'}
                                 </p>
                               )}
                             </div>
-                          </div>
-                          <div className="text-right flex items-center gap-3">
-                            <div>
-                              <p className="text-lg font-bold text-text-primary">
-                                {showBalances ? formatCurrency(account.balance) : '••••••'}
-                              </p>
-                              <div className="flex gap-1 mt-1 justify-end opacity-0 group-hover:opacity-100 transition-opacity">
-                                <button
-                                  onClick={() => handleOpenModal(account)}
-                                  className="p-1.5 text-text-tertiary hover:text-accent hover:bg-accent/10 rounded-lg transition-colors"
-                                >
-                                  <Edit2 className="w-4 h-4" />
-                                </button>
-                                <button
-                                  onClick={() => handleDelete(account.id)}
-                                  className="p-1.5 text-text-tertiary hover:text-error hover:bg-error/10 rounded-lg transition-colors"
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </button>
-                              </div>
+
+                            {/* Always Visible Action Buttons */}
+                            <div className="flex gap-1 ml-1">
+                              <button
+                                onClick={(e) => { e.stopPropagation(); handleOpenModal(account); }}
+                                className="p-2 text-text-tertiary hover:text-accent hover:bg-accent/10 rounded-lg transition-colors"
+                              >
+                                <Edit2 className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={(e) => { e.stopPropagation(); handleDelete(account.id); }}
+                                className="p-2 text-text-tertiary hover:text-error hover:bg-error/10 rounded-lg transition-colors"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
                             </div>
-                            <ChevronRight className="w-5 h-5 text-text-tertiary opacity-0 group-hover:opacity-100 transition-opacity" />
                           </div>
                         </div>
                       </motion.div>

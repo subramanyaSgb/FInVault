@@ -180,7 +180,7 @@ export default function TransactionsPage() {
   const handleEdit = useCallback(
     (transaction: Transaction) => {
       setEditingTransaction(transaction)
-      router.push(`/transactions/edit/${transaction.id}`)
+      router.push(`/transactions/edit?id=${transaction.id}`)
     },
     [router]
   )

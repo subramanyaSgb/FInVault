@@ -226,7 +226,7 @@ export interface Contact {
 // ACCOUNTS & CREDIT CARDS
 // ============================================
 
-export type AccountType = 'savings' | 'current' | 'wallet' | 'cash' | 'credit_card' | 'investment';
+export type AccountType = 'savings' | 'current' | 'wallet' | 'cash' | 'credit_card' | 'investment' | 'rd';
 
 export interface Account {
   id: string;
