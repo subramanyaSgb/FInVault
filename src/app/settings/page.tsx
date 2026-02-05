@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   ArrowLeft,
@@ -17,7 +17,6 @@ import {
   EyeOff,
   Info,
   LogOut,
-  Smartphone,
   FileJson,
   FileText,
   FileSpreadsheet,
@@ -29,8 +28,10 @@ import {
   Tags,
   Sparkles,
   ExternalLink,
+  Fingerprint,
 } from 'lucide-react'
 import { useAuthStore } from '@/stores/authStore'
+import { checkBiometricAvailability, getBiometricErrorMessage } from '@/lib/biometric'
 import { useRouter } from 'next/navigation'
 import {
   exportEncryptedBackup,
@@ -62,7 +63,7 @@ const themes = [
 
 export default function SettingsPage() {
   const router = useRouter()
-  const { currentProfile, updateSettings, changePIN, logout } = useAuthStore()
+  const { currentProfile, updateSettings, changePIN, logout, enrollBiometric, disableBiometric } = useAuthStore()
   const [section, setSection] = useState<SettingsSection>('main')
   const [showChangePIN, setShowChangePIN] = useState(false)
   const [pinData, setPinData] = useState({ oldPin: '', newPin: '', confirmPin: '' })
@@ -70,6 +71,27 @@ export default function SettingsPage() {
   const [showNewPin, setShowNewPin] = useState(false)
   const [pinError, setPinError] = useState('')
   const [pinSuccess, setPinSuccess] = useState(false)
+
+  // Biometric state
+  const [biometricAvailable, setBiometricAvailable] = useState(false)
+  const [biometricStatus, setBiometricStatus] = useState<string>('')
+  const [showBiometricEnroll, setShowBiometricEnroll] = useState(false)
+  const [biometricPin, setBiometricPin] = useState('')
+  const [biometricError, setBiometricError] = useState('')
+  const [biometricLoading, setBiometricLoading] = useState(false)
+  const [showBiometricPin, setShowBiometricPin] = useState(false)
+
+  // Check biometric availability
+  useEffect(() => {
+    const checkBiometric = async () => {
+      const availability = await checkBiometricAvailability()
+      setBiometricAvailable(availability === 'available')
+      if (availability !== 'available') {
+        setBiometricStatus(getBiometricErrorMessage(availability))
+      }
+    }
+    checkBiometric()
+  }, [])
 
   // Data management state
   const [isExporting, setIsExporting] = useState(false)
@@ -428,22 +450,47 @@ export default function SettingsPage() {
       <div className="bg-bg-secondary rounded-card p-4 border border-white/5">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Smartphone className="w-5 h-5 text-text-secondary" />
+            <Fingerprint className="w-5 h-5 text-text-secondary" />
             <div>
               <p className="text-text-primary font-medium">Biometric Login</p>
-              <p className="text-xs text-text-tertiary">Use fingerprint or face ID</p>
+              <p className="text-xs text-text-tertiary">
+                {!biometricAvailable
+                  ? biometricStatus || 'Not available on this device'
+                  : currentProfile.biometricEnabled
+                    ? 'Enabled - Use fingerprint or face ID'
+                    : 'Use fingerprint or face ID'}
+              </p>
             </div>
           </div>
           <label className="relative inline-flex items-center cursor-pointer">
             <input
               type="checkbox"
               checked={currentProfile.biometricEnabled}
-              onChange={() => alert('Biometric toggle coming soon')}
+              disabled={!biometricAvailable}
+              onChange={() => {
+                if (currentProfile.biometricEnabled) {
+                  // Disable biometric
+                  if (confirm('Disable biometric login?')) {
+                    disableBiometric()
+                  }
+                } else {
+                  // Show enrollment modal
+                  setShowBiometricEnroll(true)
+                }
+              }}
               className="sr-only peer"
             />
-            <div className="w-11 h-6 bg-bg-tertiary peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-accent-primary"></div>
+            <div className={`w-11 h-6 bg-bg-tertiary peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-accent-primary ${!biometricAvailable ? 'opacity-50 cursor-not-allowed' : ''}`}></div>
           </label>
         </div>
+        {currentProfile.biometricEnabled && (
+          <div className="mt-3 pt-3 border-t border-white/5">
+            <p className="text-xs text-success flex items-center gap-2">
+              <CheckCircle className="w-3.5 h-3.5" />
+              Biometric authentication is active
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Auto Lock */}
@@ -1310,6 +1357,122 @@ export default function SettingsPage() {
                       <>
                         <Download className="w-4 h-4" />
                         Export
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Biometric Enrollment Modal */}
+      <AnimatePresence>
+        {showBiometricEnroll && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-bg-primary/95 backdrop-blur-md flex items-center justify-center p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-bg-secondary rounded-card p-6 w-full max-w-sm"
+            >
+              <div className="text-center mb-6">
+                <div className="w-16 h-16 rounded-2xl bg-accent-alpha mx-auto mb-4 flex items-center justify-center">
+                  <Fingerprint className="w-8 h-8 text-accent-primary" />
+                </div>
+                <h3 className="text-lg font-semibold text-text-primary">Enable Biometric Login</h3>
+                <p className="text-sm text-text-secondary mt-1">
+                  Enter your PIN to confirm and enable biometric authentication
+                </p>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="text-sm text-text-secondary block mb-2">Current PIN</label>
+                  <div className="relative">
+                    <input
+                      type={showBiometricPin ? 'text' : 'password'}
+                      value={biometricPin}
+                      onChange={e => {
+                        setBiometricPin(e.target.value)
+                        setBiometricError('')
+                      }}
+                      className="w-full bg-bg-tertiary border border-white/10 rounded-input px-4 py-3 text-text-primary pr-10"
+                      placeholder="Enter your PIN"
+                      maxLength={6}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowBiometricPin(!showBiometricPin)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-text-tertiary"
+                    >
+                      {showBiometricPin ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    </button>
+                  </div>
+                </div>
+
+                {biometricError && (
+                  <div className="p-3 rounded-lg bg-error-bg border border-error/20 flex items-center gap-2">
+                    <AlertCircle className="w-4 h-4 text-error flex-shrink-0" />
+                    <p className="text-sm text-error">{biometricError}</p>
+                  </div>
+                )}
+
+                <div className="flex gap-3 pt-2">
+                  <button
+                    onClick={() => {
+                      setShowBiometricEnroll(false)
+                      setBiometricPin('')
+                      setBiometricError('')
+                    }}
+                    disabled={biometricLoading}
+                    className="flex-1 py-3 border border-white/10 text-text-primary rounded-button disabled:opacity-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={async () => {
+                      if (!biometricPin || biometricPin.length < 4) {
+                        setBiometricError('Please enter your PIN')
+                        return
+                      }
+
+                      setBiometricLoading(true)
+                      setBiometricError('')
+
+                      try {
+                        const result = await enrollBiometric(biometricPin)
+
+                        if (result.success) {
+                          setShowBiometricEnroll(false)
+                          setBiometricPin('')
+                        } else {
+                          setBiometricError(result.error || 'Enrollment failed')
+                        }
+                      } catch (err) {
+                        setBiometricError(err instanceof Error ? err.message : 'Enrollment failed')
+                      } finally {
+                        setBiometricLoading(false)
+                      }
+                    }}
+                    disabled={!biometricPin || biometricPin.length < 4 || biometricLoading}
+                    className="flex-1 py-3 bg-accent-primary text-bg-primary font-semibold rounded-button disabled:opacity-50 flex items-center justify-center gap-2"
+                  >
+                    {biometricLoading ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Setting up...
+                      </>
+                    ) : (
+                      <>
+                        <Fingerprint className="w-4 h-4" />
+                        Enable
                       </>
                     )}
                   </button>

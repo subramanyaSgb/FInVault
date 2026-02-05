@@ -1,9 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowLeft, AlertCircle, Fingerprint, Delete } from 'lucide-react'
 import { useAuthStore } from '@/stores/authStore'
+import { isBiometricAvailable } from '@/lib/biometric'
 
 interface PINEntryProps {
   profileId: string
@@ -16,9 +17,58 @@ export function PINEntry({ profileId, onSuccess, onBack }: PINEntryProps) {
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [attempts, setAttempts] = useState(0)
+  const [biometricAvailable, setBiometricAvailable] = useState(false)
+  const [biometricTriggered, setBiometricTriggered] = useState(false)
 
-  const { login, profiles } = useAuthStore()
+  const { login, loginWithBiometric, profiles } = useAuthStore()
   const profile = profiles.find((p) => p.id === profileId)
+
+  // Check biometric availability
+  useEffect(() => {
+    const checkBiometric = async () => {
+      const available = await isBiometricAvailable()
+      setBiometricAvailable(available)
+    }
+    checkBiometric()
+  }, [])
+
+  // Handle biometric login
+  const handleBiometricLogin = useCallback(async () => {
+    if (isLoading || biometricTriggered) return
+
+    setBiometricTriggered(true)
+    setIsLoading(true)
+    setError('')
+
+    try {
+      const success = await loginWithBiometric(profileId)
+
+      if (success) {
+        onSuccess()
+      } else {
+        setAttempts((prev) => prev + 1)
+        setError('Biometric verification failed. Use PIN instead.')
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Biometric login failed')
+    } finally {
+      setIsLoading(false)
+      // Reset trigger after a delay to allow retry
+      setTimeout(() => setBiometricTriggered(false), 1000)
+    }
+  }, [isLoading, biometricTriggered, loginWithBiometric, profileId, onSuccess])
+
+  // Auto-trigger biometric on mount if enabled
+  useEffect(() => {
+    if (profile?.biometricEnabled && biometricAvailable && !biometricTriggered) {
+      // Small delay to let the UI render first
+      const timer = setTimeout(() => {
+        handleBiometricLogin()
+      }, 500)
+      return () => clearTimeout(timer)
+    }
+    return undefined
+  }, [profile?.biometricEnabled, biometricAvailable, biometricTriggered, handleBiometricLogin])
 
   const handlePinInput = (value: string) => {
     if (value.length <= 6) {
@@ -228,14 +278,16 @@ export function PINEntry({ profileId, onSuccess, onBack }: PINEntryProps) {
         </AnimatePresence>
 
         {/* Biometric option */}
-        {profile?.biometricEnabled && !isLoading && (
-          <button
+        {profile?.biometricEnabled && biometricAvailable && !isLoading && (
+          <motion.button
             type="button"
-            className="flex items-center gap-2 mt-6 px-4 py-2.5 rounded-lg border border-border-subtle text-text-tertiary hover:text-accent hover:border-accent/30 transition-all"
+            onClick={handleBiometricLogin}
+            whileTap={{ scale: 0.95 }}
+            className="flex items-center gap-2 mt-6 px-5 py-3 rounded-xl bg-gradient-to-r from-accent/20 to-accent/10 border border-accent/30 text-accent hover:from-accent/30 hover:to-accent/20 hover:border-accent/50 transition-all"
           >
-            <Fingerprint className="w-4 h-4" />
-            <span className="text-xs">Use Biometrics</span>
-          </button>
+            <Fingerprint className="w-5 h-5" />
+            <span className="text-sm font-medium">Use Biometrics</span>
+          </motion.button>
         )}
 
         {/* Spacer */}

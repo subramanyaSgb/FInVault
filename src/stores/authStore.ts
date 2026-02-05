@@ -10,6 +10,13 @@ import type {
 import { db } from '@/lib/db'
 import { deriveMasterKey, storeMasterKey, removeMasterKey, verifyPINAndGetKey } from '@/lib/crypto'
 import { setGeminiApiKey } from '@/lib/ai/gemini'
+import {
+  enrollBiometric as enrollBiometricCredential,
+  verifyBiometric as verifyBiometricCredential,
+  serializeBiometricCredential,
+  deserializeBiometricCredential,
+  isBiometricAvailable,
+} from '@/lib/biometric'
 
 interface AuthState {
   // Current session
@@ -33,6 +40,12 @@ interface AuthState {
   // Security
   verifyPIN: (pin: string) => Promise<boolean>
   changePIN: (oldPin: string, newPin: string) => Promise<void>
+
+  // Biometric
+  checkBiometricAvailable: () => Promise<boolean>
+  enrollBiometric: (pin: string) => Promise<{ success: boolean; error?: string }>
+  loginWithBiometric: (profileId: string) => Promise<boolean>
+  disableBiometric: () => Promise<void>
 
   // Settings
   updateSettings: (settings: Partial<UserSettings>) => Promise<void>
@@ -368,6 +381,190 @@ export const useAuthStore = create<AuthState>()(
         const updatedProfile = await db.userProfiles.get(currentProfile.id)
         if (updatedProfile) {
           set({ currentProfile: updatedProfile })
+        }
+      },
+
+      checkBiometricAvailable: async () => {
+        return await isBiometricAvailable()
+      },
+
+      enrollBiometric: async (pin: string) => {
+        const { currentProfile, keyId } = get()
+        if (!currentProfile || !keyId) {
+          return { success: false, error: 'Not authenticated' }
+        }
+
+        // Verify PIN first
+        const isValid = await get().verifyPIN(pin)
+        if (!isValid) {
+          return { success: false, error: 'Invalid PIN' }
+        }
+
+        // Enroll biometric
+        const result = await enrollBiometricCredential(currentProfile.id, currentProfile.name)
+
+        if (!result.success || !result.credential) {
+          return { success: false, error: result.error || 'Enrollment failed' }
+        }
+
+        // Store credential in profile
+        const serializedCredential = serializeBiometricCredential(result.credential)
+
+        await db.userProfiles.update(currentProfile.id, {
+          biometricEnabled: true,
+          biometricCredentials: serializedCredential,
+          updatedAt: new Date(),
+        })
+
+        // Update state
+        const updatedProfile = await db.userProfiles.get(currentProfile.id)
+        if (updatedProfile) {
+          set({ currentProfile: updatedProfile })
+          // Also update profiles list
+          const profiles = get().profiles.map(p =>
+            p.id === updatedProfile.id ? updatedProfile : p
+          )
+          set({ profiles })
+        }
+
+        return { success: true }
+      },
+
+      loginWithBiometric: async (profileId: string) => {
+        set({ isLoading: true, error: null })
+
+        try {
+          const profile = await db.userProfiles.get(profileId)
+
+          if (!profile) {
+            set({ isLoading: false, error: 'Profile not found' })
+            return false
+          }
+
+          // Check if biometric is enabled
+          if (!profile.biometricEnabled || !profile.biometricCredentials) {
+            set({ isLoading: false, error: 'Biometric not enabled for this profile' })
+            return false
+          }
+
+          // Check for lockout
+          if (profile.security.lockoutUntil && new Date() < profile.security.lockoutUntil) {
+            set({ isLoading: false, error: 'Account temporarily locked. Please try again later.' })
+            return false
+          }
+
+          // Deserialize stored credential
+          const storedCredential = deserializeBiometricCredential(profile.biometricCredentials)
+
+          if (!storedCredential) {
+            set({ isLoading: false, error: 'Invalid biometric credential' })
+            return false
+          }
+
+          // Verify biometric
+          const verifyResult = await verifyBiometricCredential(storedCredential)
+
+          if (!verifyResult.success) {
+            // Increment failed attempts
+            const failedAttempts = (profile.security.failedAttempts || 0) + 1
+            let lockoutUntil: Date | undefined
+
+            if (failedAttempts >= 5) {
+              if (failedAttempts === 5) {
+                lockoutUntil = new Date(Date.now() + 5 * 60 * 1000)
+              } else if (failedAttempts === 10) {
+                lockoutUntil = new Date(Date.now() + 15 * 60 * 1000)
+              } else if (failedAttempts >= 15) {
+                lockoutUntil = new Date(Date.now() + 60 * 60 * 1000)
+              }
+            }
+
+            const updateData: {
+              'security.failedAttempts': number
+              'security.lockoutUntil'?: Date
+            } = {
+              'security.failedAttempts': failedAttempts,
+            }
+            if (lockoutUntil) {
+              updateData['security.lockoutUntil'] = lockoutUntil
+            }
+            await db.userProfiles.update(profileId, updateData)
+
+            set({
+              isLoading: false,
+              error: verifyResult.error || 'Biometric verification failed',
+            })
+            return false
+          }
+
+          // Biometric verified - log in
+          const keyId = `profile_${profileId}`
+
+          // Re-derive master key using profile's pinHash salt
+          // Note: For biometric login, we need to restore the session
+          // The key should still be stored from previous PIN login
+          // If not, user will need to use PIN once to restore the key
+          const storedMasterKey = await import('@/lib/crypto').then(m => m.retrieveMasterKey(keyId))
+
+          if (!storedMasterKey) {
+            set({
+              isLoading: false,
+              error: 'Session expired. Please log in with PIN first.',
+            })
+            return false
+          }
+
+          // Reset failed attempts
+          await db.userProfiles.update(profileId, {
+            'security.failedAttempts': 0,
+            'security.lockoutUntil': null as unknown as Date,
+            'security.lastActivityAt': new Date(),
+          })
+
+          // Re-fetch updated profile
+          const updatedProfile = await db.userProfiles.get(profileId)
+          const finalProfile = updatedProfile || profile
+
+          // Set Gemini API key from user's AI settings
+          setGeminiApiKey(finalProfile.ai?.apiKey)
+
+          set({
+            currentProfile: finalProfile,
+            isAuthenticated: true,
+            isLoading: false,
+            keyId,
+          })
+
+          return true
+        } catch (error) {
+          console.error('Biometric login error:', error)
+          set({
+            isLoading: false,
+            error: error instanceof Error ? error.message : 'Biometric login failed',
+          })
+          return false
+        }
+      },
+
+      disableBiometric: async () => {
+        const { currentProfile } = get()
+        if (!currentProfile) return
+
+        await db.userProfiles.update(currentProfile.id, {
+          biometricEnabled: false,
+          biometricCredentials: '',
+          updatedAt: new Date(),
+        })
+
+        // Update state
+        const updatedProfile = await db.userProfiles.get(currentProfile.id)
+        if (updatedProfile) {
+          set({ currentProfile: updatedProfile })
+          // Also update profiles list
+          const profiles = get().profiles.map(p =>
+            p.id === updatedProfile.id ? updatedProfile : p
+          )
+          set({ profiles })
         }
       },
 
