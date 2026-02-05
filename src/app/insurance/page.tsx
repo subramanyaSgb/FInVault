@@ -36,6 +36,56 @@ interface InsuranceFormData {
   startDate: string
   endDate: string
   nominees: Nominee[]
+  // Dynamic fields based on type
+  // Life Insurance
+  maturityAmount?: number
+  policyTerm?: number
+  riders?: string
+  // Health Insurance
+  deductible?: number
+  copayPercentage?: number
+  roomType?: string
+  waitingPeriod?: number
+  // Vehicle Insurance
+  vehicleNumber?: string
+  vehicleModel?: string
+  idv?: number
+  // Property Insurance
+  propertyType?: string
+  propertyAddress?: string
+  // Travel Insurance
+  destination?: string
+  tripDuration?: number
+}
+
+// Type-specific field configurations
+const typeSpecificFields: Record<InsuranceType, { label: string; field: keyof InsuranceFormData; type: string; placeholder: string }[]> = {
+  life: [
+    { label: 'Maturity Amount', field: 'maturityAmount', type: 'number', placeholder: 'Amount at maturity' },
+    { label: 'Policy Term (Years)', field: 'policyTerm', type: 'number', placeholder: '20' },
+    { label: 'Riders (Optional)', field: 'riders', type: 'text', placeholder: 'Critical illness, Accidental' },
+  ],
+  health: [
+    { label: 'Deductible', field: 'deductible', type: 'number', placeholder: '10000' },
+    { label: 'Co-pay %', field: 'copayPercentage', type: 'number', placeholder: '10' },
+    { label: 'Room Type', field: 'roomType', type: 'text', placeholder: 'Single/Twin Sharing' },
+    { label: 'Waiting Period (Days)', field: 'waitingPeriod', type: 'number', placeholder: '30' },
+  ],
+  vehicle: [
+    { label: 'Vehicle Number', field: 'vehicleNumber', type: 'text', placeholder: 'MH01AB1234' },
+    { label: 'Vehicle Model', field: 'vehicleModel', type: 'text', placeholder: 'Honda City 2023' },
+    { label: 'IDV (Insured Declared Value)', field: 'idv', type: 'number', placeholder: '500000' },
+  ],
+  property: [
+    { label: 'Property Type', field: 'propertyType', type: 'text', placeholder: 'Apartment/House/Shop' },
+    { label: 'Property Address', field: 'propertyAddress', type: 'text', placeholder: 'Full address' },
+  ],
+  travel: [
+    { label: 'Destination', field: 'destination', type: 'text', placeholder: 'USA, Europe, Asia' },
+    { label: 'Trip Duration (Days)', field: 'tripDuration', type: 'number', placeholder: '15' },
+  ],
+  disability: [],
+  other: [],
 }
 
 const formatDateForInput = (date: Date): string => {
@@ -575,6 +625,32 @@ export default function InsurancePage() {
                     />
                   </div>
                 </div>
+
+                {/* Dynamic Type-Specific Fields */}
+                {typeSpecificFields[formData.type]?.length > 0 && (
+                  <div className="space-y-4 pt-4 border-t border-white/10">
+                    <p className="text-sm font-medium text-accent-primary">
+                      {insuranceTypes.find(t => t.type === formData.type)?.label} Details
+                    </p>
+                    <div className="grid grid-cols-2 gap-4">
+                      {typeSpecificFields[formData.type]?.map((fieldConfig) => (
+                        <div key={fieldConfig.field} className={fieldConfig.field === 'propertyAddress' || fieldConfig.field === 'riders' ? 'col-span-2' : ''}>
+                          <label className="text-sm text-text-secondary block mb-2">{fieldConfig.label}</label>
+                          <input
+                            type={fieldConfig.type}
+                            value={(formData[fieldConfig.field] as string | number) || ''}
+                            onChange={e => setFormData({
+                              ...formData,
+                              [fieldConfig.field]: fieldConfig.type === 'number' ? Number(e.target.value) : e.target.value
+                            })}
+                            className="w-full bg-bg-tertiary border border-white/10 rounded-input px-4 py-3 text-text-primary focus:border-accent-primary focus:outline-none"
+                            placeholder={fieldConfig.placeholder}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 {/* Nominees Section */}
                 <div>

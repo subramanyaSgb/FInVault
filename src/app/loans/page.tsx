@@ -35,6 +35,96 @@ interface LoanFormData {
   tenure: number
   emiDate: number
   startDate: Date
+  // Dynamic fields based on loan type
+  // Home Loan
+  propertyAddress?: string
+  propertyValue?: number
+  propertyType?: string
+  loanAccountNumber?: string
+  // Car Loan
+  vehicleModel?: string
+  vehicleRegistration?: string
+  dealerName?: string
+  insurancePolicy?: string
+  // Education Loan
+  institutionName?: string
+  courseName?: string
+  courseDuration?: number
+  studentName?: string
+  // Business Loan
+  businessName?: string
+  businessType?: string
+  collateralDetails?: string
+  // Gold Loan
+  goldWeight?: number
+  goldPurity?: string
+  pledgedValue?: number
+  // Personal/Other
+  purposeOfLoan?: string
+  notes?: string
+}
+
+interface DynamicField {
+  label: string
+  field: keyof LoanFormData
+  type: 'text' | 'number' | 'select'
+  placeholder: string
+  options?: string[]
+}
+
+const loanTypeSpecificFields: Record<LoanType, DynamicField[]> = {
+  home: [
+    { label: 'Property Address', field: 'propertyAddress', type: 'text', placeholder: 'Full property address' },
+    { label: 'Property Value', field: 'propertyValue', type: 'number', placeholder: 'Market value' },
+    { label: 'Property Type', field: 'propertyType', type: 'select', placeholder: 'Select type', options: ['Apartment', 'Villa', 'Plot', 'Commercial', 'Under Construction'] },
+    { label: 'Loan Account No.', field: 'loanAccountNumber', type: 'text', placeholder: 'Bank loan account number' },
+  ],
+  car: [
+    { label: 'Vehicle Model', field: 'vehicleModel', type: 'text', placeholder: 'e.g., Honda City 2023' },
+    { label: 'Registration No.', field: 'vehicleRegistration', type: 'text', placeholder: 'e.g., MH01AB1234' },
+    { label: 'Dealer Name', field: 'dealerName', type: 'text', placeholder: 'Dealership name' },
+    { label: 'Insurance Policy', field: 'insurancePolicy', type: 'text', placeholder: 'Insurance policy number' },
+  ],
+  personal: [
+    { label: 'Purpose of Loan', field: 'purposeOfLoan', type: 'text', placeholder: 'e.g., Medical, Wedding, Travel' },
+    { label: 'Notes', field: 'notes', type: 'text', placeholder: 'Additional details' },
+  ],
+  education: [
+    { label: 'Institution Name', field: 'institutionName', type: 'text', placeholder: 'University/College name' },
+    { label: 'Course Name', field: 'courseName', type: 'text', placeholder: 'e.g., MBA, M.Tech' },
+    { label: 'Course Duration (Years)', field: 'courseDuration', type: 'number', placeholder: '2' },
+    { label: 'Student Name', field: 'studentName', type: 'text', placeholder: 'Name of student' },
+  ],
+  business: [
+    { label: 'Business Name', field: 'businessName', type: 'text', placeholder: 'Company/Business name' },
+    { label: 'Business Type', field: 'businessType', type: 'select', placeholder: 'Select type', options: ['Sole Proprietorship', 'Partnership', 'Private Limited', 'LLP', 'Other'] },
+    { label: 'Collateral Details', field: 'collateralDetails', type: 'text', placeholder: 'Property, FD, etc.' },
+  ],
+  gold: [
+    { label: 'Gold Weight (grams)', field: 'goldWeight', type: 'number', placeholder: '50' },
+    { label: 'Gold Purity', field: 'goldPurity', type: 'select', placeholder: 'Select purity', options: ['24K', '22K', '18K', '14K'] },
+    { label: 'Pledged Value', field: 'pledgedValue', type: 'number', placeholder: 'Valuation amount' },
+  ],
+  lap: [
+    { label: 'Property Address', field: 'propertyAddress', type: 'text', placeholder: 'Mortgaged property address' },
+    { label: 'Property Value', field: 'propertyValue', type: 'number', placeholder: 'Market value' },
+    { label: 'Property Type', field: 'propertyType', type: 'select', placeholder: 'Select type', options: ['Residential', 'Commercial', 'Industrial'] },
+    { label: 'LTV Ratio (%)', field: 'purposeOfLoan', type: 'text', placeholder: '50-70%' },
+  ],
+  credit_card: [
+    { label: 'Card Name', field: 'businessName', type: 'text', placeholder: 'Credit card name' },
+    { label: 'Card Last 4 Digits', field: 'loanAccountNumber', type: 'text', placeholder: '1234' },
+    { label: 'Purpose', field: 'purposeOfLoan', type: 'text', placeholder: 'EMI conversion reason' },
+  ],
+  bnpl: [
+    { label: 'BNPL Provider', field: 'businessName', type: 'select', placeholder: 'Select provider', options: ['Simpl', 'LazyPay', 'ZestMoney', 'Amazon Pay Later', 'Flipkart Pay Later', 'Other'] },
+    { label: 'Purchase Description', field: 'purposeOfLoan', type: 'text', placeholder: 'What was purchased' },
+    { label: 'Number of Installments', field: 'notes', type: 'text', placeholder: '3, 6, 12' },
+  ],
+  other: [
+    { label: 'Purpose of Loan', field: 'purposeOfLoan', type: 'text', placeholder: 'Describe the purpose' },
+    { label: 'Notes', field: 'notes', type: 'text', placeholder: 'Additional details' },
+  ],
 }
 
 const LOAN_TYPES: { type: LoanType; label: string; icon: React.ReactNode }[] = [
@@ -636,6 +726,56 @@ export default function LoansPage() {
                     required
                   />
                 </div>
+
+                {/* Dynamic Type-Specific Fields */}
+                {loanTypeSpecificFields[formData.type]?.length > 0 && (
+                  <div className="pt-4 border-t border-white/10">
+                    <p className="text-xs text-accent-primary uppercase tracking-wider mb-4">
+                      {LOAN_TYPES.find(lt => lt.type === formData.type)?.label} Details
+                    </p>
+                    <div className="space-y-4">
+                      {loanTypeSpecificFields[formData.type].map((fieldConfig) => (
+                        <div key={fieldConfig.field}>
+                          <label className="text-sm text-text-secondary block mb-2">
+                            {fieldConfig.label}
+                          </label>
+                          {fieldConfig.type === 'select' ? (
+                            <select
+                              value={(formData[fieldConfig.field] as string) || ''}
+                              onChange={(e) =>
+                                setFormData({ ...formData, [fieldConfig.field]: e.target.value })
+                              }
+                              className="w-full bg-bg-tertiary border border-white/10 rounded-input px-4 py-3 text-text-primary focus:border-accent-primary focus:outline-none"
+                            >
+                              <option value="">{fieldConfig.placeholder}</option>
+                              {fieldConfig.options?.map((opt) => (
+                                <option key={opt} value={opt}>
+                                  {opt}
+                                </option>
+                              ))}
+                            </select>
+                          ) : (
+                            <input
+                              type={fieldConfig.type}
+                              value={(formData[fieldConfig.field] as string | number) || ''}
+                              onChange={(e) =>
+                                setFormData({
+                                  ...formData,
+                                  [fieldConfig.field]:
+                                    fieldConfig.type === 'number'
+                                      ? Number(e.target.value)
+                                      : e.target.value,
+                                })
+                              }
+                              className="w-full bg-bg-tertiary border border-white/10 rounded-input px-4 py-3 text-text-primary focus:border-accent-primary focus:outline-none"
+                              placeholder={fieldConfig.placeholder}
+                            />
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 <button
                   type="submit"

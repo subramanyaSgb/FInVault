@@ -19,6 +19,8 @@ import { useAccountStore } from '@/stores/accountStore'
 import { useAuthStore } from '@/stores/authStore'
 import type { CreditCard as CreditCardType } from '@/types'
 
+type CardType = 'premium' | 'travel' | 'cashback' | 'fuel' | 'business' | 'secured' | 'basic'
+
 interface CardFormData {
   bankName: string
   cardName: string
@@ -28,6 +30,85 @@ interface CardFormData {
   billingDate: number
   dueDate: number
   color: string
+  cardType: CardType
+  network: string
+  // Dynamic fields based on card type
+  // Premium/Lifestyle
+  annualFee?: number
+  rewardRate?: number
+  loungeAccess?: string
+  // Travel
+  milesEarningRate?: number
+  travelInsurance?: string
+  forexMarkup?: number
+  // Cashback
+  cashbackPercentage?: number
+  categoryBonuses?: string
+  maxCashbackMonth?: number
+  // Fuel
+  fuelSurchargeWaiver?: string
+  partnerStations?: string
+  // Business
+  gstInputCredit?: boolean
+  employeeCards?: number
+  // Secured
+  fdRequired?: number
+  fdBank?: string
+}
+
+const CARD_TYPES: { type: CardType; label: string }[] = [
+  { type: 'basic', label: 'Basic' },
+  { type: 'premium', label: 'Premium' },
+  { type: 'travel', label: 'Travel' },
+  { type: 'cashback', label: 'Cashback' },
+  { type: 'fuel', label: 'Fuel' },
+  { type: 'business', label: 'Business' },
+  { type: 'secured', label: 'Secured' },
+]
+
+const CARD_NETWORKS = ['Visa', 'Mastercard', 'RuPay', 'American Express', 'Diners Club']
+
+interface DynamicField {
+  label: string
+  field: keyof CardFormData
+  type: 'text' | 'number' | 'select' | 'toggle'
+  placeholder: string
+  options?: string[]
+}
+
+const cardTypeSpecificFields: Record<CardType, DynamicField[]> = {
+  basic: [],
+  premium: [
+    { label: 'Annual Fee', field: 'annualFee', type: 'number', placeholder: '5000' },
+    { label: 'Reward Rate (points/₹100)', field: 'rewardRate', type: 'number', placeholder: '2' },
+    { label: 'Lounge Access', field: 'loungeAccess', type: 'select', placeholder: 'Select access', options: ['Unlimited Domestic', '8 Domestic/Year', '4 Domestic/Year', 'International + Domestic', 'None'] },
+  ],
+  travel: [
+    { label: 'Miles Earning Rate', field: 'milesEarningRate', type: 'number', placeholder: '4' },
+    { label: 'Travel Insurance', field: 'travelInsurance', type: 'select', placeholder: 'Select coverage', options: ['Comprehensive', 'Basic', 'Air Accident Only', 'None'] },
+    { label: 'Forex Markup (%)', field: 'forexMarkup', type: 'number', placeholder: '2' },
+    { label: 'Lounge Access', field: 'loungeAccess', type: 'select', placeholder: 'Select access', options: ['Priority Pass', 'Dreamfolks', 'Bank Lounges Only', 'None'] },
+  ],
+  cashback: [
+    { label: 'Base Cashback (%)', field: 'cashbackPercentage', type: 'number', placeholder: '1.5' },
+    { label: 'Category Bonuses', field: 'categoryBonuses', type: 'text', placeholder: '5% Groceries, 10% Fuel' },
+    { label: 'Max Cashback/Month', field: 'maxCashbackMonth', type: 'number', placeholder: '1000' },
+  ],
+  fuel: [
+    { label: 'Fuel Surcharge Waiver', field: 'fuelSurchargeWaiver', type: 'select', placeholder: 'Select waiver', options: ['1% Waiver', '1% Waiver (Max ₹250)', '2.5% Waiver', 'No Waiver'] },
+    { label: 'Partner Stations', field: 'partnerStations', type: 'select', placeholder: 'Select partners', options: ['All Stations', 'HPCL', 'Indian Oil', 'BPCL', 'Multiple Partners'] },
+    { label: 'Annual Fee', field: 'annualFee', type: 'number', placeholder: '500' },
+  ],
+  business: [
+    { label: 'Annual Fee', field: 'annualFee', type: 'number', placeholder: '10000' },
+    { label: 'Employee Add-on Cards', field: 'employeeCards', type: 'number', placeholder: '5' },
+    { label: 'Reward Rate (points/₹100)', field: 'rewardRate', type: 'number', placeholder: '1' },
+  ],
+  secured: [
+    { label: 'FD Amount Required', field: 'fdRequired', type: 'number', placeholder: '25000' },
+    { label: 'FD Bank', field: 'fdBank', type: 'text', placeholder: 'Same as card issuer' },
+    { label: 'Annual Fee', field: 'annualFee', type: 'number', placeholder: '0' },
+  ],
 }
 
 const CARD_COLORS = [
@@ -65,6 +146,8 @@ export default function CreditCardsPage() {
     billingDate: 1,
     dueDate: 15,
     color: '#3B82F6',
+    cardType: 'basic',
+    network: 'Visa',
   })
 
   useEffect(() => {
@@ -139,6 +222,8 @@ export default function CreditCardsPage() {
         billingDate: 1,
         dueDate: 15,
         color: '#3B82F6',
+        cardType: 'basic',
+        network: 'Visa',
       })
       getCreditUtilization(currentProfile.id).then(setUtilization)
     } catch (error) {
@@ -157,6 +242,8 @@ export default function CreditCardsPage() {
       billingDate: card.billingDate,
       dueDate: card.dueDate,
       color: card.color,
+      cardType: 'basic',
+      network: 'Visa',
     })
     setShowAddModal(true)
   }
@@ -217,6 +304,8 @@ export default function CreditCardsPage() {
                 billingDate: 1,
                 dueDate: 15,
                 color: '#3B82F6',
+                cardType: 'basic',
+                network: 'Visa',
               })
               setShowAddModal(true)
             }}
@@ -454,6 +543,48 @@ export default function CreditCardsPage() {
                   />
                 </div>
 
+                {/* Card Type Selection */}
+                <div>
+                  <label className="text-sm text-text-secondary block mb-2">Card Type</label>
+                  <div className="flex flex-wrap gap-2">
+                    {CARD_TYPES.map((ct) => (
+                      <button
+                        key={ct.type}
+                        type="button"
+                        onClick={() => setFormData({ ...formData, cardType: ct.type })}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
+                          formData.cardType === ct.type
+                            ? 'border-accent-primary bg-accent-alpha text-accent-primary'
+                            : 'border-white/10 text-text-secondary hover:bg-bg-tertiary'
+                        }`}
+                      >
+                        {ct.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Card Network Selection */}
+                <div>
+                  <label className="text-sm text-text-secondary block mb-2">Card Network</label>
+                  <div className="flex flex-wrap gap-2">
+                    {CARD_NETWORKS.map((network) => (
+                      <button
+                        key={network}
+                        type="button"
+                        onClick={() => setFormData({ ...formData, network })}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
+                          formData.network === network
+                            ? 'border-accent-primary bg-accent-alpha text-accent-primary'
+                            : 'border-white/10 text-text-secondary hover:bg-bg-tertiary'
+                        }`}
+                      >
+                        {network}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
                 <div>
                   <label className="text-sm text-text-secondary block mb-2">Last 4 Digits</label>
                   <input
@@ -546,6 +677,56 @@ export default function CreditCardsPage() {
                     ))}
                   </div>
                 </div>
+
+                {/* Dynamic Type-Specific Fields */}
+                {cardTypeSpecificFields[formData.cardType]?.length > 0 && (
+                  <div className="pt-4 border-t border-white/10">
+                    <p className="text-xs text-accent-primary uppercase tracking-wider mb-4">
+                      {CARD_TYPES.find(ct => ct.type === formData.cardType)?.label} Card Details
+                    </p>
+                    <div className="space-y-4">
+                      {cardTypeSpecificFields[formData.cardType].map((fieldConfig) => (
+                        <div key={fieldConfig.field}>
+                          <label className="text-sm text-text-secondary block mb-2">
+                            {fieldConfig.label}
+                          </label>
+                          {fieldConfig.type === 'select' ? (
+                            <select
+                              value={(formData[fieldConfig.field] as string) || ''}
+                              onChange={(e) =>
+                                setFormData({ ...formData, [fieldConfig.field]: e.target.value })
+                              }
+                              className="w-full bg-bg-tertiary border border-white/10 rounded-input px-4 py-3 text-text-primary focus:border-accent-primary focus:outline-none"
+                            >
+                              <option value="">{fieldConfig.placeholder}</option>
+                              {fieldConfig.options?.map((opt) => (
+                                <option key={opt} value={opt}>
+                                  {opt}
+                                </option>
+                              ))}
+                            </select>
+                          ) : (
+                            <input
+                              type={fieldConfig.type}
+                              value={(formData[fieldConfig.field] as string | number) || ''}
+                              onChange={(e) =>
+                                setFormData({
+                                  ...formData,
+                                  [fieldConfig.field]:
+                                    fieldConfig.type === 'number'
+                                      ? Number(e.target.value)
+                                      : e.target.value,
+                                })
+                              }
+                              className="w-full bg-bg-tertiary border border-white/10 rounded-input px-4 py-3 text-text-primary focus:border-accent-primary focus:outline-none"
+                              placeholder={fieldConfig.placeholder}
+                            />
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 <button
                   type="submit"

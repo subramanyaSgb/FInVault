@@ -40,6 +40,66 @@ interface AccountFormData {
   balance: number
   icon: string
   color: string
+  // Dynamic fields based on account type
+  // Savings
+  interestRate?: number
+  minimumBalance?: number
+  branchName?: string
+  ifscCode?: string
+  // Current
+  overdraftLimit?: number
+  // Wallet
+  walletProvider?: string
+  linkedPhone?: string
+  kycStatus?: string
+  // Cash
+  location?: string
+  // Credit Card (basic - full details in Credit Cards page)
+  cardNetwork?: string
+  creditLimit?: number
+  // Investment
+  brokerName?: string
+  dematAccountNumber?: string
+  tradingAccountNumber?: string
+}
+
+interface DynamicField {
+  label: string
+  field: keyof AccountFormData
+  type: 'text' | 'number' | 'select'
+  placeholder: string
+  options?: string[]
+}
+
+const accountTypeSpecificFields: Record<AccountType, DynamicField[]> = {
+  savings: [
+    { label: 'Interest Rate (%)', field: 'interestRate', type: 'number', placeholder: '3.5' },
+    { label: 'Minimum Balance', field: 'minimumBalance', type: 'number', placeholder: '10000' },
+    { label: 'Branch Name', field: 'branchName', type: 'text', placeholder: 'Main Branch' },
+    { label: 'IFSC Code', field: 'ifscCode', type: 'text', placeholder: 'HDFC0001234' },
+  ],
+  current: [
+    { label: 'Overdraft Limit', field: 'overdraftLimit', type: 'number', placeholder: '500000' },
+    { label: 'Branch Name', field: 'branchName', type: 'text', placeholder: 'Commercial Branch' },
+    { label: 'IFSC Code', field: 'ifscCode', type: 'text', placeholder: 'HDFC0001234' },
+  ],
+  wallet: [
+    { label: 'Wallet Provider', field: 'walletProvider', type: 'select', placeholder: 'Select provider', options: ['Paytm', 'Google Pay', 'PhonePe', 'Amazon Pay', 'MobiKwik', 'Other'] },
+    { label: 'Linked Phone', field: 'linkedPhone', type: 'text', placeholder: '+91 98765 43210' },
+    { label: 'KYC Status', field: 'kycStatus', type: 'select', placeholder: 'Select status', options: ['Full KYC', 'Min KYC', 'Pending'] },
+  ],
+  cash: [
+    { label: 'Location/Purpose', field: 'location', type: 'select', placeholder: 'Select location', options: ['Home Safe', 'Office', 'Travel Fund', 'Emergency', 'Other'] },
+  ],
+  credit_card: [
+    { label: 'Card Network', field: 'cardNetwork', type: 'select', placeholder: 'Select network', options: ['Visa', 'Mastercard', 'RuPay', 'Amex', 'Diners'] },
+    { label: 'Credit Limit', field: 'creditLimit', type: 'number', placeholder: '100000' },
+  ],
+  investment: [
+    { label: 'Broker Name', field: 'brokerName', type: 'select', placeholder: 'Select broker', options: ['Zerodha', 'Groww', 'Upstox', 'Angel One', 'ICICI Direct', 'HDFC Securities', 'Other'] },
+    { label: 'Demat Account No.', field: 'dematAccountNumber', type: 'text', placeholder: '1234567890123456' },
+    { label: 'Trading Account No.', field: 'tradingAccountNumber', type: 'text', placeholder: 'ABC123' },
+  ],
 }
 
 const initialFormData: AccountFormData = {
@@ -468,6 +528,56 @@ export default function AccountsPage() {
                     required
                   />
                 </div>
+
+                {/* Dynamic Type-Specific Fields */}
+                {accountTypeSpecificFields[formData.type]?.length > 0 && (
+                  <div className="pt-4 border-t border-white/10">
+                    <p className="text-xs text-accent-primary uppercase tracking-wider mb-4">
+                      {ACCOUNT_TYPES.find(t => t.type === formData.type)?.label} Details
+                    </p>
+                    <div className="space-y-4">
+                      {accountTypeSpecificFields[formData.type].map((fieldConfig) => (
+                        <div key={fieldConfig.field}>
+                          <label className="text-sm text-text-secondary block mb-2">
+                            {fieldConfig.label}
+                          </label>
+                          {fieldConfig.type === 'select' ? (
+                            <select
+                              value={(formData[fieldConfig.field] as string) || ''}
+                              onChange={(e) =>
+                                setFormData({ ...formData, [fieldConfig.field]: e.target.value })
+                              }
+                              className="w-full bg-bg-tertiary border border-white/10 rounded-input px-4 py-3 text-text-primary focus:border-accent-primary focus:outline-none"
+                            >
+                              <option value="">{fieldConfig.placeholder}</option>
+                              {fieldConfig.options?.map((opt) => (
+                                <option key={opt} value={opt}>
+                                  {opt}
+                                </option>
+                              ))}
+                            </select>
+                          ) : (
+                            <input
+                              type={fieldConfig.type}
+                              value={(formData[fieldConfig.field] as string | number) || ''}
+                              onChange={(e) =>
+                                setFormData({
+                                  ...formData,
+                                  [fieldConfig.field]:
+                                    fieldConfig.type === 'number'
+                                      ? Number(e.target.value)
+                                      : e.target.value,
+                                })
+                              }
+                              className="w-full bg-bg-tertiary border border-white/10 rounded-input px-4 py-3 text-text-primary focus:border-accent-primary focus:outline-none"
+                              placeholder={fieldConfig.placeholder}
+                            />
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 {/* Submit Button */}
                 <button

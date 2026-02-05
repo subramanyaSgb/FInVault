@@ -42,6 +42,113 @@ interface InvestmentFormData {
   sipAmount: number
   sipDate: number
   isWatchlist: boolean
+  // Dynamic fields based on investment type
+  // Mutual Fund
+  folioNumber?: string
+  fundCategory?: string
+  exitLoad?: number
+  // Stock
+  exchange?: string
+  sector?: string
+  marketCapCategory?: string
+  dividendYield?: number
+  // FD
+  fdInterestRate?: number
+  maturityDate?: string
+  nominationDetails?: string
+  // PPF
+  ppfAccountNumber?: string
+  maturityYear?: number
+  // EPF
+  uanNumber?: string
+  employerName?: string
+  employerContribution?: number
+  // Gold
+  goldForm?: string
+  goldPurity?: string
+  goldWeight?: number
+  // Crypto
+  exchangePlatform?: string
+  walletAddress?: string
+  network?: string
+  // Other
+  description?: string
+  notes?: string
+}
+
+interface DynamicField {
+  label: string
+  field: keyof InvestmentFormData
+  type: 'text' | 'number' | 'select' | 'date'
+  placeholder: string
+  options?: string[]
+}
+
+const investmentTypeSpecificFields: Record<InvestmentType, DynamicField[]> = {
+  mutual_fund: [
+    { label: 'Folio Number', field: 'folioNumber', type: 'text', placeholder: 'Enter folio number' },
+    { label: 'Fund Category', field: 'fundCategory', type: 'select', placeholder: 'Select category', options: ['Equity - Large Cap', 'Equity - Mid Cap', 'Equity - Small Cap', 'Equity - Multi Cap', 'Debt - Liquid', 'Debt - Short Term', 'Debt - Long Term', 'Hybrid - Balanced', 'Index Fund', 'ELSS', 'Other'] },
+    { label: 'Exit Load (%)', field: 'exitLoad', type: 'number', placeholder: '1' },
+  ],
+  stock: [
+    { label: 'Exchange', field: 'exchange', type: 'select', placeholder: 'Select exchange', options: ['NSE', 'BSE', 'NASDAQ', 'NYSE', 'Other'] },
+    { label: 'Sector', field: 'sector', type: 'select', placeholder: 'Select sector', options: ['Technology', 'Banking', 'Finance', 'Healthcare', 'Consumer', 'Energy', 'Auto', 'Infrastructure', 'Pharma', 'FMCG', 'Other'] },
+    { label: 'Market Cap', field: 'marketCapCategory', type: 'select', placeholder: 'Select category', options: ['Large Cap', 'Mid Cap', 'Small Cap', 'Micro Cap'] },
+    { label: 'Dividend Yield (%)', field: 'dividendYield', type: 'number', placeholder: '2.5' },
+  ],
+  fd: [
+    { label: 'Interest Rate (%)', field: 'fdInterestRate', type: 'number', placeholder: '7.5' },
+    { label: 'Maturity Date', field: 'maturityDate', type: 'date', placeholder: '' },
+    { label: 'Nomination Details', field: 'nominationDetails', type: 'text', placeholder: 'Nominee name' },
+  ],
+  rd: [
+    { label: 'Monthly Deposit', field: 'fdInterestRate', type: 'number', placeholder: '5000' },
+    { label: 'Maturity Date', field: 'maturityDate', type: 'date', placeholder: '' },
+    { label: 'Nomination Details', field: 'nominationDetails', type: 'text', placeholder: 'Nominee name' },
+  ],
+  ppf: [
+    { label: 'PPF Account Number', field: 'ppfAccountNumber', type: 'text', placeholder: 'Account number' },
+    { label: 'Maturity Year', field: 'maturityYear', type: 'number', placeholder: '2039' },
+  ],
+  epf: [
+    { label: 'UAN Number', field: 'uanNumber', type: 'text', placeholder: '100123456789' },
+    { label: 'Employer Name', field: 'employerName', type: 'text', placeholder: 'Company name' },
+    { label: 'Employer Contribution (Monthly)', field: 'employerContribution', type: 'number', placeholder: '1800' },
+  ],
+  nps: [
+    { label: 'PRAN Number', field: 'uanNumber', type: 'text', placeholder: '110012345678' },
+    { label: 'Tier', field: 'fundCategory', type: 'select', placeholder: 'Select tier', options: ['Tier I', 'Tier II'] },
+    { label: 'Investment Choice', field: 'sector', type: 'select', placeholder: 'Select choice', options: ['Auto Choice - Aggressive', 'Auto Choice - Moderate', 'Auto Choice - Conservative', 'Active Choice'] },
+  ],
+  gold: [
+    { label: 'Form', field: 'goldForm', type: 'select', placeholder: 'Select form', options: ['Physical - Jewelry', 'Physical - Coins', 'Physical - Bars', 'Digital Gold', 'Sovereign Gold Bond (SGB)', 'Gold ETF'] },
+    { label: 'Purity', field: 'goldPurity', type: 'select', placeholder: 'Select purity', options: ['24K (99.9%)', '22K (91.6%)', '18K (75%)'] },
+    { label: 'Weight (grams)', field: 'goldWeight', type: 'number', placeholder: '10' },
+  ],
+  real_estate: [
+    { label: 'Property Address', field: 'description', type: 'text', placeholder: 'Full property address' },
+    { label: 'Property Type', field: 'sector', type: 'select', placeholder: 'Select type', options: ['Residential - Apartment', 'Residential - Villa', 'Commercial - Office', 'Commercial - Shop', 'Plot/Land', 'Warehouse'] },
+    { label: 'Registration Number', field: 'folioNumber', type: 'text', placeholder: 'Property registration number' },
+  ],
+  crypto: [
+    { label: 'Exchange Platform', field: 'exchangePlatform', type: 'select', placeholder: 'Select platform', options: ['Binance', 'CoinDCX', 'WazirX', 'Coinbase', 'Zebpay', 'Other'] },
+    { label: 'Wallet Address', field: 'walletAddress', type: 'text', placeholder: '0x...' },
+    { label: 'Network', field: 'network', type: 'select', placeholder: 'Select network', options: ['Ethereum', 'Bitcoin', 'BSC', 'Polygon', 'Solana', 'Other'] },
+  ],
+  bond: [
+    { label: 'Bond Type', field: 'fundCategory', type: 'select', placeholder: 'Select type', options: ['Government Bond', 'Corporate Bond', 'Tax-Free Bond', 'RBI Bond', 'Municipal Bond'] },
+    { label: 'Coupon Rate (%)', field: 'fdInterestRate', type: 'number', placeholder: '7.5' },
+    { label: 'Face Value', field: 'notes', type: 'text', placeholder: '1000' },
+  ],
+  etf: [
+    { label: 'ETF Category', field: 'fundCategory', type: 'select', placeholder: 'Select category', options: ['Index ETF', 'Gold ETF', 'Sectoral ETF', 'Debt ETF', 'International ETF'] },
+    { label: 'Exchange', field: 'exchange', type: 'select', placeholder: 'Select exchange', options: ['NSE', 'BSE'] },
+    { label: 'Expense Ratio (%)', field: 'exitLoad', type: 'number', placeholder: '0.1' },
+  ],
+  other: [
+    { label: 'Description', field: 'description', type: 'text', placeholder: 'Describe this investment' },
+    { label: 'Notes', field: 'notes', type: 'text', placeholder: 'Additional notes' },
+  ],
 }
 
 const INVESTMENT_TYPES: { type: InvestmentType; label: string; icon: React.ReactNode }[] = [
@@ -842,6 +949,65 @@ export default function InvestmentsPage() {
                     />
                   </button>
                 </div>
+
+                {/* Dynamic Type-Specific Fields */}
+                {investmentTypeSpecificFields[formData.type]?.length > 0 && (
+                  <div className="pt-4 border-t border-white/10">
+                    <p className="text-xs text-accent-primary uppercase tracking-wider mb-4">
+                      {INVESTMENT_TYPES.find(it => it.type === formData.type)?.label} Details
+                    </p>
+                    <div className="space-y-4">
+                      {investmentTypeSpecificFields[formData.type].map((fieldConfig) => (
+                        <div key={fieldConfig.field}>
+                          <label className="text-sm text-text-secondary block mb-2">
+                            {fieldConfig.label}
+                          </label>
+                          {fieldConfig.type === 'select' ? (
+                            <select
+                              value={(formData[fieldConfig.field] as string) || ''}
+                              onChange={(e) =>
+                                setFormData({ ...formData, [fieldConfig.field]: e.target.value })
+                              }
+                              className="w-full bg-bg-tertiary border border-white/10 rounded-input px-4 py-3 text-text-primary focus:border-accent-primary focus:outline-none"
+                            >
+                              <option value="">{fieldConfig.placeholder}</option>
+                              {fieldConfig.options?.map((opt) => (
+                                <option key={opt} value={opt}>
+                                  {opt}
+                                </option>
+                              ))}
+                            </select>
+                          ) : fieldConfig.type === 'date' ? (
+                            <input
+                              type="date"
+                              value={(formData[fieldConfig.field] as string) || ''}
+                              onChange={(e) =>
+                                setFormData({ ...formData, [fieldConfig.field]: e.target.value })
+                              }
+                              className="w-full bg-bg-tertiary border border-white/10 rounded-input px-4 py-3 text-text-primary focus:border-accent-primary focus:outline-none"
+                            />
+                          ) : (
+                            <input
+                              type={fieldConfig.type}
+                              value={(formData[fieldConfig.field] as string | number) || ''}
+                              onChange={(e) =>
+                                setFormData({
+                                  ...formData,
+                                  [fieldConfig.field]:
+                                    fieldConfig.type === 'number'
+                                      ? Number(e.target.value)
+                                      : e.target.value,
+                                })
+                              }
+                              className="w-full bg-bg-tertiary border border-white/10 rounded-input px-4 py-3 text-text-primary focus:border-accent-primary focus:outline-none"
+                              placeholder={fieldConfig.placeholder}
+                            />
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 <button
                   type="submit"
