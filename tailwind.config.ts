@@ -45,10 +45,18 @@ const config: Config = {
         // Accent
         accent: {
           DEFAULT: '#C9A55C',
+          primary: '#C9A55C',
+          secondary: '#D4B574',
           light: '#D4B574',
           dark: '#A88B4A',
           muted: 'rgba(201, 165, 92, 0.15)',
           subtle: 'rgba(201, 165, 92, 0.08)',
+          alpha: 'rgba(201, 165, 92, 0.12)',
+        },
+
+        // Glass effects
+        glass: {
+          border: 'rgba(255, 255, 255, 0.08)',
         },
 
         // Text
@@ -62,18 +70,22 @@ const config: Config = {
         success: {
           DEFAULT: '#22C55E',
           muted: 'rgba(34, 197, 94, 0.12)',
+          bg: 'rgba(34, 197, 94, 0.12)',
         },
         error: {
           DEFAULT: '#EF4444',
           muted: 'rgba(239, 68, 68, 0.12)',
+          bg: 'rgba(239, 68, 68, 0.12)',
         },
         warning: {
           DEFAULT: '#F59E0B',
           muted: 'rgba(245, 158, 11, 0.12)',
+          bg: 'rgba(245, 158, 11, 0.12)',
         },
         info: {
           DEFAULT: '#3B82F6',
           muted: 'rgba(59, 130, 246, 0.12)',
+          bg: 'rgba(59, 130, 246, 0.12)',
         },
       },
 
@@ -110,6 +122,9 @@ const config: Config = {
         lg: '14px',
         xl: '20px',
         '2xl': '24px',
+        card: '14px',
+        input: '10px',
+        button: '10px',
       },
 
       boxShadow: {

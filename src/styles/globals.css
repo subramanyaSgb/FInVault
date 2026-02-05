@@ -141,11 +141,13 @@ html, body {
 }
 
 /* Hide scrollbar utility */
-.no-scrollbar {
+.no-scrollbar,
+.hide-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
-.no-scrollbar::-webkit-scrollbar {
+.no-scrollbar::-webkit-scrollbar,
+.hide-scrollbar::-webkit-scrollbar {
   display: none;
 }
 
@@ -202,6 +204,25 @@ input[type="number"] {
 
 .card-interactive:active {
   transform: scale(0.98);
+}
+
+/* Glass card - premium glass morphism */
+.glass-card {
+  background: rgba(17, 17, 17, 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-xl);
+  transition: all 0.3s var(--ease-out);
+}
+
+.glass-card:hover {
+  border-color: rgba(201, 165, 92, 0.2);
+}
+
+/* Glass border utility */
+.border-glass-border {
+  border-color: rgba(255, 255, 255, 0.08);
 }
 
 /* Buttons */
@@ -277,6 +298,60 @@ input[type="number"] {
   color: var(--text-primary);
 }
 
+/* Luxury button - premium gold gradient */
+.btn-luxury {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 1rem 1.5rem;
+  background: linear-gradient(135deg, #D4B574 0%, #C9A55C 50%, #A88B4A 100%);
+  color: #000000;
+  font-weight: 600;
+  font-size: 0.9375rem;
+  border-radius: var(--radius-lg);
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s var(--ease-out);
+  box-shadow: 0 0 20px rgba(201, 165, 92, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-luxury::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s ease;
+}
+
+.btn-luxury:hover {
+  box-shadow: 0 0 30px rgba(201, 165, 92, 0.4);
+  transform: translateY(-1px);
+}
+
+.btn-luxury:hover::before {
+  left: 100%;
+}
+
+.btn-luxury:active {
+  transform: translateY(0);
+}
+
+.btn-luxury:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.btn-luxury:disabled:hover {
+  transform: none;
+}
+
 /* Input fields */
 .input {
   width: 100%;
@@ -342,7 +417,8 @@ input[type="number"] {
   font-family: 'JetBrains Mono', monospace;
 }
 
-.text-gradient-gold {
+.text-gradient-gold,
+.gold-gradient {
   background: linear-gradient(135deg, #D4B574 0%, #C9A55C 50%, #A88B4A 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
