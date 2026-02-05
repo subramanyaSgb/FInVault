@@ -32,21 +32,23 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     ref
   ) => {
     const baseStyles =
-      'inline-flex items-center justify-center font-semibold rounded-button transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-bg-primary disabled:opacity-50 disabled:cursor-not-allowed'
+      'relative inline-flex items-center justify-center font-semibold rounded-xl transition-all duration-300 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed overflow-hidden'
 
     const variants = {
       primary:
-        'bg-accent-primary text-bg-primary hover:bg-accent-secondary focus:ring-accent-primary',
+        'bg-gradient-to-r from-accent to-accent-light text-bg-base shadow-[0_0_15px_rgba(201,165,92,0.3)] hover:shadow-[0_0_25px_rgba(201,165,92,0.5)] hover:scale-[1.02]',
       secondary:
-        'bg-bg-secondary text-text-primary border border-white/10 hover:bg-bg-tertiary focus:ring-white/20',
+        'bg-gradient-to-br from-bg-secondary to-bg-tertiary text-text-primary border border-glass-border hover:border-accent/30 hover:shadow-[0_0_15px_rgba(201,165,92,0.1)] backdrop-blur-sm',
       ghost:
-        'bg-transparent text-text-secondary hover:bg-bg-secondary hover:text-text-primary focus:ring-white/20',
-      danger: 'bg-error text-white hover:bg-error/80 focus:ring-error',
-      success: 'bg-success text-white hover:bg-success/80 focus:ring-success',
+        'bg-transparent text-text-secondary hover:bg-accent/10 hover:text-accent',
+      danger:
+        'bg-gradient-to-r from-error to-error/80 text-white shadow-[0_0_15px_rgba(239,68,68,0.3)] hover:shadow-[0_0_25px_rgba(239,68,68,0.5)] hover:scale-[1.02]',
+      success:
+        'bg-gradient-to-r from-success to-success/80 text-white shadow-[0_0_15px_rgba(34,197,94,0.3)] hover:shadow-[0_0_25px_rgba(34,197,94,0.5)] hover:scale-[1.02]',
     }
 
     const sizes = {
-      sm: 'px-3 py-1.5 text-sm gap-1.5',
+      sm: 'px-3 py-1.5 text-xs gap-1.5',
       md: 'px-4 py-2.5 text-sm gap-2',
       lg: 'px-6 py-3 text-base gap-2',
     }
@@ -69,13 +71,17 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         className={`${baseStyles} ${variants[variant]} ${sizes[size]} ${fullWidth ? 'w-full' : ''} ${className}`}
         {...motionProps}
       >
+        {/* Shine effect for primary button */}
+        {variant === 'primary' && (
+          <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full hover:translate-x-full transition-transform duration-700" />
+        )}
         {isLoading ? (
           <Loader2 className="w-4 h-4 animate-spin" />
         ) : (
           <>
-            {leftIcon && <span className="flex-shrink-0">{leftIcon}</span>}
-            {children}
-            {rightIcon && <span className="flex-shrink-0">{rightIcon}</span>}
+            {leftIcon && <span className="flex-shrink-0 relative z-10">{leftIcon}</span>}
+            <span className="relative z-10">{children}</span>
+            {rightIcon && <span className="flex-shrink-0 relative z-10">{rightIcon}</span>}
           </>
         )}
       </motion.button>

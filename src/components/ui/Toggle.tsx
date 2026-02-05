@@ -13,14 +13,14 @@ const Toggle = forwardRef<HTMLInputElement, ToggleProps>(
   ({ label, description, onChange, checked, size = 'md', className = '', ...props }, ref) => {
     const sizes = {
       sm: {
-        track: 'w-8 h-4',
-        thumb: 'h-3 w-3',
+        track: 'w-9 h-5',
+        thumb: 'h-4 w-4',
         translate: 'peer-checked:translate-x-4',
       },
       md: {
-        track: 'w-11 h-6',
+        track: 'w-12 h-6',
         thumb: 'h-5 w-5',
-        translate: 'peer-checked:translate-x-5',
+        translate: 'peer-checked:translate-x-6',
       },
       lg: {
         track: 'w-14 h-7',
@@ -32,11 +32,11 @@ const Toggle = forwardRef<HTMLInputElement, ToggleProps>(
     const sizeStyles = sizes[size]
 
     return (
-      <label className={`flex items-center justify-between cursor-pointer ${className}`}>
+      <label className={`flex items-center justify-between cursor-pointer group ${className}`}>
         {(label || description) && (
           <div className="mr-4">
             {label && <p className="text-text-primary font-medium">{label}</p>}
-            {description && <p className="text-xs text-text-tertiary">{description}</p>}
+            {description && <p className="text-[10px] text-text-muted mt-0.5">{description}</p>}
           </div>
         )}
         <div className="relative inline-flex items-center">
@@ -48,17 +48,27 @@ const Toggle = forwardRef<HTMLInputElement, ToggleProps>(
             className="sr-only peer"
             {...props}
           />
+          {/* Track with glass effect */}
           <div
             className={`
-              ${sizeStyles.track} bg-bg-tertiary rounded-full
-              peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-accent-primary/20
-              peer-checked:bg-accent-primary transition-colors
+              ${sizeStyles.track} rounded-full relative overflow-hidden
+              bg-gradient-to-br from-bg-secondary to-bg-tertiary border border-glass-border
+              peer-checked:bg-gradient-to-r peer-checked:from-accent peer-checked:to-accent-light
+              peer-checked:border-accent/50 peer-checked:shadow-[0_0_15px_rgba(201,165,92,0.3)]
+              transition-all duration-300
             `}
-          />
+          >
+            {/* Inner glow when checked */}
+            <div className="absolute inset-0 opacity-0 peer-checked:opacity-100 bg-gradient-to-r from-transparent via-white/10 to-transparent transition-opacity" />
+          </div>
+          {/* Thumb with premium shadow */}
           <div
             className={`
-              absolute left-[2px] ${sizeStyles.thumb} bg-white rounded-full
-              transition-transform ${sizeStyles.translate}
+              absolute left-[3px] ${sizeStyles.thumb} rounded-full
+              bg-gradient-to-br from-white to-gray-200
+              shadow-[0_2px_4px_rgba(0,0,0,0.3)]
+              peer-checked:shadow-[0_0_8px_rgba(201,165,92,0.5)]
+              transition-all duration-300 ${sizeStyles.translate}
             `}
           />
         </div>

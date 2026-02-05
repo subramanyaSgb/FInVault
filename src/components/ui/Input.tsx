@@ -34,11 +34,15 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
     return (
       <div className="w-full">
         {label && (
-          <label className="block text-sm text-text-secondary mb-2">{label}</label>
+          <label className="block text-[10px] text-accent font-medium tracking-wide uppercase mb-2">
+            {label}
+          </label>
         )}
-        <div className="relative">
+        <div className="relative group">
+          {/* Premium glow effect on focus */}
+          <div className="absolute -inset-0.5 rounded-xl bg-gradient-to-r from-accent/0 via-accent/0 to-accent/0 opacity-0 group-focus-within:opacity-100 group-focus-within:from-accent/20 group-focus-within:via-accent/10 group-focus-within:to-accent/20 blur transition-all duration-300" />
           {leftIcon && (
-            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary">
+            <div className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center text-accent z-10">
               {leftIcon}
             </div>
           )}
@@ -46,13 +50,15 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
             ref={ref}
             type={inputType}
             className={`
-              w-full bg-bg-tertiary border rounded-input px-4 py-3 text-text-primary
-              placeholder:text-text-tertiary
-              focus:border-accent-primary focus:outline-none focus:ring-1 focus:ring-accent-primary/20
+              relative w-full bg-gradient-to-br from-bg-secondary to-bg-tertiary
+              border rounded-xl px-4 py-3 text-text-primary
+              placeholder:text-text-tertiary backdrop-blur-sm
+              focus:border-accent/50 focus:outline-none focus:shadow-[0_0_15px_rgba(201,165,92,0.15)]
+              hover:border-accent/30 transition-all duration-300
               disabled:opacity-50 disabled:cursor-not-allowed
-              ${leftIcon ? 'pl-10' : ''}
-              ${rightIcon || showPasswordToggle ? 'pr-10' : ''}
-              ${error ? 'border-error' : 'border-white/10'}
+              ${leftIcon ? 'pl-14' : ''}
+              ${rightIcon || showPasswordToggle ? 'pr-14' : ''}
+              ${error ? 'border-error/50' : 'border-glass-border'}
               ${className}
             `}
             {...props}
@@ -61,19 +67,19 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-text-tertiary hover:text-text-secondary"
+              className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center text-accent hover:bg-accent/20 transition-colors z-10"
             >
-              {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+              {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
             </button>
           )}
           {rightIcon && !showPasswordToggle && (
-            <div className="absolute right-3 top-1/2 -translate-y-1/2 text-text-tertiary">
+            <div className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center text-accent z-10">
               {rightIcon}
             </div>
           )}
         </div>
-        {error && <p className="mt-1 text-sm text-error">{error}</p>}
-        {hint && !error && <p className="mt-1 text-xs text-text-tertiary">{hint}</p>}
+        {error && <p className="mt-1.5 text-xs text-error">{error}</p>}
+        {hint && !error && <p className="mt-1.5 text-[10px] text-text-muted">{hint}</p>}
       </div>
     )
   }

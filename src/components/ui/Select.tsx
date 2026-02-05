@@ -22,18 +22,26 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
   ({ label, error, hint, options, placeholder, onChange, className = '', value, ...props }, ref) => {
     return (
       <div className="w-full">
-        {label && <label className="block text-sm text-text-secondary mb-2">{label}</label>}
-        <div className="relative">
+        {label && (
+          <label className="block text-[10px] text-accent font-medium tracking-wide uppercase mb-2">
+            {label}
+          </label>
+        )}
+        <div className="relative group">
+          {/* Premium glow effect on focus */}
+          <div className="absolute -inset-0.5 rounded-xl bg-gradient-to-r from-accent/0 via-accent/0 to-accent/0 opacity-0 group-focus-within:opacity-100 group-focus-within:from-accent/20 group-focus-within:via-accent/10 group-focus-within:to-accent/20 blur transition-all duration-300" />
           <select
             ref={ref}
             value={value}
             onChange={e => onChange?.(e.target.value)}
             className={`
-              w-full bg-bg-tertiary border rounded-input px-4 py-3 text-text-primary
-              appearance-none cursor-pointer
-              focus:border-accent-primary focus:outline-none focus:ring-1 focus:ring-accent-primary/20
+              relative w-full bg-gradient-to-br from-bg-secondary to-bg-tertiary
+              border rounded-xl px-4 py-3 text-text-primary
+              appearance-none cursor-pointer backdrop-blur-sm
+              focus:border-accent/50 focus:outline-none focus:shadow-[0_0_15px_rgba(201,165,92,0.15)]
+              hover:border-accent/30 transition-all duration-300
               disabled:opacity-50 disabled:cursor-not-allowed
-              ${error ? 'border-error' : 'border-white/10'}
+              ${error ? 'border-error/50' : 'border-glass-border'}
               ${className}
             `}
             {...props}
@@ -49,10 +57,12 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
               </option>
             ))}
           </select>
-          <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-text-tertiary pointer-events-none" />
+          <div className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center pointer-events-none group-hover:bg-accent/20 transition-colors">
+            <ChevronDown className="w-4 h-4 text-accent" />
+          </div>
         </div>
-        {error && <p className="mt-1 text-sm text-error">{error}</p>}
-        {hint && !error && <p className="mt-1 text-xs text-text-tertiary">{hint}</p>}
+        {error && <p className="mt-1.5 text-xs text-error">{error}</p>}
+        {hint && !error && <p className="mt-1.5 text-[10px] text-text-muted">{hint}</p>}
       </div>
     )
   }
