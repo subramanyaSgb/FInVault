@@ -2,7 +2,18 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { motion } from 'framer-motion'
-import { TrendingDown, Calculator, Snowflake, Flame, ArrowRight, Info } from 'lucide-react'
+import {
+  TrendingDown,
+  Calculator,
+  Snowflake,
+  Flame,
+  ArrowRight,
+  Info,
+  DollarSign,
+  Clock,
+  Target,
+  Sparkles,
+} from 'lucide-react'
 import { useAuthStore } from '@/stores/authStore'
 import { useLoanStore } from '@/stores/loanStore'
 
@@ -12,6 +23,16 @@ interface PayoffResult {
   totalInterest: number
   interestSaved: number
   payoffOrder: { name: string; months: number; interest: number }[]
+}
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { staggerChildren: 0.08 } },
+}
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20, filter: 'blur(10px)' },
+  visible: { opacity: 1, y: 0, filter: 'blur(0px)', transition: { duration: 0.4 } },
 }
 
 export default function DebtPayoffPage() {
@@ -107,182 +128,306 @@ export default function DebtPayoffPage() {
   const totalEMI = loans.reduce((sum, loan) => sum + loan.emiAmount, 0)
 
   return (
-    <div className="min-h-screen bg-bg-primary pb-20">
-      <header className="sticky top-0 z-40 bg-bg-primary/80 backdrop-blur-md border-b border-white/5 p-4">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-error to-orange-500 flex items-center justify-center">
-            <TrendingDown className="w-5 h-5 text-white" />
-          </div>
-          <div>
-            <h1 className="text-lg font-bold text-text-primary">Debt Payoff</h1>
-            <p className="text-xs text-text-secondary">Strategy Planner</p>
-          </div>
+    <div className="min-h-screen bg-bg-primary pb-20 relative z-10">
+      {/* Premium Header */}
+      <header className="sticky top-0 z-40 bg-bg-primary/60 backdrop-blur-xl border-b border-glass-border pt-safe">
+        <div className="flex items-center justify-between px-4 py-4">
+          <motion.div
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <p className="text-xs text-error font-medium tracking-wide uppercase">Strategy</p>
+            <h1 className="text-xl font-semibold text-text-primary mt-0.5">Debt Payoff</h1>
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.3 }}
+            className="w-10 h-10 rounded-xl bg-gradient-to-br from-error/20 to-orange-500/20 border border-error/30 flex items-center justify-center"
+          >
+            <TrendingDown className="w-5 h-5 text-error" />
+          </motion.div>
         </div>
       </header>
 
-      <main className="p-4 space-y-6">
-        {/* Summary Card */}
-        <div className="bg-gradient-to-br from-error/20 to-orange-500/20 rounded-card p-6 border border-error/30">
-          <div className="text-center mb-4">
-            <p className="text-sm text-text-secondary mb-1">Total Debt</p>
-            <p className="text-4xl font-bold text-error">{formatCurrency(totalDebt)}</p>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="bg-bg-primary/50 rounded-lg p-3 text-center">
-              <p className="text-xs text-text-tertiary">Monthly EMI</p>
-              <p className="text-lg font-semibold text-text-primary">{formatCurrency(totalEMI)}</p>
+      <motion.main
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+        className="p-4 space-y-6"
+      >
+        {/* Premium Summary Card */}
+        <motion.div variants={itemVariants} className="relative overflow-hidden">
+          <div className="card-elevated p-5 relative overflow-hidden">
+            {/* Glow decoration */}
+            <div
+              className="absolute -top-20 -right-20 w-40 h-40 pointer-events-none"
+              style={{
+                background: 'radial-gradient(circle, rgba(239, 68, 68, 0.15) 0%, transparent 70%)',
+              }}
+            />
+            <div
+              className="absolute -bottom-20 -left-20 w-40 h-40 pointer-events-none"
+              style={{
+                background: 'radial-gradient(circle, rgba(251, 146, 60, 0.1) 0%, transparent 70%)',
+              }}
+            />
+
+            <div className="relative text-center mb-5">
+              <p className="text-xs text-text-tertiary uppercase tracking-wider mb-2">Total Debt</p>
+              <h2 className="text-4xl font-display font-bold text-error">{formatCurrency(totalDebt)}</h2>
             </div>
-            <div className="bg-bg-primary/50 rounded-lg p-3 text-center">
-              <p className="text-xs text-text-tertiary">Active Loans</p>
-              <p className="text-lg font-semibold text-text-primary">{loans.length}</p>
+
+            {/* Stats Grid */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-bg-secondary to-bg-tertiary border border-border-subtle p-4">
+                <div className="absolute -top-6 -right-6 w-12 h-12 bg-warning/10 rounded-full blur-xl" />
+                <div className="w-9 h-9 rounded-lg bg-warning/10 flex items-center justify-center mb-2">
+                  <DollarSign className="w-4 h-4 text-warning" />
+                </div>
+                <p className="text-[10px] text-text-muted uppercase tracking-wider">Monthly EMI</p>
+                <p className="text-lg font-semibold text-text-primary">{formatCurrency(totalEMI)}</p>
+              </div>
+              <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-bg-secondary to-bg-tertiary border border-border-subtle p-4">
+                <div className="absolute -top-6 -right-6 w-12 h-12 bg-info/10 rounded-full blur-xl" />
+                <div className="w-9 h-9 rounded-lg bg-info/10 flex items-center justify-center mb-2">
+                  <Target className="w-4 h-4 text-info" />
+                </div>
+                <p className="text-[10px] text-text-muted uppercase tracking-wider">Active Loans</p>
+                <p className="text-lg font-semibold text-text-primary">{loans.length}</p>
+              </div>
             </div>
           </div>
-        </div>
+        </motion.div>
 
         {/* Strategy Selection */}
-        <div className="bg-bg-secondary rounded-card p-5 border border-white/5">
+        <motion.div variants={itemVariants} className="card-elevated p-5">
           <h3 className="font-semibold text-text-primary mb-4 flex items-center gap-2">
-            <Calculator className="w-5 h-5 text-accent-primary" />
+            <Calculator className="w-5 h-5 text-accent" />
             Choose Strategy
           </h3>
 
-          <div className="grid grid-cols-2 gap-3 mb-4">
+          <div className="grid grid-cols-2 gap-3 mb-5">
+            {/* Snowball Strategy */}
             <button
               onClick={() => setStrategy('snowball')}
-              className={`p-4 rounded-card border transition-all ${
+              className={`group relative overflow-hidden rounded-2xl p-4 border transition-all duration-300 ${
                 strategy === 'snowball'
-                  ? 'bg-accent-alpha border-accent-primary'
-                  : 'bg-bg-tertiary border-white/10'
+                  ? 'bg-gradient-to-br from-info/20 via-info/10 to-transparent border-info/50 shadow-[0_0_20px_rgba(56,189,248,0.15)]'
+                  : 'bg-gradient-to-br from-bg-secondary to-bg-tertiary border-border-subtle hover:border-info/30'
               }`}
             >
-              <Snowflake
-                className={`w-6 h-6 mx-auto mb-2 ${strategy === 'snowball' ? 'text-accent-primary' : 'text-text-secondary'}`}
+              <div
+                className={`absolute -top-10 -right-10 w-24 h-24 rounded-full blur-2xl transition-colors ${
+                  strategy === 'snowball' ? 'bg-info/20' : 'bg-info/0 group-hover:bg-info/10'
+                }`}
               />
-              <p
-                className={`font-semibold ${strategy === 'snowball' ? 'text-accent-primary' : 'text-text-primary'}`}
-              >
-                Snowball
-              </p>
-              <p className="text-xs text-text-tertiary mt-1">Smallest first</p>
+              <div className="relative">
+                <div
+                  className={`w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-3 border transition-all ${
+                    strategy === 'snowball'
+                      ? 'bg-info/20 border-info/30'
+                      : 'bg-bg-tertiary border-border-subtle group-hover:border-info/20'
+                  }`}
+                >
+                  <Snowflake
+                    className={`w-6 h-6 transition-colors ${
+                      strategy === 'snowball' ? 'text-info' : 'text-text-secondary'
+                    }`}
+                  />
+                </div>
+                <p
+                  className={`font-semibold text-sm transition-colors ${
+                    strategy === 'snowball' ? 'text-info' : 'text-text-primary'
+                  }`}
+                >
+                  Snowball
+                </p>
+                <p className="text-[10px] text-text-tertiary mt-1">Smallest first</p>
+              </div>
             </button>
 
+            {/* Avalanche Strategy */}
             <button
               onClick={() => setStrategy('avalanche')}
-              className={`p-4 rounded-card border transition-all ${
+              className={`group relative overflow-hidden rounded-2xl p-4 border transition-all duration-300 ${
                 strategy === 'avalanche'
-                  ? 'bg-accent-alpha border-accent-primary'
-                  : 'bg-bg-tertiary border-white/10'
+                  ? 'bg-gradient-to-br from-orange-500/20 via-orange-500/10 to-transparent border-orange-500/50 shadow-[0_0_20px_rgba(249,115,22,0.15)]'
+                  : 'bg-gradient-to-br from-bg-secondary to-bg-tertiary border-border-subtle hover:border-orange-500/30'
               }`}
             >
-              <Flame
-                className={`w-6 h-6 mx-auto mb-2 ${strategy === 'avalanche' ? 'text-accent-primary' : 'text-text-secondary'}`}
+              <div
+                className={`absolute -top-10 -right-10 w-24 h-24 rounded-full blur-2xl transition-colors ${
+                  strategy === 'avalanche'
+                    ? 'bg-orange-500/20'
+                    : 'bg-orange-500/0 group-hover:bg-orange-500/10'
+                }`}
               />
-              <p
-                className={`font-semibold ${strategy === 'avalanche' ? 'text-accent-primary' : 'text-text-primary'}`}
-              >
-                Avalanche
-              </p>
-              <p className="text-xs text-text-tertiary mt-1">Highest rate first</p>
+              <div className="relative">
+                <div
+                  className={`w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-3 border transition-all ${
+                    strategy === 'avalanche'
+                      ? 'bg-orange-500/20 border-orange-500/30'
+                      : 'bg-bg-tertiary border-border-subtle group-hover:border-orange-500/20'
+                  }`}
+                >
+                  <Flame
+                    className={`w-6 h-6 transition-colors ${
+                      strategy === 'avalanche' ? 'text-orange-500' : 'text-text-secondary'
+                    }`}
+                  />
+                </div>
+                <p
+                  className={`font-semibold text-sm transition-colors ${
+                    strategy === 'avalanche' ? 'text-orange-500' : 'text-text-primary'
+                  }`}
+                >
+                  Avalanche
+                </p>
+                <p className="text-[10px] text-text-tertiary mt-1">Highest rate first</p>
+              </div>
             </button>
           </div>
 
-          <div>
-            <label className="text-sm text-text-secondary mb-2 block flex items-center gap-2">
+          {/* Extra Payment Input */}
+          <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-bg-secondary to-bg-tertiary border border-border-subtle p-4">
+            <div className="absolute -top-6 -right-6 w-12 h-12 bg-accent/10 rounded-full blur-xl" />
+            <label className="text-sm text-text-secondary mb-3 flex items-center gap-2">
               Extra Monthly Payment
               <span title="Additional amount you can pay towards debt each month">
                 <Info className="w-4 h-4 text-text-tertiary" />
               </span>
             </label>
-            <input
-              type="number"
-              value={extraPayment}
-              onChange={e => setExtraPayment(Number(e.target.value))}
-              className="w-full p-3 bg-bg-tertiary border border-white/10 rounded-button text-text-primary"
-            />
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary">₹</span>
+              <input
+                type="number"
+                value={extraPayment}
+                onChange={e => setExtraPayment(Number(e.target.value))}
+                className="w-full pl-8 pr-4 py-3 bg-bg-tertiary border border-border-subtle rounded-xl text-text-primary focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/20 transition-all"
+              />
+            </div>
           </div>
-        </div>
+        </motion.div>
 
-        {/* Results */}
+        {/* Results Section */}
         {results && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="space-y-4"
-          >
-            <div className="bg-success-bg rounded-card p-5 border border-success/20">
-              <h3 className="font-semibold text-success mb-4">Payoff Summary</h3>
+          <motion.div variants={itemVariants} className="space-y-4">
+            {/* Payoff Summary Card */}
+            <div className="card-elevated p-5 relative overflow-hidden">
+              <div
+                className="absolute -top-20 -right-20 w-40 h-40 pointer-events-none"
+                style={{
+                  background: 'radial-gradient(circle, rgba(34, 197, 94, 0.15) 0%, transparent 70%)',
+                }}
+              />
 
-              <div className="grid grid-cols-2 gap-4 mb-4">
-                <div>
-                  <p className="text-xs text-text-secondary">Debt Free In</p>
-                  <p className="text-2xl font-bold text-text-primary">
-                    {(results.totalMonths / 12).toFixed(1)} years
+              <div className="relative">
+                <div className="flex items-center gap-2 mb-4">
+                  <Sparkles className="w-5 h-5 text-success" />
+                  <h3 className="font-semibold text-success">Payoff Summary</h3>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-bg-secondary to-bg-tertiary border border-border-subtle p-4">
+                    <div className="absolute -top-6 -right-6 w-12 h-12 bg-accent/10 rounded-full blur-xl" />
+                    <div className="w-9 h-9 rounded-lg bg-accent/10 flex items-center justify-center mb-2">
+                      <Clock className="w-4 h-4 text-accent" />
+                    </div>
+                    <p className="text-[10px] text-text-muted uppercase tracking-wider">Debt Free In</p>
+                    <p className="text-xl font-bold text-gradient-gold">
+                      {(results.totalMonths / 12).toFixed(1)} years
+                    </p>
+                  </div>
+                  <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-bg-secondary to-bg-tertiary border border-border-subtle p-4">
+                    <div className="absolute -top-6 -right-6 w-12 h-12 bg-success/10 rounded-full blur-xl" />
+                    <div className="w-9 h-9 rounded-lg bg-success/10 flex items-center justify-center mb-2">
+                      <TrendingDown className="w-4 h-4 text-success" />
+                    </div>
+                    <p className="text-[10px] text-text-muted uppercase tracking-wider">Interest Saved</p>
+                    <p className="text-xl font-bold text-success">{formatCurrency(results.interestSaved)}</p>
+                  </div>
+                </div>
+
+                <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-bg-secondary to-bg-tertiary border border-border-subtle p-4">
+                  <p className="text-xs text-text-secondary mb-1">Total Interest Paid</p>
+                  <p className="text-lg font-semibold text-text-primary">
+                    {formatCurrency(results.totalInterest)}
                   </p>
                 </div>
-                <div>
-                  <p className="text-xs text-text-secondary">Interest Saved</p>
-                  <p className="text-2xl font-bold text-success">
-                    {formatCurrency(results.interestSaved)}
-                  </p>
-                </div>
-              </div>
-
-              <div className="bg-bg-primary/50 rounded-lg p-3">
-                <p className="text-xs text-text-secondary">Total Interest Paid</p>
-                <p className="text-lg font-semibold text-text-primary">
-                  {formatCurrency(results.totalInterest)}
-                </p>
               </div>
             </div>
 
             {/* Payoff Order */}
-            <div className="bg-bg-secondary rounded-card p-5 border border-white/5">
+            <div className="card-elevated p-5">
               <h3 className="font-semibold text-text-primary mb-4">Payoff Order</h3>
               <div className="space-y-3">
                 {results.payoffOrder.map((loan, index) => (
-                  <div key={index} className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-accent-alpha flex items-center justify-center text-accent-primary font-semibold">
+                  <motion.div
+                    key={index}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                    className="group flex items-center gap-3 p-3 rounded-xl bg-gradient-to-br from-bg-secondary to-bg-tertiary border border-border-subtle hover:border-accent/30 hover:shadow-[0_0_15px_rgba(201,165,92,0.08)] transition-all duration-300"
+                  >
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent/20 to-accent/10 border border-accent/30 flex items-center justify-center text-accent font-display font-bold group-hover:scale-110 transition-transform">
                       {index + 1}
                     </div>
                     <div className="flex-1">
                       <p className="font-medium text-text-primary">{loan.name}</p>
                       <p className="text-xs text-text-secondary">
-                        {(loan.months / 12).toFixed(1)} years • {formatCurrency(loan.interest)}{' '}
-                        interest
+                        {(loan.months / 12).toFixed(1)} years • {formatCurrency(loan.interest)} interest
                       </p>
                     </div>
-                    <ArrowRight className="w-4 h-4 text-text-tertiary" />
-                  </div>
+                    <ArrowRight className="w-4 h-4 text-text-tertiary group-hover:text-accent transition-colors" />
+                  </motion.div>
                 ))}
               </div>
             </div>
           </motion.div>
         )}
 
-        {/* Loans List */}
-        <div className="bg-bg-secondary rounded-card p-5 border border-white/5">
+        {/* Active Loans List */}
+        <motion.div variants={itemVariants} className="card-elevated p-5">
           <h3 className="font-semibold text-text-primary mb-4">Active Loans</h3>
           <div className="space-y-3">
-            {loans.map(loan => (
-              <div
-                key={loan.id}
-                className="flex items-center justify-between p-3 bg-bg-tertiary rounded-lg"
-              >
-                <div>
-                  <p className="font-medium text-text-primary">{loan.lender}</p>
-                  <p className="text-xs text-text-secondary">{loan.interestRate}% interest</p>
+            {loans.length === 0 ? (
+              <div className="text-center py-8">
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-accent/20 to-accent/10 border border-accent/30 flex items-center justify-center mx-auto mb-4">
+                  <Target className="w-8 h-8 text-accent" />
                 </div>
-                <div className="text-right">
-                  <p className="font-semibold text-text-primary">
-                    {formatCurrency(loan.outstandingAmount)}
-                  </p>
-                  <p className="text-xs text-text-secondary">{formatCurrency(loan.emiAmount)}/mo</p>
-                </div>
+                <p className="text-text-secondary text-sm mb-2">No loans found</p>
+                <p className="text-text-tertiary text-xs">Add loans to start planning your debt payoff</p>
               </div>
-            ))}
+            ) : (
+              loans.map((loan, index) => (
+                <motion.div
+                  key={loan.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                  className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-bg-secondary to-bg-tertiary border border-border-subtle p-4 hover:border-accent/30 hover:shadow-[0_0_15px_rgba(201,165,92,0.08)] transition-all duration-300"
+                >
+                  <div className="absolute -top-10 -right-10 w-20 h-20 bg-accent/0 rounded-full blur-2xl group-hover:bg-accent/10 transition-all" />
+                  <div className="relative flex items-center justify-between">
+                    <div>
+                      <p className="font-medium text-text-primary">{loan.lender}</p>
+                      <p className="text-xs text-text-secondary">{loan.interestRate}% interest</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-semibold text-text-primary">
+                        {formatCurrency(loan.outstandingAmount)}
+                      </p>
+                      <p className="text-xs text-text-secondary">{formatCurrency(loan.emiAmount)}/mo</p>
+                    </div>
+                  </div>
+                </motion.div>
+              ))
+            )}
           </div>
-        </div>
-      </main>
+        </motion.div>
+      </motion.main>
     </div>
   )
 }

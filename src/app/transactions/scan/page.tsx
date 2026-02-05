@@ -13,6 +13,7 @@ import {
   Zap,
   AlertCircle,
   FileText,
+  ScanLine,
 } from 'lucide-react'
 import { scanReceipt, fileToDataURL, compressImage, enhanceImage, ReceiptData } from '@/lib/ocr'
 import { useTransactionStore } from '@/stores/transactionStore'
@@ -200,22 +201,38 @@ export default function ScanReceiptPage() {
   }
 
   return (
-    <div className="min-h-screen bg-bg-primary">
-      {/* Header */}
-      <header className="sticky top-0 z-30 bg-bg-primary/95 backdrop-blur-lg border-b border-white/5">
+    <div className="min-h-screen bg-bg-primary relative z-10">
+      {/* Premium Header */}
+      <header className="sticky top-0 z-40 bg-bg-primary/60 backdrop-blur-xl border-b border-glass-border pt-safe">
         <div className="flex items-center justify-between px-4 py-4">
-          <div className="flex items-center gap-3">
+          <motion.div
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.3 }}
+            className="flex items-center gap-3"
+          >
             <button
               onClick={() => {
                 stopCamera()
                 router.back()
               }}
-              className="p-2 -ml-2 rounded-full hover:bg-white/5 transition-colors"
+              className="p-2 hover:bg-bg-tertiary rounded-xl transition-colors"
             >
-              <ArrowLeft className="w-5 h-5 text-text-primary" />
+              <ArrowLeft className="w-5 h-5 text-text-secondary" />
             </button>
-            <h1 className="text-xl font-bold text-text-primary">Scan Receipt</h1>
-          </div>
+            <div>
+              <p className="text-xs text-accent font-medium tracking-wide uppercase">Scan</p>
+              <h1 className="text-lg font-semibold text-text-primary">Receipt</h1>
+            </div>
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.3 }}
+            className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent/20 to-accent/10 border border-accent/30 flex items-center justify-center"
+          >
+            <ScanLine className="w-5 h-5 text-accent" />
+          </motion.div>
         </div>
       </header>
 
@@ -225,14 +242,14 @@ export default function ScanReceiptPage() {
           {step === 'capture' && (
             <motion.div
               key="capture"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
               className="space-y-4"
             >
               {/* Camera View */}
               {isCameraActive ? (
-                <div className="relative aspect-[3/4] bg-black rounded-card overflow-hidden">
+                <div className="relative aspect-[3/4] bg-black rounded-2xl overflow-hidden border border-border-subtle">
                   <video
                     ref={videoRef}
                     autoPlay
@@ -242,19 +259,19 @@ export default function ScanReceiptPage() {
                   <canvas ref={canvasRef} className="hidden" />
 
                   {/* Capture overlay */}
-                  <div className="absolute inset-0 border-2 border-dashed border-accent-primary/50 m-8 rounded-lg pointer-events-none" />
+                  <div className="absolute inset-0 border-2 border-dashed border-accent/50 m-8 rounded-xl pointer-events-none" />
 
                   {/* Capture button */}
                   <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-4">
                     <button
                       onClick={stopCamera}
-                      className="p-3 bg-bg-secondary/80 rounded-full"
+                      className="p-3 bg-bg-secondary/80 backdrop-blur-xl rounded-full border border-border-subtle"
                     >
                       <X className="w-6 h-6 text-text-primary" />
                     </button>
                     <button
                       onClick={capturePhoto}
-                      className="p-4 bg-accent-primary rounded-full"
+                      className="p-4 bg-gradient-to-r from-accent to-accent-secondary rounded-full shadow-[0_0_30px_rgba(201,165,92,0.4)]"
                     >
                       <Camera className="w-8 h-8 text-bg-primary" />
                     </button>
@@ -263,11 +280,15 @@ export default function ScanReceiptPage() {
               ) : (
                 <div className="space-y-4">
                   {/* Preview or placeholder */}
-                  <div className="aspect-[3/4] bg-bg-secondary rounded-card flex items-center justify-center border border-dashed border-white/10">
+                  <div className="card-elevated aspect-[3/4] flex items-center justify-center border border-dashed border-border-subtle">
                     <div className="text-center p-8">
-                      <FileText className="w-16 h-16 text-text-tertiary mx-auto mb-4" />
-                      <p className="text-text-secondary mb-2">Take a photo or upload a receipt</p>
-                      <p className="text-xs text-text-tertiary">
+                      <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-accent/20 to-accent/10 border border-accent/30 flex items-center justify-center mx-auto mb-4">
+                        <FileText className="w-10 h-10 text-accent" />
+                      </div>
+                      <p className="text-text-primary font-semibold mb-2">
+                        Take a photo or upload a receipt
+                      </p>
+                      <p className="text-sm text-text-tertiary">
                         We&apos;ll extract the amount, merchant, and date automatically
                       </p>
                     </div>
@@ -277,14 +298,14 @@ export default function ScanReceiptPage() {
                   <div className="grid grid-cols-2 gap-4">
                     <button
                       onClick={startCamera}
-                      className="flex items-center justify-center gap-2 p-4 bg-accent-primary text-bg-primary rounded-button font-medium"
+                      className="flex items-center justify-center gap-2 p-4 bg-gradient-to-r from-accent to-accent-secondary text-bg-primary rounded-xl font-semibold shadow-[0_0_20px_rgba(201,165,92,0.3)] hover:shadow-[0_0_30px_rgba(201,165,92,0.4)] transition-all"
                     >
                       <Camera className="w-5 h-5" />
                       Take Photo
                     </button>
                     <button
                       onClick={() => fileInputRef.current?.click()}
-                      className="flex items-center justify-center gap-2 p-4 bg-bg-secondary text-text-primary rounded-button font-medium border border-white/10"
+                      className="flex items-center justify-center gap-2 p-4 bg-gradient-to-br from-bg-secondary to-bg-tertiary text-text-primary rounded-xl font-semibold border border-border-subtle hover:border-accent/30 transition-all"
                     >
                       <Upload className="w-5 h-5" />
                       Upload
@@ -310,31 +331,42 @@ export default function ScanReceiptPage() {
           {step === 'processing' && (
             <motion.div
               key="processing"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
               className="space-y-6"
             >
               {imageUrl && (
-                <div className="aspect-[3/4] bg-bg-secondary rounded-card overflow-hidden">
+                <div className="aspect-[3/4] bg-bg-secondary rounded-2xl overflow-hidden border border-border-subtle">
                   <img src={imageUrl} alt="Receipt" className="w-full h-full object-contain" />
                 </div>
               )}
 
-              <div className="bg-bg-secondary rounded-card p-6">
-                <div className="flex items-center gap-3 mb-4">
-                  <Zap className="w-5 h-5 text-accent-primary animate-pulse" />
-                  <span className="text-text-primary font-medium">Processing receipt...</span>
-                </div>
+              <div className="card-elevated p-6 relative overflow-hidden">
+                <div
+                  className="absolute -top-20 -right-20 w-40 h-40 pointer-events-none"
+                  style={{
+                    background:
+                      'radial-gradient(circle, rgba(201, 165, 92, 0.15) 0%, transparent 70%)',
+                  }}
+                />
+                <div className="relative">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 rounded-xl bg-accent/20 border border-accent/30 flex items-center justify-center">
+                      <Zap className="w-5 h-5 text-accent animate-pulse" />
+                    </div>
+                    <span className="text-text-primary font-medium">Processing receipt...</span>
+                  </div>
 
-                <div className="w-full h-2 bg-bg-tertiary rounded-full overflow-hidden">
-                  <motion.div
-                    initial={{ width: 0 }}
-                    animate={{ width: `${progress}%` }}
-                    className="h-full bg-accent-primary"
-                  />
+                  <div className="w-full h-2 bg-bg-tertiary rounded-full overflow-hidden">
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ width: `${progress}%` }}
+                      className="h-full bg-gradient-to-r from-accent to-accent-secondary shadow-[0_0_10px_rgba(201,165,92,0.5)]"
+                    />
+                  </div>
+                  <p className="text-xs text-text-tertiary mt-2">{Math.round(progress)}% complete</p>
                 </div>
-                <p className="text-xs text-text-tertiary mt-2">{Math.round(progress)}% complete</p>
               </div>
             </motion.div>
           )}
@@ -343,14 +375,14 @@ export default function ScanReceiptPage() {
           {step === 'review' && (
             <motion.div
               key="review"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
               className="space-y-4"
             >
               {/* Image preview */}
               {imageUrl && (
-                <div className="aspect-video bg-bg-secondary rounded-card overflow-hidden">
+                <div className="aspect-video bg-bg-secondary rounded-2xl overflow-hidden border border-border-subtle">
                   <img src={imageUrl} alt="Receipt" className="w-full h-full object-contain" />
                 </div>
               )}
@@ -360,7 +392,7 @@ export default function ScanReceiptPage() {
                 <div className="flex items-center gap-2 text-sm">
                   <span className="text-text-tertiary">OCR Confidence:</span>
                   <span
-                    className={`font-medium ${
+                    className={`font-semibold ${
                       receiptData.confidence >= 80
                         ? 'text-success'
                         : receiptData.confidence >= 50
@@ -374,11 +406,11 @@ export default function ScanReceiptPage() {
               )}
 
               {/* Form */}
-              <div className="space-y-4 bg-bg-secondary rounded-card p-4">
+              <div className="card-elevated p-5 space-y-4">
                 <div>
                   <label className="block text-sm text-text-secondary mb-2">Amount *</label>
                   <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-tertiary">
                       ₹
                     </span>
                     <input
@@ -386,7 +418,7 @@ export default function ScanReceiptPage() {
                       step="0.01"
                       value={formData.amount}
                       onChange={e => setFormData(prev => ({ ...prev, amount: e.target.value }))}
-                      className="w-full bg-bg-tertiary border border-white/10 rounded-input pl-8 pr-4 py-3 text-text-primary focus:border-accent-primary focus:outline-none"
+                      className="w-full bg-bg-tertiary border border-border-subtle rounded-xl pl-8 pr-4 py-3 text-text-primary focus:border-accent/50 focus:ring-1 focus:ring-accent/20 focus:outline-none transition-all"
                       placeholder="0.00"
                     />
                   </div>
@@ -398,7 +430,7 @@ export default function ScanReceiptPage() {
                     type="text"
                     value={formData.merchant}
                     onChange={e => setFormData(prev => ({ ...prev, merchant: e.target.value }))}
-                    className="w-full bg-bg-tertiary border border-white/10 rounded-input px-4 py-3 text-text-primary focus:border-accent-primary focus:outline-none"
+                    className="w-full bg-bg-tertiary border border-border-subtle rounded-xl px-4 py-3 text-text-primary focus:border-accent/50 focus:ring-1 focus:ring-accent/20 focus:outline-none transition-all"
                     placeholder="Store name"
                   />
                 </div>
@@ -409,7 +441,7 @@ export default function ScanReceiptPage() {
                     type="date"
                     value={formData.date}
                     onChange={e => setFormData(prev => ({ ...prev, date: e.target.value }))}
-                    className="w-full bg-bg-tertiary border border-white/10 rounded-input px-4 py-3 text-text-primary focus:border-accent-primary focus:outline-none"
+                    className="w-full bg-bg-tertiary border border-border-subtle rounded-xl px-4 py-3 text-text-primary focus:border-accent/50 focus:ring-1 focus:ring-accent/20 focus:outline-none transition-all"
                   />
                 </div>
 
@@ -418,7 +450,7 @@ export default function ScanReceiptPage() {
                   <select
                     value={formData.category}
                     onChange={e => setFormData(prev => ({ ...prev, category: e.target.value }))}
-                    className="w-full bg-bg-tertiary border border-white/10 rounded-input px-4 py-3 text-text-primary focus:border-accent-primary focus:outline-none"
+                    className="w-full bg-bg-tertiary border border-border-subtle rounded-xl px-4 py-3 text-text-primary focus:border-accent/50 focus:ring-1 focus:ring-accent/20 focus:outline-none transition-all"
                   >
                     <option value="food">Food & Dining</option>
                     <option value="shopping">Shopping</option>
@@ -437,7 +469,7 @@ export default function ScanReceiptPage() {
                     value={formData.notes}
                     onChange={e => setFormData(prev => ({ ...prev, notes: e.target.value }))}
                     rows={2}
-                    className="w-full bg-bg-tertiary border border-white/10 rounded-input px-4 py-3 text-text-primary focus:border-accent-primary focus:outline-none resize-none"
+                    className="w-full bg-bg-tertiary border border-border-subtle rounded-xl px-4 py-3 text-text-primary focus:border-accent/50 focus:ring-1 focus:ring-accent/20 focus:outline-none resize-none transition-all"
                     placeholder="Add notes..."
                   />
                 </div>
@@ -447,7 +479,7 @@ export default function ScanReceiptPage() {
               <div className="grid grid-cols-2 gap-4">
                 <button
                   onClick={handleReset}
-                  className="flex items-center justify-center gap-2 p-4 bg-bg-secondary text-text-primary rounded-button font-medium border border-white/10"
+                  className="flex items-center justify-center gap-2 p-4 bg-gradient-to-br from-bg-secondary to-bg-tertiary text-text-primary rounded-xl font-semibold border border-border-subtle hover:border-accent/30 transition-all"
                 >
                   <RefreshCw className="w-5 h-5" />
                   Retry
@@ -455,7 +487,7 @@ export default function ScanReceiptPage() {
                 <button
                   onClick={handleSave}
                   disabled={!formData.amount}
-                  className="flex items-center justify-center gap-2 p-4 bg-accent-primary text-bg-primary rounded-button font-medium disabled:opacity-50"
+                  className="flex items-center justify-center gap-2 p-4 bg-gradient-to-r from-accent to-accent-secondary text-bg-primary rounded-xl font-semibold shadow-[0_0_20px_rgba(201,165,92,0.3)] hover:shadow-[0_0_30px_rgba(201,165,92,0.4)] disabled:opacity-50 disabled:shadow-none transition-all"
                 >
                   <Check className="w-5 h-5" />
                   Save
@@ -468,20 +500,31 @@ export default function ScanReceiptPage() {
           {step === 'error' && (
             <motion.div
               key="error"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
               className="space-y-4"
             >
-              <div className="bg-error/10 border border-error/30 rounded-card p-6 text-center">
-                <AlertCircle className="w-12 h-12 text-error mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-text-primary mb-2">Processing Failed</h3>
-                <p className="text-text-secondary">{error}</p>
+              <div className="card-elevated p-6 text-center relative overflow-hidden">
+                <div
+                  className="absolute -top-20 -right-20 w-40 h-40 pointer-events-none"
+                  style={{
+                    background:
+                      'radial-gradient(circle, rgba(239, 68, 68, 0.15) 0%, transparent 70%)',
+                  }}
+                />
+                <div className="relative">
+                  <div className="w-16 h-16 rounded-2xl bg-error/20 border border-error/30 flex items-center justify-center mx-auto mb-4">
+                    <AlertCircle className="w-8 h-8 text-error" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-text-primary mb-2">Processing Failed</h3>
+                  <p className="text-text-secondary">{error}</p>
+                </div>
               </div>
 
               <button
                 onClick={handleReset}
-                className="w-full flex items-center justify-center gap-2 p-4 bg-accent-primary text-bg-primary rounded-button font-medium"
+                className="w-full flex items-center justify-center gap-2 p-4 bg-gradient-to-r from-accent to-accent-secondary text-bg-primary rounded-xl font-semibold shadow-[0_0_20px_rgba(201,165,92,0.3)] hover:shadow-[0_0_30px_rgba(201,165,92,0.4)] transition-all"
               >
                 <RefreshCw className="w-5 h-5" />
                 Try Again

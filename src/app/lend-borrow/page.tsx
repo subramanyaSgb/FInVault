@@ -4,7 +4,6 @@ import { useEffect, useState, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Plus,
-  ArrowLeft,
   ArrowUpRight,
   ArrowDownLeft,
   User,
@@ -16,6 +15,9 @@ import {
   Phone,
   Mail,
   DollarSign,
+  TrendingUp,
+  TrendingDown,
+  Scale,
 } from 'lucide-react'
 import { useAuthStore } from '@/stores/authStore'
 import { useLendBorrowStore } from '@/stores/lendBorrowStore'
@@ -47,6 +49,16 @@ const initialFormData: LendBorrowFormData = {
   date: formatDateForInput(new Date()),
   dueDate: '',
   notes: '',
+}
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { staggerChildren: 0.08 } },
+}
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20, filter: 'blur(10px)' },
+  visible: { opacity: 1, y: 0, filter: 'blur(0px)', transition: { duration: 0.4 } },
 }
 
 export default function LendBorrowPage() {
@@ -219,11 +231,11 @@ export default function LendBorrowPage() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'settled':
-        return 'bg-success-bg text-success'
+        return 'bg-success/20 text-success border border-success/30'
       case 'partial':
-        return 'bg-warning-bg text-warning'
+        return 'bg-warning/20 text-warning border border-warning/30'
       default:
-        return 'bg-error-bg text-error'
+        return 'bg-error/20 text-error border border-error/30'
     }
   }
 
@@ -235,102 +247,134 @@ export default function LendBorrowPage() {
 
     if (diffDays < 0) return { text: 'Overdue', color: 'text-error' }
     if (diffDays <= 7) return { text: `Due in ${diffDays} days`, color: 'text-warning' }
-    return { text: `Due ${due.toLocaleDateString('en-IN', { month: 'short', day: 'numeric' })}`, color: 'text-text-tertiary' }
+    return {
+      text: `Due ${due.toLocaleDateString('en-IN', { month: 'short', day: 'numeric' })}`,
+      color: 'text-text-tertiary',
+    }
   }
 
+  const netBalance = totalLent - totalBorrowed
+
   return (
-    <div className="min-h-screen bg-bg-primary pb-20">
-      <header className="sticky top-0 z-40 bg-bg-primary/80 backdrop-blur-md border-b border-white/5 p-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => window.history.back()}
-              className="p-2 hover:bg-bg-secondary rounded-full transition-colors"
-            >
-              <ArrowLeft className="w-5 h-5 text-text-secondary" />
-            </button>
-            <div>
-              <p className="text-xs text-text-tertiary uppercase tracking-wider">Lend & Borrow</p>
-              <h1 className="text-lg font-semibold text-text-primary">Track Loans</h1>
-            </div>
-          </div>
-          <button
-            onClick={() => handleOpenModal()}
-            className="p-2 bg-accent-alpha rounded-full"
+    <div className="min-h-screen bg-bg-primary pb-20 relative z-10">
+      {/* Premium Header */}
+      <header className="sticky top-0 z-40 bg-bg-primary/60 backdrop-blur-xl border-b border-glass-border pt-safe">
+        <div className="flex items-center justify-between px-4 py-4">
+          <motion.div
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.3 }}
           >
-            <Plus className="w-5 h-5 text-accent-primary" />
-          </button>
+            <p className="text-xs text-accent font-medium tracking-wide uppercase">Personal</p>
+            <h1 className="text-xl font-semibold text-text-primary mt-0.5">Lend & Borrow</h1>
+          </motion.div>
+          <motion.button
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.3 }}
+            onClick={() => handleOpenModal()}
+            className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent/20 to-accent/10 border border-accent/30 flex items-center justify-center hover:scale-110 transition-transform"
+          >
+            <Plus className="w-5 h-5 text-accent" />
+          </motion.button>
         </div>
       </header>
 
-      <main className="p-4 space-y-6">
+      <motion.main
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+        className="p-4 space-y-6"
+      >
         {/* Summary Cards */}
-        <div className="grid grid-cols-2 gap-4">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-success-bg rounded-card p-4 border border-success/20"
-          >
-            <div className="flex items-center gap-2 mb-2">
-              <ArrowUpRight className="w-5 h-5 text-success" />
-              <span className="text-sm text-success">Money Lent</span>
+        <motion.div variants={itemVariants} className="grid grid-cols-2 gap-4">
+          {/* Money Lent */}
+          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-success/20 via-success/10 to-transparent border border-success/30 p-4">
+            <div className="absolute -top-10 -right-10 w-24 h-24 bg-success/20 rounded-full blur-2xl" />
+            <div className="relative">
+              <div className="w-10 h-10 rounded-xl bg-success/20 border border-success/30 flex items-center justify-center mb-3">
+                <TrendingUp className="w-5 h-5 text-success" />
+              </div>
+              <p className="text-[10px] text-text-muted uppercase tracking-wider mb-1">Money Lent</p>
+              <p className="text-xl font-bold text-success">{formatCurrency(totalLent)}</p>
+              <p className="text-[10px] text-text-tertiary mt-1">To receive</p>
             </div>
-            <p className="text-2xl font-bold text-success">{formatCurrency(totalLent)}</p>
-            <p className="text-xs text-text-tertiary mt-1">To receive</p>
-          </motion.div>
+          </div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="bg-error-bg rounded-card p-4 border border-error/20"
-          >
-            <div className="flex items-center gap-2 mb-2">
-              <ArrowDownLeft className="w-5 h-5 text-error" />
-              <span className="text-sm text-error">Money Borrowed</span>
+          {/* Money Borrowed */}
+          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-error/20 via-error/10 to-transparent border border-error/30 p-4">
+            <div className="absolute -top-10 -right-10 w-24 h-24 bg-error/20 rounded-full blur-2xl" />
+            <div className="relative">
+              <div className="w-10 h-10 rounded-xl bg-error/20 border border-error/30 flex items-center justify-center mb-3">
+                <TrendingDown className="w-5 h-5 text-error" />
+              </div>
+              <p className="text-[10px] text-text-muted uppercase tracking-wider mb-1">
+                Money Borrowed
+              </p>
+              <p className="text-xl font-bold text-error">{formatCurrency(totalBorrowed)}</p>
+              <p className="text-[10px] text-text-tertiary mt-1">To pay</p>
             </div>
-            <p className="text-2xl font-bold text-error">{formatCurrency(totalBorrowed)}</p>
-            <p className="text-xs text-text-tertiary mt-1">To pay</p>
-          </motion.div>
-        </div>
+          </div>
+        </motion.div>
 
-        {/* Net Balance */}
-        <div className="bg-bg-secondary rounded-card p-4 border border-white/5">
-          <div className="flex items-center justify-between">
-            <span className="text-text-secondary">Net Balance</span>
-            <span className={`text-xl font-bold ${totalLent - totalBorrowed >= 0 ? 'text-success' : 'text-error'}`}>
-              {totalLent - totalBorrowed >= 0 ? '+' : ''}{formatCurrency(totalLent - totalBorrowed)}
+        {/* Net Balance Card */}
+        <motion.div variants={itemVariants} className="card-elevated p-5 relative overflow-hidden">
+          <div
+            className="absolute -top-20 -right-20 w-40 h-40 pointer-events-none"
+            style={{
+              background: `radial-gradient(circle, ${netBalance >= 0 ? 'rgba(34, 197, 94, 0.12)' : 'rgba(239, 68, 68, 0.12)'} 0%, transparent 70%)`,
+            }}
+          />
+          <div className="relative flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div
+                className={`w-10 h-10 rounded-xl border flex items-center justify-center ${netBalance >= 0 ? 'bg-success/20 border-success/30' : 'bg-error/20 border-error/30'}`}
+              >
+                <Scale className={`w-5 h-5 ${netBalance >= 0 ? 'text-success' : 'text-error'}`} />
+              </div>
+              <span className="text-text-secondary font-medium">Net Balance</span>
+            </div>
+            <span
+              className={`text-2xl font-display font-bold ${netBalance >= 0 ? 'text-success' : 'text-error'}`}
+            >
+              {netBalance >= 0 ? '+' : ''}
+              {formatCurrency(netBalance)}
             </span>
           </div>
-        </div>
+        </motion.div>
 
-        {/* Tabs */}
-        <div className="flex gap-2 bg-bg-secondary rounded-full p-1">
+        {/* Premium Tabs */}
+        <motion.div
+          variants={itemVariants}
+          className="flex gap-2 p-1.5 bg-gradient-to-r from-bg-secondary to-bg-tertiary rounded-2xl border border-border-subtle"
+        >
           {(['all', 'lent', 'borrowed'] as const).map(tab => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`flex-1 py-2 px-4 rounded-full text-sm font-medium transition-colors capitalize ${
+              className={`flex-1 py-2.5 px-4 rounded-xl text-sm font-medium transition-all duration-300 capitalize ${
                 activeTab === tab
-                  ? 'bg-accent-primary text-bg-primary'
-                  : 'text-text-secondary hover:text-text-primary'
+                  ? 'bg-gradient-to-r from-accent/20 to-accent/10 text-accent border border-accent/30 shadow-[0_0_15px_rgba(201,165,92,0.15)]'
+                  : 'text-text-secondary hover:text-text-primary hover:bg-bg-tertiary'
               }`}
             >
               {tab}
             </button>
           ))}
-        </div>
+        </motion.div>
 
-        {/* List */}
-        <div className="space-y-3">
+        {/* Items List */}
+        <motion.div variants={itemVariants} className="space-y-3">
           {filteredItems.length === 0 ? (
-            <div className="text-center py-12 bg-bg-secondary rounded-card">
-              <DollarSign className="w-16 h-16 text-text-tertiary mx-auto mb-4" />
+            <div className="card-elevated p-8 text-center">
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-accent/20 to-accent/10 border border-accent/30 flex items-center justify-center mx-auto mb-4">
+                <DollarSign className="w-8 h-8 text-accent" />
+              </div>
               <h3 className="text-lg font-semibold text-text-primary mb-2">No entries yet</h3>
-              <p className="text-text-secondary mb-6">Track money you lend or borrow</p>
+              <p className="text-text-secondary text-sm mb-6">Track money you lend or borrow</p>
               <button
                 onClick={() => handleOpenModal()}
-                className="px-6 py-3 bg-accent-primary text-bg-primary font-semibold rounded-button"
+                className="px-6 py-3 bg-gradient-to-r from-accent to-accent-secondary text-bg-primary font-semibold rounded-xl shadow-[0_0_20px_rgba(201,165,92,0.3)] hover:shadow-[0_0_30px_rgba(201,165,92,0.4)] transition-all"
               >
                 Add Entry
               </button>
@@ -344,116 +388,135 @@ export default function LendBorrowPage() {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.05 }}
-                  className="bg-bg-secondary rounded-card p-4 border border-white/5"
+                  className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-bg-secondary to-bg-tertiary border border-border-subtle p-4 hover:border-accent/30 hover:shadow-[0_0_15px_rgba(201,165,92,0.08)] transition-all duration-300"
                 >
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex items-center gap-3">
-                      <div
-                        className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                          item.type === 'lent' ? 'bg-success-bg' : 'bg-error-bg'
-                        }`}
-                      >
-                        {item.type === 'lent' ? (
-                          <ArrowUpRight className="w-5 h-5 text-success" />
-                        ) : (
-                          <ArrowDownLeft className="w-5 h-5 text-error" />
+                  <div className="absolute -top-10 -right-10 w-20 h-20 bg-accent/0 rounded-full blur-2xl group-hover:bg-accent/10 transition-all" />
+
+                  <div className="relative">
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex items-center gap-3">
+                        <div
+                          className={`w-12 h-12 rounded-xl border flex items-center justify-center group-hover:scale-110 transition-transform ${
+                            item.type === 'lent'
+                              ? 'bg-success/20 border-success/30'
+                              : 'bg-error/20 border-error/30'
+                          }`}
+                        >
+                          {item.type === 'lent' ? (
+                            <ArrowUpRight className="w-6 h-6 text-success" />
+                          ) : (
+                            <ArrowDownLeft className="w-6 h-6 text-error" />
+                          )}
+                        </div>
+                        <div>
+                          <h4 className="font-semibold text-text-primary">{item.personName}</h4>
+                          <p className="text-xs text-text-tertiary">
+                            {item.type === 'lent' ? 'You lent' : 'You borrowed'} •{' '}
+                            {new Date(item.date).toLocaleDateString('en-IN', {
+                              month: 'short',
+                              day: 'numeric',
+                            })}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p
+                          className={`text-lg font-bold ${item.type === 'lent' ? 'text-success' : 'text-error'}`}
+                        >
+                          {item.type === 'lent' ? '+' : '-'}
+                          {formatCurrency(item.amount)}
+                        </p>
+                        <span
+                          className={`text-[10px] px-2 py-0.5 rounded-full ${getStatusColor(item.status)}`}
+                        >
+                          {item.status}
+                        </span>
+                      </div>
+                    </div>
+
+                    {item.reason && (
+                      <p className="text-sm text-text-secondary mb-3 pl-15">{item.reason}</p>
+                    )}
+
+                    {/* Contact Info */}
+                    {(item.personPhone || item.personEmail) && (
+                      <div className="flex gap-4 mb-3 text-xs text-text-tertiary">
+                        {item.personPhone && (
+                          <span className="flex items-center gap-1">
+                            <Phone className="w-3 h-3" /> {item.personPhone}
+                          </span>
+                        )}
+                        {item.personEmail && (
+                          <span className="flex items-center gap-1">
+                            <Mail className="w-3 h-3" /> {item.personEmail}
+                          </span>
                         )}
                       </div>
-                      <div>
-                        <h4 className="font-semibold text-text-primary">{item.personName}</h4>
-                        <p className="text-xs text-text-tertiary">
-                          {item.type === 'lent' ? 'You lent' : 'You borrowed'} • {new Date(item.date).toLocaleDateString('en-IN', { month: 'short', day: 'numeric' })}
-                        </p>
+                    )}
+
+                    {/* Progress */}
+                    {item.status !== 'settled' && (
+                      <div className="mb-3">
+                        <div className="flex justify-between text-xs mb-1">
+                          <span className="text-text-tertiary">
+                            {formatCurrency(item.amount - item.remainingAmount)} settled
+                          </span>
+                          <span className="text-text-secondary">
+                            {formatCurrency(item.remainingAmount)} remaining
+                          </span>
+                        </div>
+                        <div className="h-1.5 bg-bg-tertiary rounded-full overflow-hidden">
+                          <motion.div
+                            initial={{ width: 0 }}
+                            animate={{
+                              width: `${((item.amount - item.remainingAmount) / item.amount) * 100}%`,
+                            }}
+                            transition={{ duration: 0.5, delay: index * 0.1 }}
+                            className={`h-full rounded-full ${item.type === 'lent' ? 'bg-gradient-to-r from-success to-emerald-400' : 'bg-gradient-to-r from-error to-rose-400'}`}
+                          />
+                        </div>
                       </div>
-                    </div>
-                    <div className="text-right">
-                      <p className={`text-lg font-bold ${item.type === 'lent' ? 'text-success' : 'text-error'}`}>
-                        {item.type === 'lent' ? '+' : '-'}{formatCurrency(item.amount)}
-                      </p>
-                      <span className={`text-xs px-2 py-0.5 rounded-full ${getStatusColor(item.status)}`}>
-                        {item.status}
-                      </span>
-                    </div>
-                  </div>
+                    )}
 
-                  {item.reason && (
-                    <p className="text-sm text-text-secondary mb-3">{item.reason}</p>
-                  )}
-
-                  {/* Contact Info */}
-                  {(item.personPhone || item.personEmail) && (
-                    <div className="flex gap-4 mb-3 text-xs text-text-tertiary">
-                      {item.personPhone && (
-                        <span className="flex items-center gap-1">
-                          <Phone className="w-3 h-3" /> {item.personPhone}
-                        </span>
-                      )}
-                      {item.personEmail && (
-                        <span className="flex items-center gap-1">
-                          <Mail className="w-3 h-3" /> {item.personEmail}
-                        </span>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Progress */}
-                  {item.status !== 'settled' && (
-                    <div className="mb-3">
-                      <div className="flex justify-between text-xs mb-1">
-                        <span className="text-text-tertiary">
-                          {formatCurrency(item.amount - item.remainingAmount)} settled
-                        </span>
-                        <span className="text-text-secondary">
-                          {formatCurrency(item.remainingAmount)} remaining
-                        </span>
+                    {/* Footer */}
+                    <div className="flex items-center justify-between pt-3 border-t border-border-subtle">
+                      <div className="flex items-center gap-2">
+                        {dueStatus && (
+                          <span className={`text-xs flex items-center gap-1 ${dueStatus.color}`}>
+                            <Clock className="w-3 h-3" /> {dueStatus.text}
+                          </span>
+                        )}
                       </div>
-                      <div className="h-1.5 bg-bg-tertiary rounded-full overflow-hidden">
-                        <div
-                          className={`h-full rounded-full ${item.type === 'lent' ? 'bg-success' : 'bg-error'}`}
-                          style={{ width: `${((item.amount - item.remainingAmount) / item.amount) * 100}%` }}
-                        />
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Footer */}
-                  <div className="flex items-center justify-between pt-3 border-t border-white/5">
-                    <div className="flex items-center gap-2">
-                      {dueStatus && (
-                        <span className={`text-xs flex items-center gap-1 ${dueStatus.color}`}>
-                          <Clock className="w-3 h-3" /> {dueStatus.text}
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-1">
-                      {item.status !== 'settled' && (
+                      <div className="flex items-center gap-1">
+                        {item.status !== 'settled' && (
+                          <button
+                            onClick={() => handleOpenSettlement(item)}
+                            className="px-3 py-1.5 text-xs bg-gradient-to-r from-accent/20 to-accent/10 text-accent rounded-lg border border-accent/30 hover:border-accent/50 transition-all"
+                          >
+                            Settle
+                          </button>
+                        )}
                         <button
-                          onClick={() => handleOpenSettlement(item)}
-                          className="px-3 py-1 text-xs bg-accent-alpha text-accent-primary rounded-button"
+                          onClick={() => handleOpenModal(item)}
+                          className="p-2 text-text-tertiary hover:text-accent hover:bg-accent/10 rounded-lg transition-all"
                         >
-                          Settle
+                          <Edit2 className="w-4 h-4" />
                         </button>
-                      )}
-                      <button
-                        onClick={() => handleOpenModal(item)}
-                        className="p-1 text-text-tertiary hover:text-accent-primary"
-                      >
-                        <Edit2 className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(item.id)}
-                        className="p-1 text-text-tertiary hover:text-error"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                        <button
+                          onClick={() => handleDelete(item.id)}
+                          className="p-2 text-text-tertiary hover:text-error hover:bg-error/10 rounded-lg transition-all"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </motion.div>
               )
             })
           )}
-        </div>
-      </main>
+        </motion.div>
+      </motion.main>
 
       {/* Add/Edit Modal */}
       <AnimatePresence>
@@ -462,168 +525,186 @@ export default function LendBorrowPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-bg-primary/95 backdrop-blur-md flex items-center justify-center p-4"
+            className="fixed inset-0 z-50 bg-bg-primary/95 backdrop-blur-xl flex items-center justify-center p-4"
           >
             <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-bg-secondary rounded-card p-6 w-full max-w-md max-h-[90vh] overflow-y-auto"
+              initial={{ scale: 0.95, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 20 }}
+              className="card-elevated p-6 w-full max-w-md max-h-[90vh] overflow-y-auto relative"
             >
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-h4 font-semibold text-text-primary">
-                  {editingItem ? 'Edit Entry' : 'Add Entry'}
-                </h2>
-                <button
-                  onClick={handleCloseModal}
-                  className="p-2 hover:bg-bg-tertiary rounded-full transition-colors"
-                >
-                  <X className="w-5 h-5 text-text-secondary" />
-                </button>
-              </div>
+              {/* Glow decoration */}
+              <div
+                className="absolute -top-20 -right-20 w-40 h-40 pointer-events-none"
+                style={{
+                  background:
+                    'radial-gradient(circle, rgba(201, 165, 92, 0.12) 0%, transparent 70%)',
+                }}
+              />
 
-              <form onSubmit={handleSubmit} className="space-y-4">
-                {/* Type Selection */}
-                <div>
-                  <label className="text-sm text-text-secondary block mb-2">Type</label>
-                  <div className="grid grid-cols-2 gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setFormData({ ...formData, type: 'lent' })}
-                      className={`py-3 px-4 rounded-lg border flex items-center justify-center gap-2 transition-colors ${
-                        formData.type === 'lent'
-                          ? 'border-success bg-success-bg text-success'
-                          : 'border-white/10 text-text-secondary hover:bg-bg-tertiary'
-                      }`}
-                    >
-                      <ArrowUpRight className="w-5 h-5" />
-                      I Lent
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setFormData({ ...formData, type: 'borrowed' })}
-                      className={`py-3 px-4 rounded-lg border flex items-center justify-center gap-2 transition-colors ${
-                        formData.type === 'borrowed'
-                          ? 'border-error bg-error-bg text-error'
-                          : 'border-white/10 text-text-secondary hover:bg-bg-tertiary'
-                      }`}
-                    >
-                      <ArrowDownLeft className="w-5 h-5" />
-                      I Borrowed
-                    </button>
-                  </div>
+              <div className="relative">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-xl font-semibold text-text-primary">
+                    {editingItem ? 'Edit Entry' : 'Add Entry'}
+                  </h2>
+                  <button
+                    onClick={handleCloseModal}
+                    className="p-2 hover:bg-bg-tertiary rounded-xl transition-colors"
+                  >
+                    <X className="w-5 h-5 text-text-secondary" />
+                  </button>
                 </div>
 
-                {/* Person Name */}
-                <div>
-                  <label className="text-sm text-text-secondary block mb-2">
-                    {formData.type === 'lent' ? 'Lent To' : 'Borrowed From'}
-                  </label>
-                  <div className="relative">
-                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-text-tertiary" />
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  {/* Type Selection */}
+                  <div>
+                    <label className="text-sm text-text-secondary block mb-2">Type</label>
+                    <div className="grid grid-cols-2 gap-3">
+                      <button
+                        type="button"
+                        onClick={() => setFormData({ ...formData, type: 'lent' })}
+                        className={`py-3 px-4 rounded-xl border flex items-center justify-center gap-2 transition-all duration-300 ${
+                          formData.type === 'lent'
+                            ? 'border-success/50 bg-success/20 text-success shadow-[0_0_15px_rgba(34,197,94,0.15)]'
+                            : 'border-border-subtle bg-bg-tertiary text-text-secondary hover:bg-bg-secondary'
+                        }`}
+                      >
+                        <ArrowUpRight className="w-5 h-5" />I Lent
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setFormData({ ...formData, type: 'borrowed' })}
+                        className={`py-3 px-4 rounded-xl border flex items-center justify-center gap-2 transition-all duration-300 ${
+                          formData.type === 'borrowed'
+                            ? 'border-error/50 bg-error/20 text-error shadow-[0_0_15px_rgba(239,68,68,0.15)]'
+                            : 'border-border-subtle bg-bg-tertiary text-text-secondary hover:bg-bg-secondary'
+                        }`}
+                      >
+                        <ArrowDownLeft className="w-5 h-5" />I Borrowed
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Person Name */}
+                  <div>
+                    <label className="text-sm text-text-secondary block mb-2">
+                      {formData.type === 'lent' ? 'Lent To' : 'Borrowed From'}
+                    </label>
+                    <div className="relative">
+                      <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-text-tertiary" />
+                      <input
+                        type="text"
+                        value={formData.personName}
+                        onChange={e => setFormData({ ...formData, personName: e.target.value })}
+                        className="w-full bg-bg-tertiary border border-border-subtle rounded-xl pl-10 pr-4 py-3 text-text-primary focus:border-accent/50 focus:ring-1 focus:ring-accent/20 focus:outline-none transition-all"
+                        placeholder="Person's name"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  {/* Contact */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-sm text-text-secondary block mb-2">Phone</label>
+                      <input
+                        type="tel"
+                        value={formData.personPhone}
+                        onChange={e => setFormData({ ...formData, personPhone: e.target.value })}
+                        className="w-full bg-bg-tertiary border border-border-subtle rounded-xl px-4 py-3 text-text-primary focus:border-accent/50 focus:ring-1 focus:ring-accent/20 focus:outline-none transition-all"
+                        placeholder="Optional"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm text-text-secondary block mb-2">Email</label>
+                      <input
+                        type="email"
+                        value={formData.personEmail}
+                        onChange={e => setFormData({ ...formData, personEmail: e.target.value })}
+                        className="w-full bg-bg-tertiary border border-border-subtle rounded-xl px-4 py-3 text-text-primary focus:border-accent/50 focus:ring-1 focus:ring-accent/20 focus:outline-none transition-all"
+                        placeholder="Optional"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Amount */}
+                  <div>
+                    <label className="text-sm text-text-secondary block mb-2">Amount</label>
+                    <div className="relative">
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-tertiary">
+                        ₹
+                      </span>
+                      <input
+                        type="number"
+                        value={formData.amount || ''}
+                        onChange={e => setFormData({ ...formData, amount: Number(e.target.value) })}
+                        className="w-full bg-bg-tertiary border border-border-subtle rounded-xl pl-8 pr-4 py-3 text-text-primary focus:border-accent/50 focus:ring-1 focus:ring-accent/20 focus:outline-none transition-all"
+                        placeholder="0"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  {/* Reason */}
+                  <div>
+                    <label className="text-sm text-text-secondary block mb-2">
+                      Reason (optional)
+                    </label>
                     <input
                       type="text"
-                      value={formData.personName}
-                      onChange={e => setFormData({ ...formData, personName: e.target.value })}
-                      className="w-full bg-bg-tertiary border border-white/10 rounded-input pl-10 pr-4 py-3 text-text-primary focus:border-accent-primary focus:outline-none"
-                      placeholder="Person's name"
-                      required
+                      value={formData.reason}
+                      onChange={e => setFormData({ ...formData, reason: e.target.value })}
+                      className="w-full bg-bg-tertiary border border-border-subtle rounded-xl px-4 py-3 text-text-primary focus:border-accent/50 focus:ring-1 focus:ring-accent/20 focus:outline-none transition-all"
+                      placeholder="e.g., For medical expenses"
                     />
                   </div>
-                </div>
 
-                {/* Contact */}
-                <div className="grid grid-cols-2 gap-4">
+                  {/* Dates */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-sm text-text-secondary block mb-2">Date</label>
+                      <input
+                        type="date"
+                        value={formData.date}
+                        onChange={e => setFormData({ ...formData, date: e.target.value })}
+                        className="w-full bg-bg-tertiary border border-border-subtle rounded-xl px-4 py-3 text-text-primary focus:border-accent/50 focus:ring-1 focus:ring-accent/20 focus:outline-none transition-all"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm text-text-secondary block mb-2">Due Date</label>
+                      <input
+                        type="date"
+                        value={formData.dueDate}
+                        onChange={e => setFormData({ ...formData, dueDate: e.target.value })}
+                        className="w-full bg-bg-tertiary border border-border-subtle rounded-xl px-4 py-3 text-text-primary focus:border-accent/50 focus:ring-1 focus:ring-accent/20 focus:outline-none transition-all"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Notes */}
                   <div>
-                    <label className="text-sm text-text-secondary block mb-2">Phone</label>
-                    <input
-                      type="tel"
-                      value={formData.personPhone}
-                      onChange={e => setFormData({ ...formData, personPhone: e.target.value })}
-                      className="w-full bg-bg-tertiary border border-white/10 rounded-input px-4 py-3 text-text-primary focus:border-accent-primary focus:outline-none"
-                      placeholder="Optional"
+                    <label className="text-sm text-text-secondary block mb-2">
+                      Notes (optional)
+                    </label>
+                    <textarea
+                      value={formData.notes}
+                      onChange={e => setFormData({ ...formData, notes: e.target.value })}
+                      className="w-full bg-bg-tertiary border border-border-subtle rounded-xl px-4 py-3 text-text-primary focus:border-accent/50 focus:ring-1 focus:ring-accent/20 focus:outline-none resize-none transition-all"
+                      placeholder="Additional notes..."
+                      rows={2}
                     />
                   </div>
-                  <div>
-                    <label className="text-sm text-text-secondary block mb-2">Email</label>
-                    <input
-                      type="email"
-                      value={formData.personEmail}
-                      onChange={e => setFormData({ ...formData, personEmail: e.target.value })}
-                      className="w-full bg-bg-tertiary border border-white/10 rounded-input px-4 py-3 text-text-primary focus:border-accent-primary focus:outline-none"
-                      placeholder="Optional"
-                    />
-                  </div>
-                </div>
 
-                {/* Amount */}
-                <div>
-                  <label className="text-sm text-text-secondary block mb-2">Amount</label>
-                  <input
-                    type="number"
-                    value={formData.amount || ''}
-                    onChange={e => setFormData({ ...formData, amount: Number(e.target.value) })}
-                    className="w-full bg-bg-tertiary border border-white/10 rounded-input px-4 py-3 text-text-primary focus:border-accent-primary focus:outline-none"
-                    placeholder="0"
-                    required
-                  />
-                </div>
-
-                {/* Reason */}
-                <div>
-                  <label className="text-sm text-text-secondary block mb-2">Reason (optional)</label>
-                  <input
-                    type="text"
-                    value={formData.reason}
-                    onChange={e => setFormData({ ...formData, reason: e.target.value })}
-                    className="w-full bg-bg-tertiary border border-white/10 rounded-input px-4 py-3 text-text-primary focus:border-accent-primary focus:outline-none"
-                    placeholder="e.g., For medical expenses"
-                  />
-                </div>
-
-                {/* Dates */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-sm text-text-secondary block mb-2">Date</label>
-                    <input
-                      type="date"
-                      value={formData.date}
-                      onChange={e => setFormData({ ...formData, date: e.target.value })}
-                      className="w-full bg-bg-tertiary border border-white/10 rounded-input px-4 py-3 text-text-primary focus:border-accent-primary focus:outline-none"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm text-text-secondary block mb-2">Due Date</label>
-                    <input
-                      type="date"
-                      value={formData.dueDate}
-                      onChange={e => setFormData({ ...formData, dueDate: e.target.value })}
-                      className="w-full bg-bg-tertiary border border-white/10 rounded-input px-4 py-3 text-text-primary focus:border-accent-primary focus:outline-none"
-                    />
-                  </div>
-                </div>
-
-                {/* Notes */}
-                <div>
-                  <label className="text-sm text-text-secondary block mb-2">Notes (optional)</label>
-                  <textarea
-                    value={formData.notes}
-                    onChange={e => setFormData({ ...formData, notes: e.target.value })}
-                    className="w-full bg-bg-tertiary border border-white/10 rounded-input px-4 py-3 text-text-primary focus:border-accent-primary focus:outline-none resize-none"
-                    placeholder="Additional notes..."
-                    rows={2}
-                  />
-                </div>
-
-                {/* Submit */}
-                <button
-                  type="submit"
-                  className="w-full py-3 bg-accent-primary text-bg-primary font-semibold rounded-button hover:bg-accent-secondary transition-colors"
-                >
-                  {editingItem ? 'Update Entry' : 'Add Entry'}
-                </button>
-              </form>
+                  {/* Submit */}
+                  <button
+                    type="submit"
+                    className="w-full py-3 bg-gradient-to-r from-accent to-accent-secondary text-bg-primary font-semibold rounded-xl shadow-[0_0_20px_rgba(201,165,92,0.3)] hover:shadow-[0_0_30px_rgba(201,165,92,0.4)] transition-all"
+                  >
+                    {editingItem ? 'Update Entry' : 'Add Entry'}
+                  </button>
+                </form>
+              </div>
             </motion.div>
           </motion.div>
         )}
@@ -636,61 +717,77 @@ export default function LendBorrowPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-bg-primary/95 backdrop-blur-md flex items-center justify-center p-4"
+            className="fixed inset-0 z-50 bg-bg-primary/95 backdrop-blur-xl flex items-center justify-center p-4"
           >
             <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-bg-secondary rounded-card p-6 w-full max-w-sm"
+              initial={{ scale: 0.95, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 20 }}
+              className="card-elevated p-6 w-full max-w-sm relative"
             >
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-text-primary">Record Settlement</h3>
-                <button
-                  onClick={() => setIsSettlementModalOpen(false)}
-                  className="p-2 hover:bg-bg-tertiary rounded-full transition-colors"
-                >
-                  <X className="w-5 h-5 text-text-secondary" />
-                </button>
-              </div>
+              {/* Glow decoration */}
+              <div
+                className="absolute -top-20 -right-20 w-40 h-40 pointer-events-none"
+                style={{
+                  background:
+                    'radial-gradient(circle, rgba(34, 197, 94, 0.12) 0%, transparent 70%)',
+                }}
+              />
 
-              <div className="bg-bg-tertiary rounded-lg p-4 mb-4">
-                <p className="text-sm text-text-secondary mb-1">
-                  {selectedItem.type === 'lent' ? 'Receiving from' : 'Paying to'}
-                </p>
-                <p className="font-semibold text-text-primary">{selectedItem.personName}</p>
-                <p className="text-xs text-text-tertiary mt-2">
-                  Remaining: {formatCurrency(selectedItem.remainingAmount)}
-                </p>
-              </div>
+              <div className="relative">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold text-text-primary">Record Settlement</h3>
+                  <button
+                    onClick={() => setIsSettlementModalOpen(false)}
+                    className="p-2 hover:bg-bg-tertiary rounded-xl transition-colors"
+                  >
+                    <X className="w-5 h-5 text-text-secondary" />
+                  </button>
+                </div>
 
-              <div className="mb-4">
-                <label className="text-sm text-text-secondary block mb-2">Settlement Amount</label>
-                <input
-                  type="number"
-                  value={settlementAmount}
-                  onChange={e => setSettlementAmount(e.target.value)}
-                  className="w-full bg-bg-tertiary border border-white/10 rounded-input px-4 py-3 text-text-primary text-center text-xl font-bold focus:border-accent-primary focus:outline-none"
-                  max={selectedItem.remainingAmount}
-                  autoFocus
-                />
-              </div>
+                <div className="rounded-xl bg-gradient-to-br from-bg-secondary to-bg-tertiary border border-border-subtle p-4 mb-4">
+                  <p className="text-sm text-text-secondary mb-1">
+                    {selectedItem.type === 'lent' ? 'Receiving from' : 'Paying to'}
+                  </p>
+                  <p className="font-semibold text-text-primary">{selectedItem.personName}</p>
+                  <p className="text-xs text-text-tertiary mt-2">
+                    Remaining: {formatCurrency(selectedItem.remainingAmount)}
+                  </p>
+                </div>
 
-              <div className="flex gap-3">
-                <button
-                  onClick={() => setIsSettlementModalOpen(false)}
-                  className="flex-1 py-3 border border-white/10 text-text-primary rounded-button"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleSettlement}
-                  disabled={!settlementAmount || parseFloat(settlementAmount) <= 0}
-                  className="flex-1 py-3 bg-accent-primary text-bg-primary font-semibold rounded-button disabled:opacity-50 flex items-center justify-center gap-2"
-                >
-                  <CheckCircle2 className="w-4 h-4" />
-                  Settle
-                </button>
+                <div className="mb-4">
+                  <label className="text-sm text-text-secondary block mb-2">Settlement Amount</label>
+                  <div className="relative">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-tertiary text-lg">
+                      ₹
+                    </span>
+                    <input
+                      type="number"
+                      value={settlementAmount}
+                      onChange={e => setSettlementAmount(e.target.value)}
+                      className="w-full bg-bg-tertiary border border-border-subtle rounded-xl pl-10 pr-4 py-3 text-text-primary text-center text-xl font-bold focus:border-accent/50 focus:ring-1 focus:ring-accent/20 focus:outline-none transition-all"
+                      max={selectedItem.remainingAmount}
+                      autoFocus
+                    />
+                  </div>
+                </div>
+
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setIsSettlementModalOpen(false)}
+                    className="flex-1 py-3 border border-border-subtle text-text-primary rounded-xl hover:bg-bg-tertiary transition-all"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleSettlement}
+                    disabled={!settlementAmount || parseFloat(settlementAmount) <= 0}
+                    className="flex-1 py-3 bg-gradient-to-r from-success to-emerald-500 text-white font-semibold rounded-xl shadow-[0_0_15px_rgba(34,197,94,0.3)] hover:shadow-[0_0_20px_rgba(34,197,94,0.4)] disabled:opacity-50 disabled:shadow-none flex items-center justify-center gap-2 transition-all"
+                  >
+                    <CheckCircle2 className="w-4 h-4" />
+                    Settle
+                  </button>
+                </div>
               </div>
             </motion.div>
           </motion.div>
