@@ -27,6 +27,7 @@ import { useAuthStore } from '@/stores/authStore'
 import { db } from '@/lib/db'
 import type { Transaction } from '@/types'
 import { BottomNav } from '@/components/layouts/BottomNav'
+import { Logo } from '@/components/ui/Logo'
 
 interface DashboardSummary {
   netWorth: number
@@ -163,16 +164,20 @@ export default function DashboardPage() {
       <header className="sticky top-0 z-40 bg-bg-base/80 backdrop-blur-lg border-b border-border-subtle">
         <div className="flex items-center justify-between px-4 py-3 pt-safe">
           <motion.div
+            className="flex items-center gap-3"
             initial={{ opacity: 0, x: -10 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.3 }}
           >
-            <p className="text-xs text-accent font-medium tracking-wide uppercase">
-              {getGreeting()}
-            </p>
-            <h1 className="text-lg font-semibold text-text-primary mt-0.5">
-              {currentProfile?.name.split(' ')[0]}
-            </h1>
+            <Logo size="sm" />
+            <div>
+              <p className="text-xs text-accent font-medium tracking-wide uppercase">
+                {getGreeting()}
+              </p>
+              <h1 className="text-lg font-semibold text-text-primary mt-0.5">
+                {currentProfile?.name.split(' ')[0]}
+              </h1>
+            </div>
           </motion.div>
 
           <motion.div

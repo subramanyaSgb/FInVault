@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Trash2, ChevronRight, Plus, Shield } from 'lucide-react'
 import { useAuthStore } from '@/stores/authStore'
+import { Logo } from '@/components/ui/Logo'
 
 interface ProfileSelectionProps {
   onSelect: (profileId: string) => void
@@ -54,60 +55,7 @@ export function ProfileSelection({ onSelect, onCreateNew }: ProfileSelectionProp
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: [0.33, 1, 0.68, 1] }}
         >
-          {/* Logo mark */}
-          <div className="relative mb-4">
-            <div className="w-16 h-16 rounded-2xl bg-bg-secondary border border-border-subtle flex items-center justify-center">
-              <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-                {/* Vault door circle */}
-                <circle
-                  cx="16"
-                  cy="16"
-                  r="12"
-                  stroke="#C9A55C"
-                  strokeWidth="1.5"
-                  fill="none"
-                />
-                {/* Inner ring */}
-                <circle
-                  cx="16"
-                  cy="16"
-                  r="7"
-                  stroke="#C9A55C"
-                  strokeWidth="1"
-                  fill="none"
-                  opacity="0.5"
-                />
-                {/* Center dot */}
-                <circle
-                  cx="16"
-                  cy="16"
-                  r="2"
-                  fill="#C9A55C"
-                />
-                {/* Cross lines */}
-                <path
-                  d="M16 4v5M16 23v5M4 16h5M23 16h5"
-                  stroke="#C9A55C"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                />
-              </svg>
-            </div>
-
-            {/* Subtle glow */}
-            <div
-              className="absolute inset-0 -z-10 blur-xl opacity-30"
-              style={{ background: 'radial-gradient(circle, #C9A55C 0%, transparent 70%)' }}
-            />
-          </div>
-
-          {/* App name */}
-          <h1 className="text-2xl font-display font-semibold text-text-primary tracking-tight">
-            FinVault
-          </h1>
-          <p className="text-xs text-text-tertiary mt-1 tracking-wide">
-            Personal Finance Manager
-          </p>
+          <Logo size="lg" showText />
         </motion.div>
 
         {/* Middle spacer */}

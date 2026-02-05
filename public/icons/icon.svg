@@ -1,0 +1,41 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="512" height="512" rx="108" fill="#0A0A0A"/>
+
+  <!-- Outer circle -->
+  <circle
+    cx="256"
+    cy="256"
+    r="144"
+    stroke="#C9A55C"
+    stroke-width="12"
+    fill="none"
+  />
+
+  <!-- Inner circle -->
+  <circle
+    cx="256"
+    cy="256"
+    r="80"
+    stroke="#C9A55C"
+    stroke-width="8"
+    fill="none"
+    opacity="0.5"
+  />
+
+  <!-- Center dot -->
+  <circle
+    cx="256"
+    cy="256"
+    r="24"
+    fill="#C9A55C"
+  />
+
+  <!-- Cross lines -->
+  <path
+    d="M256 48v64M256 400v64M48 256h64M400 256h64"
+    stroke="#C9A55C"
+    stroke-width="12"
+    stroke-linecap="round"
+  />
+</svg>
