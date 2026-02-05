@@ -22,8 +22,7 @@ export function AuthFlow({ onAuthenticated }: AuthFlowProps) {
     const init = async () => {
       await initializeAuth()
       await loadProfiles()
-      // Minimum loading time for smooth transition
-      setTimeout(() => setScreen('select'), 800)
+      setTimeout(() => setScreen('select'), 600)
     }
 
     init()
@@ -65,29 +64,28 @@ export function AuthFlow({ onAuthenticated }: AuthFlowProps) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.4 }}
-          className="min-h-screen bg-[#0A0A0A] flex items-center justify-center relative overflow-hidden"
+          transition={{ duration: 0.3 }}
+          className="h-screen bg-[#0A0A0A] flex items-center justify-center"
         >
-          {/* Subtle ambient glow */}
+          {/* Subtle glow */}
           <div
-            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px]"
+            className="absolute w-64 h-64"
             style={{
-              background: 'radial-gradient(circle, rgba(180,155,80,0.08) 0%, transparent 60%)',
+              background: 'radial-gradient(circle, rgba(180,155,80,0.06) 0%, transparent 60%)',
             }}
           />
 
           {/* Content */}
           <div className="text-center relative z-10">
-            {/* Animated Logo */}
+            {/* Logo */}
             <motion.div
-              className="relative mb-8"
-              initial={{ scale: 0.8, opacity: 0 }}
+              className="mb-6"
+              initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+              transition={{ duration: 0.5 }}
             >
-              <div className="w-20 h-20 rounded-2xl bg-gradient-to-b from-[#1A1A1A] to-[#111111] flex items-center justify-center border border-[#262626]">
-                {/* Vault door icon */}
-                <svg width="40" height="40" viewBox="0 0 48 48" fill="none" className="text-[#B49B50]">
+              <div className="w-14 h-14 mx-auto rounded-xl bg-gradient-to-b from-[#1A1A1A] to-[#111] flex items-center justify-center border border-[#262626]">
+                <svg width="28" height="28" viewBox="0 0 48 48" fill="none" className="text-[#B49B50]">
                   <motion.circle
                     cx="24"
                     cy="24"
@@ -97,7 +95,7 @@ export function AuthFlow({ onAuthenticated }: AuthFlowProps) {
                     fill="none"
                     initial={{ pathLength: 0 }}
                     animate={{ pathLength: 1 }}
-                    transition={{ duration: 1.2, ease: 'easeOut' }}
+                    transition={{ duration: 0.8, ease: 'easeOut' }}
                   />
                   <motion.circle
                     cx="24"
@@ -108,7 +106,7 @@ export function AuthFlow({ onAuthenticated }: AuthFlowProps) {
                     fill="none"
                     initial={{ pathLength: 0 }}
                     animate={{ pathLength: 1 }}
-                    transition={{ duration: 1, delay: 0.2, ease: 'easeOut' }}
+                    transition={{ duration: 0.6, delay: 0.15, ease: 'easeOut' }}
                   />
                   <motion.circle
                     cx="24"
@@ -117,50 +115,38 @@ export function AuthFlow({ onAuthenticated }: AuthFlowProps) {
                     fill="currentColor"
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
-                    transition={{ duration: 0.3, delay: 0.6 }}
+                    transition={{ duration: 0.2, delay: 0.4 }}
                   />
                 </svg>
               </div>
-
-              {/* Loading indicator - subtle ring */}
-              <motion.div
-                className="absolute -inset-1 rounded-[22px] border border-[#B49B50]/20"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: [0, 1, 0] }}
-                transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-              />
             </motion.div>
 
             {/* Text */}
             <motion.h1
-              className="text-2xl font-light tracking-wide mb-2"
-              style={{
-                fontFamily: "'Cormorant Garamond', Georgia, serif",
-                color: '#FAFAFA',
-              }}
-              initial={{ opacity: 0, y: 10 }}
+              className="text-xl font-semibold text-white mb-4"
+              initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3, duration: 0.5 }}
+              transition={{ delay: 0.2 }}
             >
               FinVault
             </motion.h1>
 
             {/* Loading dots */}
             <motion.div
-              className="flex items-center justify-center gap-1.5 mt-4"
+              className="flex items-center justify-center gap-1"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ delay: 0.5 }}
+              transition={{ delay: 0.3 }}
             >
               {[0, 1, 2].map((i) => (
                 <motion.div
                   key={i}
-                  className="w-1 h-1 rounded-full bg-[#B49B50]"
+                  className="w-1.5 h-1.5 rounded-full bg-[#B49B50]"
                   animate={{ opacity: [0.3, 1, 0.3] }}
                   transition={{
-                    duration: 1,
+                    duration: 0.8,
                     repeat: Infinity,
-                    delay: i * 0.2,
+                    delay: i * 0.15,
                     ease: 'easeInOut',
                   }}
                 />
@@ -176,7 +162,7 @@ export function AuthFlow({ onAuthenticated }: AuthFlowProps) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.3 }}
+          transition={{ duration: 0.25 }}
         >
           <ProfileSelection onSelect={handleProfileSelect} onCreateNew={handleCreateNew} />
         </motion.div>
@@ -185,10 +171,10 @@ export function AuthFlow({ onAuthenticated }: AuthFlowProps) {
       {screen === 'create' && (
         <motion.div
           key="create"
-          initial={{ opacity: 0, x: 40 }}
+          initial={{ opacity: 0, x: 30 }}
           animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: -40 }}
-          transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+          exit={{ opacity: 0, x: -30 }}
+          transition={{ duration: 0.25 }}
         >
           <ProfileCreation onComplete={handleProfileCreated} onBack={handleBackToSelect} />
         </motion.div>
@@ -197,10 +183,10 @@ export function AuthFlow({ onAuthenticated }: AuthFlowProps) {
       {screen === 'pin' && selectedProfileId && (
         <motion.div
           key="pin"
-          initial={{ opacity: 0, x: 40 }}
+          initial={{ opacity: 0, x: 30 }}
           animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: -40 }}
-          transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+          exit={{ opacity: 0, x: -30 }}
+          transition={{ duration: 0.25 }}
         >
           <PINEntry
             profileId={selectedProfileId}
