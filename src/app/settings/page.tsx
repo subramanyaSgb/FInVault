@@ -27,6 +27,8 @@ import {
   Navigation,
   Check,
   Tags,
+  Sparkles,
+  ExternalLink,
 } from 'lucide-react'
 import { useAuthStore } from '@/stores/authStore'
 import { useRouter } from 'next/navigation'
@@ -41,8 +43,9 @@ import {
   printReport,
 } from '@/lib/backup'
 import { allNavItems, defaultBottomNavItems } from '@/components/layouts/BottomNav'
+import { setGeminiApiKey, getGeminiKeyStatus } from '@/lib/ai/gemini'
 
-type SettingsSection = 'main' | 'profile' | 'security' | 'notifications' | 'appearance' | 'navigation' | 'data' | 'about'
+type SettingsSection = 'main' | 'profile' | 'security' | 'notifications' | 'appearance' | 'navigation' | 'ai' | 'data' | 'about'
 
 const currencies = [
   { code: 'INR', symbol: '₹', name: 'Indian Rupee' },
@@ -78,6 +81,12 @@ export default function SettingsPage() {
   const [importPassword, setImportPassword] = useState('')
   const importFileRef = useRef<HTMLInputElement>(null)
   const [importFile, setImportFile] = useState<File | null>(null)
+
+  // AI settings state
+  const [apiKeyInput, setApiKeyInput] = useState('')
+  const [showApiKey, setShowApiKey] = useState(false)
+  const [aiSaveSuccess, setAiSaveSuccess] = useState(false)
+  const geminiStatus = getGeminiKeyStatus()
 
   if (!currentProfile) {
     return (
@@ -298,6 +307,12 @@ export default function SettingsPage() {
           label="Categories"
           description="Manage transaction categories"
           onClick={() => router.push('/settings/categories')}
+        />
+        <MenuItem
+          icon={<Sparkles className="w-5 h-5" />}
+          label="AI Features"
+          description={geminiStatus.configured ? 'Gemini AI configured' : 'Configure Gemini API'}
+          onClick={() => setSection('ai')}
         />
       </motion.div>
 
@@ -950,6 +965,192 @@ export default function SettingsPage() {
     </div>
   )
 
+  const handleSaveApiKey = async () => {
+    if (!currentProfile || !apiKeyInput.trim()) return
+
+    // Update profile AI settings
+    const updatedAI = {
+      ...currentProfile.ai,
+      apiKey: apiKeyInput.trim(),
+      apiProvider: 'gemini' as const,
+    }
+
+    // Update in store (which persists to DB)
+    await useAuthStore.getState().updateAISettings(updatedAI)
+
+    // Update runtime API key
+    setGeminiApiKey(apiKeyInput.trim())
+
+    setAiSaveSuccess(true)
+    setApiKeyInput('')
+    setTimeout(() => setAiSaveSuccess(false), 3000)
+  }
+
+  const handleRemoveApiKey = async () => {
+    if (!currentProfile) return
+
+    if (!confirm('Remove your Gemini API key? AI features will stop working.')) return
+
+    // Update profile AI settings - remove apiKey by spreading without it
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { apiKey: _, ...restAI } = currentProfile.ai
+    const updatedAI = {
+      ...restAI,
+      apiKey: '', // Set to empty string to clear it
+    }
+
+    await useAuthStore.getState().updateAISettings(updatedAI)
+    setGeminiApiKey(undefined)
+  }
+
+  const renderAISection = () => (
+    <div className="space-y-4">
+      {/* AI Status */}
+      <div className={`rounded-card p-4 border ${geminiStatus.configured ? 'bg-success-bg/30 border-success/20' : 'bg-accent-alpha/30 border-accent-primary/20'}`}>
+        <div className="flex items-center gap-3">
+          <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${geminiStatus.configured ? 'bg-success/20' : 'bg-accent-alpha'}`}>
+            <Sparkles className={`w-5 h-5 ${geminiStatus.configured ? 'text-success' : 'text-accent-primary'}`} />
+          </div>
+          <div className="flex-1">
+            <p className="text-text-primary font-medium">
+              {geminiStatus.configured ? 'AI Features Active' : 'AI Not Configured'}
+            </p>
+            <p className="text-xs text-text-tertiary">
+              {geminiStatus.configured
+                ? `API Key: ${geminiStatus.masked}`
+                : 'Add your Gemini API key to enable AI features'}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Success Message */}
+      {aiSaveSuccess && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="p-4 rounded-card bg-success-bg text-success flex items-center gap-3"
+        >
+          <CheckCircle className="w-5 h-5" />
+          <p className="text-sm">API key saved successfully!</p>
+        </motion.div>
+      )}
+
+      {/* API Key Input */}
+      <div className="bg-bg-secondary rounded-card p-4 border border-white/5">
+        <h4 className="font-semibold text-text-primary mb-4 flex items-center gap-2">
+          <Sparkles className="w-5 h-5 text-accent-primary" />
+          Gemini API Key
+        </h4>
+
+        <div className="space-y-3">
+          <div className="relative">
+            <input
+              type={showApiKey ? 'text' : 'password'}
+              value={apiKeyInput}
+              onChange={e => setApiKeyInput(e.target.value)}
+              className="w-full bg-bg-tertiary border border-white/10 rounded-input px-4 py-3 text-text-primary pr-10"
+              placeholder={geminiStatus.configured ? 'Enter new API key to update' : 'Enter your Gemini API key'}
+            />
+            <button
+              type="button"
+              onClick={() => setShowApiKey(!showApiKey)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-text-tertiary hover:text-text-secondary"
+            >
+              {showApiKey ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+            </button>
+          </div>
+
+          <button
+            onClick={handleSaveApiKey}
+            disabled={!apiKeyInput.trim()}
+            className="w-full py-3 bg-accent-primary text-bg-primary font-semibold rounded-button disabled:opacity-50 flex items-center justify-center gap-2"
+          >
+            <Sparkles className="w-4 h-4" />
+            {geminiStatus.configured ? 'Update API Key' : 'Save API Key'}
+          </button>
+
+          {geminiStatus.configured && (
+            <button
+              onClick={handleRemoveApiKey}
+              className="w-full py-3 border border-error/30 text-error rounded-button hover:bg-error/10 transition-colors"
+            >
+              Remove API Key
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Get API Key Instructions */}
+      <div className="bg-bg-secondary rounded-card p-4 border border-white/5">
+        <h4 className="font-medium text-text-primary mb-3">How to get your API key</h4>
+        <ol className="space-y-2 text-sm text-text-secondary">
+          <li className="flex gap-2">
+            <span className="text-accent-primary font-semibold">1.</span>
+            <span>Visit Google AI Studio</span>
+          </li>
+          <li className="flex gap-2">
+            <span className="text-accent-primary font-semibold">2.</span>
+            <span>Sign in with your Google account</span>
+          </li>
+          <li className="flex gap-2">
+            <span className="text-accent-primary font-semibold">3.</span>
+            <span>Click &quot;Get API key&quot; and create a new key</span>
+          </li>
+          <li className="flex gap-2">
+            <span className="text-accent-primary font-semibold">4.</span>
+            <span>Copy the key and paste it above</span>
+          </li>
+        </ol>
+
+        <a
+          href="https://aistudio.google.com/apikey"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-4 w-full py-3 border border-accent-primary/30 text-accent-primary rounded-button hover:bg-accent-alpha transition-colors flex items-center justify-center gap-2"
+        >
+          <ExternalLink className="w-4 h-4" />
+          Open Google AI Studio
+        </a>
+      </div>
+
+      {/* AI Features Info */}
+      <div className="bg-bg-secondary rounded-card p-4 border border-white/5">
+        <h4 className="font-medium text-text-primary mb-3">Powered AI Features</h4>
+        <ul className="space-y-2 text-sm text-text-secondary">
+          <li className="flex items-center gap-2">
+            <div className="w-1.5 h-1.5 rounded-full bg-accent-primary" />
+            Smart transaction categorization
+          </li>
+          <li className="flex items-center gap-2">
+            <div className="w-1.5 h-1.5 rounded-full bg-accent-primary" />
+            Receipt scanning with OCR
+          </li>
+          <li className="flex items-center gap-2">
+            <div className="w-1.5 h-1.5 rounded-full bg-accent-primary" />
+            Spending insights & analysis
+          </li>
+          <li className="flex items-center gap-2">
+            <div className="w-1.5 h-1.5 rounded-full bg-accent-primary" />
+            Budget recommendations
+          </li>
+          <li className="flex items-center gap-2">
+            <div className="w-1.5 h-1.5 rounded-full bg-accent-primary" />
+            Financial Q&A assistant
+          </li>
+        </ul>
+      </div>
+
+      {/* Privacy Note */}
+      <div className="bg-accent-alpha/20 rounded-card p-4 border border-accent-primary/20">
+        <p className="text-sm text-text-secondary">
+          <strong className="text-accent-primary">Privacy:</strong> Your API key is stored locally on your device.
+          When using AI features, only transaction descriptions (not amounts or personal data) are sent to Google&apos;s servers.
+        </p>
+      </div>
+    </div>
+  )
+
   const renderAboutSection = () => (
     <div className="space-y-4">
       <div className="bg-bg-secondary rounded-card p-6 border border-white/5 text-center">
@@ -1002,6 +1203,8 @@ export default function SettingsPage() {
         return 'Appearance'
       case 'navigation':
         return 'Navigation'
+      case 'ai':
+        return 'AI Features'
       case 'data':
         return 'Data Management'
       case 'about':
@@ -1043,6 +1246,7 @@ export default function SettingsPage() {
             {section === 'notifications' && renderNotificationsSection()}
             {section === 'appearance' && renderAppearanceSection()}
             {section === 'navigation' && renderNavigationSection()}
+            {section === 'ai' && renderAISection()}
             {section === 'data' && renderDataSection()}
             {section === 'about' && renderAboutSection()}
           </motion.div>

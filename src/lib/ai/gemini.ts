@@ -1,10 +1,42 @@
 /**
  * Gemini AI Service for FinVault
  * Uses Google's Gemini Flash model for fast AI-powered features
+ *
+ * IMPORTANT: API key must be configured by the user in Settings > AI
+ * Get your free API key at: https://aistudio.google.com/apikey
  */
 
-const GEMINI_API_KEY = 'AIzaSyCURx1udreGCxNLdoW2tg1-6V6fQipHFDg'
 const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent'
+
+// Runtime API key storage (set when user logs in with configured key)
+let currentApiKey: string | null = null
+
+/**
+ * Set the Gemini API key at runtime
+ * Called when user profile is loaded
+ */
+export function setGeminiApiKey(apiKey: string | undefined): void {
+  currentApiKey = apiKey || null
+}
+
+/**
+ * Check if Gemini AI is configured
+ */
+export function isGeminiConfigured(): boolean {
+  return !!currentApiKey
+}
+
+/**
+ * Get current API key (for debugging/status display)
+ */
+export function getGeminiKeyStatus(): { configured: boolean; masked: string | null } {
+  if (!currentApiKey) {
+    return { configured: false, masked: null }
+  }
+  // Return masked key for UI display (first 4 and last 4 chars)
+  const masked = `${currentApiKey.slice(0, 4)}...${currentApiKey.slice(-4)}`
+  return { configured: true, masked }
+}
 
 interface GeminiResponse {
   candidates?: Array<{
@@ -55,10 +87,15 @@ interface BudgetRecommendation {
 
 /**
  * Make a request to the Gemini API
+ * Requires API key to be configured via setGeminiApiKey()
  */
 async function callGemini(prompt: string): Promise<string> {
+  if (!currentApiKey) {
+    throw new Error('Gemini API key not configured. Please add your API key in Settings > AI.')
+  }
+
   try {
-    const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
+    const response = await fetch(`${GEMINI_API_URL}?key=${currentApiKey}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -213,9 +250,13 @@ Categories: Food, Shopping, Transportation, Utilities, Entertainment, Health, Ed
 
 If you cannot extract any field, use reasonable defaults. For date, use today if not visible.`
 
+  if (!currentApiKey) {
+    throw new Error('Gemini API key not configured. Please add your API key in Settings > AI.')
+  }
+
   try {
     // For image analysis, we need to use multimodal endpoint
-    const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
+    const response = await fetch(`${GEMINI_API_URL}?key=${currentApiKey}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

@@ -9,6 +9,7 @@ import type {
 } from '@/types'
 import { db } from '@/lib/db'
 import { deriveMasterKey, storeMasterKey, removeMasterKey, verifyPINAndGetKey } from '@/lib/crypto'
+import { setGeminiApiKey } from '@/lib/ai/gemini'
 
 interface AuthState {
   // Current session
@@ -36,6 +37,7 @@ interface AuthState {
   // Settings
   updateSettings: (settings: Partial<UserSettings>) => Promise<void>
   updateSecuritySettings: (settings: Partial<SecuritySettings>) => Promise<void>
+  updateAISettings: (settings: Partial<AISettings>) => Promise<void>
 
   // Error handling
   clearError: () => void
@@ -202,9 +204,13 @@ export const useAuthStore = create<AuthState>()(
 
             // Re-fetch updated profile
             const updatedProfile = await db.userProfiles.get(profileId)
+            const finalProfile = updatedProfile || profile
+
+            // Set Gemini API key from user's AI settings
+            setGeminiApiKey(finalProfile.ai?.apiKey)
 
             set({
-              currentProfile: updatedProfile || profile,
+              currentProfile: finalProfile,
               isAuthenticated: true,
               isLoading: false,
               keyId,
@@ -260,6 +266,9 @@ export const useAuthStore = create<AuthState>()(
         if (keyId) {
           removeMasterKey(keyId)
         }
+
+        // Clear Gemini API key
+        setGeminiApiKey(undefined)
 
         set({
           currentProfile: null,
@@ -389,6 +398,28 @@ export const useAuthStore = create<AuthState>()(
           security: updatedSettings,
           updatedAt: new Date(),
         })
+
+        const updatedProfile = await db.userProfiles.get(currentProfile.id)
+        if (updatedProfile) {
+          set({ currentProfile: updatedProfile })
+        }
+      },
+
+      updateAISettings: async (settings: Partial<AISettings>) => {
+        const { currentProfile } = get()
+        if (!currentProfile) return
+
+        const updatedAI = { ...currentProfile.ai, ...settings }
+
+        await db.userProfiles.update(currentProfile.id, {
+          ai: updatedAI,
+          updatedAt: new Date(),
+        })
+
+        // Update Gemini API key if it changed
+        if ('apiKey' in settings) {
+          setGeminiApiKey(settings.apiKey)
+        }
 
         const updatedProfile = await db.userProfiles.get(currentProfile.id)
         if (updatedProfile) {
